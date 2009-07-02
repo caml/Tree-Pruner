@@ -335,7 +335,6 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         paintPhylogeny( g, false, false, 0, 0, 0, 0 );
     }
 
-    @Override
     public int print( final Graphics g, final PageFormat page_format, final int page_index ) throws PrinterException {
         if ( page_index > 0 ) {
             return ( NO_SUCH_PAGE );
@@ -1270,7 +1269,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             }
             try {
                 _rendering_hints.put( RenderingHints.KEY_TEXT_ANTIALIASING,
-                                      RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB );
+                                      RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT );
             }
             catch ( final Throwable e ) {
                 _rendering_hints.put( RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON );
@@ -3291,7 +3290,6 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             _node = node;
         }
 
-        @Override
         public void actionPerformed( final ActionEvent e ) {
             final Color c = _chooser.getColor();
             if ( c != null ) {
