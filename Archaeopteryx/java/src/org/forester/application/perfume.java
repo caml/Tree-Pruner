@@ -77,7 +77,7 @@ public class perfume {
     private static void processNode( final PhylogenyNode node, final int i ) {
         node.setDistanceToParent( PhylogenyNode.DISTANCE_DEFAULT );
         if ( !node.isExternal() ) {
-            if ( ( node.getNodeName() == null ) || node.getNodeName().isEmpty() ) {
+            if ( ( node.getNodeName() == null ) || node.getNodeName().length()==0 ) {
                 node.setName( BASE + i );
             }
         }
