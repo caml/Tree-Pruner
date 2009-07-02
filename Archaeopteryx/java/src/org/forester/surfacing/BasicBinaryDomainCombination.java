@@ -56,7 +56,6 @@ public class BasicBinaryDomainCombination implements BinaryDomainCombination {
         _id_1 = null;
     }
 
-    @Override
     public int compareTo( final BinaryDomainCombination binary_domain_combination ) {
         if ( binary_domain_combination.getClass() != this.getClass() ) {
             throw new IllegalArgumentException( "attempt to compare [" + binary_domain_combination.getClass() + "] to "

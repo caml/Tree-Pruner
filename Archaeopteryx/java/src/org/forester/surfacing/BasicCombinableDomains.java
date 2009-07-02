@@ -149,7 +149,6 @@ public class BasicCombinableDomains implements CombinableDomains {
         _key_domain_proteins_count = key_domain_proteins_count;
     }
 
-    @Override
     public List<BinaryDomainCombination> toBinaryDomainCombinations() {
         final List<BinaryDomainCombination> binary_combinations = new ArrayList<BinaryDomainCombination>( getNumberOfCombinableDomains() );
         for( final DomainId domain : getCombiningDomains().keySet() ) {

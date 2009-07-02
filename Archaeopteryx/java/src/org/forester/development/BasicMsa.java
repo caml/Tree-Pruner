@@ -95,7 +95,6 @@ public class BasicMsa implements Msa {
         return getSequences().size();
     }
 
-    @Override
     public char getResidueAt( final int col, final int row ) {
         // TODO Auto-generated method stub
         return 0;

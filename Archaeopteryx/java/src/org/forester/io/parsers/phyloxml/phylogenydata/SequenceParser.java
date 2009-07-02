@@ -41,7 +41,6 @@ public class SequenceParser implements PhylogenyDataPhyloXmlParser {
     private SequenceParser() {
     }
 
-    @Override
     public Sequence parse( final XmlElement element ) throws PhylogenyParserException {
         final Sequence sequence = new Sequence();
         if ( element.isHasAttribute( PhyloXmlMapping.SEQUENCE_TYPE ) ) {

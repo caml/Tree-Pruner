@@ -59,7 +59,6 @@ final class MouseListener extends MouseAdapter implements MouseMotionListener {
         _treepanel.mouseClicked( e );
     }
 
-    @Override
     public void mouseDragged( final MouseEvent e ) {
         if ( ( e.getModifiersEx() == InputEvent.BUTTON1_DOWN_MASK )
                 || ( e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK ) ) {
@@ -82,7 +81,6 @@ final class MouseListener extends MouseAdapter implements MouseMotionListener {
         }
     }
 
-    @Override
     public void mouseMoved( final MouseEvent e ) {
         _treepanel.mouseMoved( e );
     }

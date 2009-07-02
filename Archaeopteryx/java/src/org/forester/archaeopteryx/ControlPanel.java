@@ -1038,7 +1038,6 @@ final class ControlPanel extends JPanel implements ActionListener {
         };
         final ActionListener action_listener = new ActionListener() {
 
-            @Override
             public void actionPerformed( final ActionEvent e ) {
                 searchReset();
                 setSearchFoundCountsOnLabel( 0 );

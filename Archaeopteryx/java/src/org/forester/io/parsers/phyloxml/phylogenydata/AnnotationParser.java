@@ -42,7 +42,6 @@ public class AnnotationParser implements PhylogenyDataPhyloXmlParser {
     private AnnotationParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         final Annotation annotation = new Annotation();
         if ( element.isHasAttribute( PhyloXmlMapping.ANNOTATION_TYPE_ATTR ) ) {

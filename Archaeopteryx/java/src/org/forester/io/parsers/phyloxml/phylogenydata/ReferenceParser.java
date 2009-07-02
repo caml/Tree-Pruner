@@ -38,7 +38,6 @@ public class ReferenceParser implements PhylogenyDataPhyloXmlParser {
     private ReferenceParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         if ( element.isHasAttribute( PhyloXmlMapping.REFERENCE_DOI_ATTR ) ) {
             return new Reference( element.getValueAsString(), element.getAttribute( PhyloXmlMapping.REFERENCE_DOI_ATTR ) );

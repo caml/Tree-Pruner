@@ -37,7 +37,6 @@ public class PfamToGoMapping implements Mapping {
         _go_id = go_id;
     }
 
-    @Override
     public int compareTo( final Mapping m ) {
         if ( this == m ) {
             return 0;
@@ -68,12 +67,10 @@ public class PfamToGoMapping implements Mapping {
         }
     }
 
-    @Override
     public DomainId getKey() {
         return _pfam_domain_id;
     }
 
-    @Override
     public GoId getValue() {
         return _go_id;
     }

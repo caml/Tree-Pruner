@@ -37,7 +37,6 @@ public class BranchWidthParser implements PhylogenyDataPhyloXmlParser {
     private BranchWidthParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         return new BranchWidth( element.getValueAsDouble() );
     }

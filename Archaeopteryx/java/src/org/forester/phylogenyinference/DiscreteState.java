@@ -39,7 +39,6 @@ public class DiscreteState implements Comparable<DiscreteState> {
         _id = id.trim();
     }
 
-    @Override
     public int compareTo( final DiscreteState discrete_state ) {
         if ( this == discrete_state ) {
             return 0;

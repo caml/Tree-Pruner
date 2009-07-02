@@ -64,12 +64,10 @@ public class Uri implements PhylogenyData {
         _type = type;
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         return new StringBuffer( getValue().toString() );
     }
 
-    @Override
     public StringBuffer asText() {
         final StringBuffer sb = new StringBuffer();
         sb.append( "[" );
@@ -81,7 +79,6 @@ public class Uri implements PhylogenyData {
         return sb;
     }
 
-    @Override
     public PhylogenyData copy() {
         return new Uri( getValue().toString(), new String( getDescription() ), new String( getType() ) );
     }
@@ -98,17 +95,14 @@ public class Uri implements PhylogenyData {
         return _uri;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         PhylogenyDataUtil.appendElement( writer,
                                          PhyloXmlMapping.URI,

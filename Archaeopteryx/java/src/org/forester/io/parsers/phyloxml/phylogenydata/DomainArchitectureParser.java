@@ -38,7 +38,6 @@ public class DomainArchitectureParser implements PhylogenyDataPhyloXmlParser {
     private DomainArchitectureParser() {
     }
 
-    @Override
     public DomainArchitecture parse( final XmlElement element ) throws PhylogenyParserException {
         final DomainArchitecture architecure = new DomainArchitecture();
         if ( !element.isHasAttribute( PhyloXmlMapping.SEQUENCE_DOMAIN_ARCHITECTURE_LENGTH ) ) {

@@ -40,7 +40,6 @@ public class EventParser implements PhylogenyDataPhyloXmlParser {
     private EventParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         String type = "";
         Confidence conf = null;

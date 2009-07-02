@@ -91,12 +91,10 @@ public class Property implements PhylogenyData {
         _id_ref = "";
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         return new StringBuffer( getValue() );
     }
 
-    @Override
     public StringBuffer asText() {
         final StringBuffer sb = new StringBuffer();
         sb.append( getRef() );
@@ -108,7 +106,6 @@ public class Property implements PhylogenyData {
         return sb;
     }
 
-    @Override
     public PhylogenyData copy() {
         return new Property( new String( getRef() ),
                              new String( getValue() ),
@@ -142,7 +139,6 @@ public class Property implements PhylogenyData {
         return _value;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         if ( data == null ) {
             return false;
@@ -152,7 +148,6 @@ public class Property implements PhylogenyData {
                 && ( ( Property ) data ).getRef().equals( getRef() );
     }
 
-    @Override
     public StringBuffer toNHX() {
         final StringBuffer nhx = new StringBuffer();
         nhx.append( ":X" );
@@ -203,7 +198,6 @@ public class Property implements PhylogenyData {
         return nhx;
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         PhylogenyDataUtil.appendElement( writer,
                                          PhyloXmlMapping.PROPERTY,

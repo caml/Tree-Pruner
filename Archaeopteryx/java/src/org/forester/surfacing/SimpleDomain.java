@@ -44,7 +44,6 @@ public class SimpleDomain implements Domain {
         _id = new DomainId( id_str );
     }
 
-    @Override
     public void addGoId( final GoId go_id ) {
         throw new RuntimeException( "method not implemented" );
     }
@@ -68,7 +67,6 @@ public class SimpleDomain implements Domain {
         throw new RuntimeException( "method not implemented" );
     }
 
-    @Override
     public GoId getGoId( final int i ) {
         throw new RuntimeException( "method not implemented" );
     }
@@ -81,7 +79,6 @@ public class SimpleDomain implements Domain {
         throw new RuntimeException( "method not implemented" );
     }
 
-    @Override
     public int getNumberOfGoIds() {
         throw new RuntimeException( "method not implemented" );
     }

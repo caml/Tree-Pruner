@@ -436,7 +436,6 @@ public final class MainFrameApplication extends MainFrame {
         _options_jmenu = MainFrame.createMenu( OPTIONS_HEADER, getConfiguration() );
         _options_jmenu.addChangeListener( new ChangeListener() {
 
-            @Override
             public void stateChanged( final ChangeEvent e ) {
                 MainFrame.setOvPlacementColorChooseMenuItem( _overview_placment_mi, getCurrentTreePanel() );
                 MainFrame.setTextColorChooseMenuItem( _switch_colors_mi, getCurrentTreePanel() );

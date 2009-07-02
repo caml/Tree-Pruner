@@ -40,7 +40,6 @@ public class ColorParser implements PhylogenyDataPhyloXmlParser {
     private ColorParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         int red = 0;
         int green = 0;

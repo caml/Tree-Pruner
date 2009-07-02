@@ -119,7 +119,6 @@ public class BasicGoTerm implements GoTerm {
         }
     }
 
-    @Override
     public String getComment() {
         return _comment;
     }
@@ -136,12 +135,10 @@ public class BasicGoTerm implements GoTerm {
         return _namespace;
     }
 
-    @Override
     public List<GoRelationship> getGoRelationships() {
         return _go_relationships;
     }
 
-    @Override
     public List<GoSubset> getGoSubsets() {
         return _go_subsets;
     }

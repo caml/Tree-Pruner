@@ -55,17 +55,14 @@ public class SimpleMutableMsa implements Msa {
         return 0;
     }
 
-    @Override
     public int getLength() {
         return _data[ 0 ].size();
     }
 
-    @Override
     public int getNumberOfSequences() {
         return _data.length;
     }
 
-    @Override
     public char getResidueAt( final int col, final int row ) {
         return _data[ row ].get( col );
     }
@@ -75,7 +72,6 @@ public class SimpleMutableMsa implements Msa {
         return 0;
     }
 
-    @Override
     public Sequence getSequence( final int i ) {
         throw new AssertionError( "method not implemented" );
     }

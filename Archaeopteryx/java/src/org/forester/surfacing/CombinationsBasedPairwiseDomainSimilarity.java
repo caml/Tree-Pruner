@@ -51,7 +51,6 @@ public class CombinationsBasedPairwiseDomainSimilarity implements PairwiseDomain
         }
     }
 
-    @Override
     public int getDifferenceInCounts() {
         return _difference_in_counts;
     }

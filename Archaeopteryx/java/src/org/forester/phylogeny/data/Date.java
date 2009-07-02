@@ -55,7 +55,6 @@ public class Date implements PhylogenyData {
         _unit = unit;
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         if ( getValue() != null ) {
             return new StringBuffer( getDesc() + " [" + getValue().toPlainString() + " +- "
@@ -66,12 +65,10 @@ public class Date implements PhylogenyData {
         }
     }
 
-    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
-    @Override
     public PhylogenyData copy() {
         return new Date( new String( getDesc() ),
                          new BigDecimal( getValue().toPlainString() ),
@@ -95,17 +92,14 @@ public class Date implements PhylogenyData {
         return _value;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );

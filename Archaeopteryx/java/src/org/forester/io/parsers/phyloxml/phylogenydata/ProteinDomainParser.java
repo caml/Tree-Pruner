@@ -37,7 +37,6 @@ public class ProteinDomainParser implements PhylogenyDataPhyloXmlParser {
     private ProteinDomainParser() {
     }
 
-    @Override
     public ProteinDomain parse( final XmlElement element ) throws PhylogenyParserException {
         String name = "";
         int f = -1;

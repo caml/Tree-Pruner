@@ -79,17 +79,14 @@ public class MainPanel extends JPanel implements ComponentListener {
         getControlPanel().showWhole();
     }
 
-    @Override
     public void componentHidden( final ComponentEvent e ) {
         // Do nothing.
     }
 
-    @Override
     public void componentMoved( final ComponentEvent e ) {
         // Do nothing.
     }
 
-    @Override
     public void componentResized( final ComponentEvent e ) {
         if ( getCurrentTreePanel() != null ) {
             getCurrentTreePanel().updateOvSettings();
@@ -97,7 +94,6 @@ public class MainPanel extends JPanel implements ComponentListener {
         }
     }
 
-    @Override
     public void componentShown( final ComponentEvent e ) {
         // Do nothing.
     }
@@ -140,7 +136,6 @@ public class MainPanel extends JPanel implements ComponentListener {
         final JScrollPane treegraphic_scroll_pane = new JScrollPane( treepanel );
         treegraphic_scroll_pane.getHorizontalScrollBar().addAdjustmentListener( new AdjustmentListener() {
 
-            @Override
             public void adjustmentValueChanged( final AdjustmentEvent e ) {
                 if ( treepanel.isOvOn() || getOptions().isShowScale() ) {
                     treepanel.repaint();
@@ -149,7 +144,6 @@ public class MainPanel extends JPanel implements ComponentListener {
         } );
         treegraphic_scroll_pane.getVerticalScrollBar().addAdjustmentListener( new AdjustmentListener() {
 
-            @Override
             public void adjustmentValueChanged( final AdjustmentEvent e ) {
                 if ( treepanel.isOvOn() || getOptions().isShowScale() ) {
                     treepanel.repaint();

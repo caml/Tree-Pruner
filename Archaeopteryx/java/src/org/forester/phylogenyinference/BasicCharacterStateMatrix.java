@@ -88,12 +88,10 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         }
     }
 
-    @Override
     public boolean containsCharacter( final String character ) {
         return _character_index_map.containsKey( character );
     }
 
-    @Override
     public boolean containsIdentifier( final String identifier ) {
         return _identifier_index_map.containsKey( identifier );
     }
@@ -156,12 +154,10 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         }
     }
 
-    @Override
     public String getCharacter( final int character_index ) {
         return _characters[ character_index ];
     }
 
-    @Override
     public int getCharacterIndex( final String character ) {
         if ( !_character_index_map.containsKey( character ) ) {
             throw new IllegalArgumentException( "character [" + character + "] not found" );
@@ -169,12 +165,10 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         return _character_index_map.get( character );
     }
 
-    @Override
     public String getIdentifier( final int identifier_index ) {
         return _identifiers[ identifier_index ];
     }
 
-    @Override
     public int getIdentifierIndex( final String identifier ) {
         if ( !_identifier_index_map.containsKey( identifier ) ) {
             throw new IllegalArgumentException( "indentifier [" + identifier + "] not found" );
@@ -182,7 +176,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         return _identifier_index_map.get( identifier );
     }
 
-    @Override
     public int getNumberOfCharacters() {
         if ( !isEmpty() ) {
             return _states[ 0 ].length;
@@ -192,17 +185,14 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         }
     }
 
-    @Override
     public int getNumberOfIdentifiers() {
         return _states.length;
     }
 
-    @Override
     public S getState( final int identifier_index, final int character_index ) {
         return ( S ) _states[ identifier_index ][ character_index ];
     }
 
-    @Override
     public S getState( final String identifier, final int character_index ) {
         if ( !containsIdentifier( identifier ) ) {
             throw new IllegalArgumentException( "identifier [" + identifier + "] not found" );
@@ -210,7 +200,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         return getState( _identifier_index_map.get( identifier ), character_index );
     }
 
-    @Override
     public S getState( final String identifier, final String character ) {
         if ( !containsIdentifier( identifier ) ) {
             throw new IllegalArgumentException( "identifier [" + identifier + "] not found" );
@@ -221,7 +210,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         return getState( _identifier_index_map.get( identifier ), _character_index_map.get( character ) );
     }
 
-    @Override
     public boolean isEmpty() {
         return getNumberOfIdentifiers() <= 0;
     }
@@ -245,7 +233,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         return new_matrix;
     }
 
-    @Override
     public void setCharacter( final int character_index, final String character ) {
         if ( character == null ) {
             throw new IllegalArgumentException( "attempt to use null character" );
@@ -257,7 +244,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         _character_index_map.put( character, character_index );
     }
 
-    @Override
     public void setIdentifier( final int identifier_index, final String identifier ) {
         if ( identifier == null ) {
             throw new IllegalArgumentException( "attempt to use null identifier" );
@@ -269,12 +255,10 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         _identifier_index_map.put( identifier, identifier_index );
     }
 
-    @Override
     public void setState( final int identifier_index, final int character_index, final S state ) {
         _states[ identifier_index ][ character_index ] = state;
     }
 
-    @Override
     public void setState( final String identifier, final int character_index, final S state ) {
         if ( !_identifier_index_map.containsKey( identifier ) ) {
             throw new IllegalArgumentException( "identifier [" + identifier + "] not found" );
@@ -282,7 +266,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         setState( _identifier_index_map.get( identifier ), character_index, state );
     }
 
-    @Override
     public void setState( final String identifier, final String character, final S state ) {
         if ( !containsIdentifier( identifier ) ) {
             throw new IllegalArgumentException( "identifier [" + identifier + "] not found" );
@@ -301,7 +284,6 @@ public class BasicCharacterStateMatrix<S> implements CharacterStateMatrix<S> {
         toForester( writer );
     }
 
-    @Override
     public void toWriter( final Writer writer, final Format format ) throws IOException {
         switch ( format ) {
             case PHYLIP:

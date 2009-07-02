@@ -51,19 +51,6 @@ public class BasicProtein implements Protein {
         getProteinDomains().add( protein_domain );
     }
 
-    @Override
-    /**
-     * If in_nc_order is set to true, this returns true only and only if
-     * the order in List 'domains' and this protein (as determined by the start positions
-     * of the domains of this proteins, _not_ by their index) are the same
-     * (interspersing, 'other', domains in this are ignored). 
-     * If in_nc_order is set to false, this returns true only and only if
-     * this contains all domains listed in 'domains' (order and count do not matter).
-     * 
-     * @param domains a list of domain ids in a certain order.
-     * @param in_nc_order to consider order
-     * @return
-     */
     public boolean contains( final List<DomainId> query_domain_ids, final boolean in_nc_order ) {
         if ( !in_nc_order ) {
             for( final DomainId query_domain_id : query_domain_ids ) {
@@ -98,17 +85,14 @@ public class BasicProtein implements Protein {
         }
     }
 
-    @Override
     public String getAccession() {
         return _accession;
     }
 
-    @Override
     public String getDescription() {
         return _desc;
     }
 
-    @Override
     public String getName() {
         return _name;
     }

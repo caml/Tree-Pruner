@@ -95,7 +95,6 @@ class NodePanel extends JPanel implements TreeSelectionListener {
         add( split_pane );
     }
 
-    @Override
     public void valueChanged( final TreeSelectionEvent e ) {
         // Do nothing.
     }

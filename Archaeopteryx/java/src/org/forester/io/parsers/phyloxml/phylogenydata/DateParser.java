@@ -37,7 +37,6 @@ public class DateParser implements PhylogenyDataPhyloXmlParser {
     private DateParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         //TODO implement me
         return new Date( element.getValueAsString() );

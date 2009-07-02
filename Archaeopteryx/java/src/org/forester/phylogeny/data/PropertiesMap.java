@@ -45,7 +45,6 @@ public class PropertiesMap implements PhylogenyData {
         getProperties().put( property.getRef(), property );
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         final StringBuffer sb = new StringBuffer();
         boolean first = true;
@@ -61,12 +60,10 @@ public class PropertiesMap implements PhylogenyData {
         return sb;
     }
 
-    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
-    @Override
     public PhylogenyData copy() {
         final PropertiesMap new_one = new PropertiesMap();
         for( final String r : getProperties().keySet() ) {
@@ -116,7 +113,6 @@ public class PropertiesMap implements PhylogenyData {
         return refs;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
@@ -132,7 +128,6 @@ public class PropertiesMap implements PhylogenyData {
         return false;
     }
 
-    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         if ( getProperties() != null ) {
@@ -143,7 +138,6 @@ public class PropertiesMap implements PhylogenyData {
         return sb;
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         if ( getProperties() != null ) {
             for( final String ref : getProperties().keySet() ) {

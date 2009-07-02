@@ -41,7 +41,6 @@ public class BinaryCharactersParser implements PhylogenyDataPhyloXmlParser {
     private BinaryCharactersParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         final SortedSet<String> present = new TreeSet<String>();
         final SortedSet<String> gained = new TreeSet<String>();

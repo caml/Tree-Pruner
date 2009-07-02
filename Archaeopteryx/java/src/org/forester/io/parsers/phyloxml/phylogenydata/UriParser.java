@@ -41,7 +41,6 @@ public class UriParser implements PhylogenyDataPhyloXmlParser {
     private UriParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         String type = "";
         String desc = "";

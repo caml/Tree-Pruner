@@ -38,7 +38,6 @@ public class IdentifierParser implements PhylogenyDataPhyloXmlParser {
     private IdentifierParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         if ( element.isHasAttribute( PhyloXmlMapping.IDENTIFIER_TYPE_ATTR ) ) {
             return new Identifier( element.getValueAsString(), element

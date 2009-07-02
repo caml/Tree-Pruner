@@ -113,12 +113,10 @@ public class BinaryCharacters implements PhylogenyData {
         getPresentCharacters().add( binary_character );
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         return asText();
     }
 
-    @Override
     public StringBuffer asText() {
         validate();
         final StringBuffer sb = new StringBuffer();
@@ -139,11 +137,6 @@ public class BinaryCharacters implements PhylogenyData {
         return sb;
     }
 
-    @Override
-    /**
-     * Not a deep copy.
-     * 
-     */
     public PhylogenyData copy() {
         validate();
         return new BinaryCharacters( getPresentCharacters(),
@@ -207,7 +200,6 @@ public class BinaryCharacters implements PhylogenyData {
         return _type;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
@@ -216,12 +208,10 @@ public class BinaryCharacters implements PhylogenyData {
         _type = type;
     }
 
-    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         validate();
         writer.write( ForesterUtil.LINE_SEPARATOR );

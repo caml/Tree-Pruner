@@ -119,7 +119,6 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return _combinable_domains_map;
     }
 
-    @Override
     public SortedSet<DomainId> getAllDomainIds() {
         final SortedSet<DomainId> domains = new TreeSet<DomainId>();
         for( final DomainId key : getAllCombinableDomainsIds().keySet() ) {
@@ -132,7 +131,6 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return domains;
     }
 
-    @Override
     public DomainCombinationType getDomainCombinationType() {
         return _dc_type;
     }
@@ -145,7 +143,6 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return _species;
     }
 
-    @Override
     public SortedSet<BinaryDomainCombination> toBinaryDomainCombinations() {
         final SortedSet<BinaryDomainCombination> binary_combinations = new TreeSet<BinaryDomainCombination>();
         for( final DomainId key : getAllCombinableDomainsIds().keySet() ) {

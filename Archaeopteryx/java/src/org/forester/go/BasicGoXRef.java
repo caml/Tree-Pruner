@@ -115,7 +115,6 @@ public class BasicGoXRef implements GoXRef {
         return _type;
     }
 
-    @Override
     public String getXRef() {
         return _xref;
     }

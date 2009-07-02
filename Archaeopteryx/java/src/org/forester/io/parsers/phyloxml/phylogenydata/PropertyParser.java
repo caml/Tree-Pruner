@@ -40,7 +40,6 @@ public class PropertyParser implements PhylogenyDataPhyloXmlParser {
     private PropertyParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         String ref = "";
         String value = "";

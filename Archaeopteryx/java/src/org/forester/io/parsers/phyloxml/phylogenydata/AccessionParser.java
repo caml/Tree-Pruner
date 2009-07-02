@@ -38,7 +38,6 @@ public class AccessionParser implements PhylogenyDataPhyloXmlParser {
     private AccessionParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         if ( element.isHasAttribute( PhyloXmlMapping.ACCESSION_SOURCE_ATTR ) ) {
             return new Accession( element.getValueAsString(), element

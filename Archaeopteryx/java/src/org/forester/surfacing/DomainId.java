@@ -60,7 +60,6 @@ public class DomainId implements Comparable<DomainId> {
         getGoIds().add( go_id );
     }
 
-    @Override
     public int compareTo( final DomainId domain_id ) {
         if ( this == domain_id ) {
             return 0;

@@ -48,17 +48,14 @@ public class Annotation implements PhylogenyData {
         init();
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         return new StringBuffer( getDesc() );
     }
 
-    @Override
     public StringBuffer asText() {
         return new StringBuffer( getDesc() );
     }
 
-    @Override
     public PhylogenyData copy() {
         final Annotation ann = new Annotation();
         if ( getConfidence() != null ) {
@@ -113,7 +110,6 @@ public class Annotation implements PhylogenyData {
         return _uri;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         if ( ForesterUtil.isEmpty( getDesc() ) ) {
             return false;
@@ -153,7 +149,6 @@ public class Annotation implements PhylogenyData {
         _uri = uri;
     }
 
-    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         sb.append( NHXtags.ANNOTATION ); //TODO change on NHXv2!!!!! //TODO
@@ -161,7 +156,6 @@ public class Annotation implements PhylogenyData {
         return sb;
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         if ( ( getConfidence() != null ) || ( getProperties() != null ) || ( getUri() != null )
                 || !ForesterUtil.isEmpty( getDesc() ) ) {

@@ -36,7 +36,6 @@ public class PointParser implements PhylogenyDataPhyloXmlParser {
     private PointParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         //TODO implement me
         throw new UnsupportedOperationException();

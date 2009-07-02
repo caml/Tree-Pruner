@@ -46,17 +46,14 @@ public class BranchData implements PhylogenyData {
         getConfidences().add( confidence );
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public StringBuffer asText() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public PhylogenyData copy() {
         final BranchData new_bd = new BranchData();
         if ( isHasBranchColor() ) {
@@ -93,7 +90,6 @@ public class BranchData implements PhylogenyData {
         return getConfidences().size();
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
@@ -118,7 +114,6 @@ public class BranchData implements PhylogenyData {
         _branch_width = branch_width;
     }
 
-    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         if ( isHasConfidences() && ( getConfidence( 0 ).getValue() != Confidence.CONFIDENCE_DEFAULT_VALUE ) ) {
@@ -136,7 +131,6 @@ public class BranchData implements PhylogenyData {
         return sb;
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         if ( isHasConfidences() ) {
             for( final Confidence confidence : getConfidences() ) {

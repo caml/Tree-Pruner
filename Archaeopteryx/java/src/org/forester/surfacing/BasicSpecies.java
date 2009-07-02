@@ -39,7 +39,6 @@ public class BasicSpecies implements Species {
         _species_id = species_id.trim();
     }
 
-    @Override
     public int compareTo( final Species species ) {
         if ( this == species ) {
             return 0;

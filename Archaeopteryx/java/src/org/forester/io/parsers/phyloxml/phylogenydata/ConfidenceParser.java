@@ -38,7 +38,6 @@ public class ConfidenceParser implements PhylogenyDataPhyloXmlParser {
     private ConfidenceParser() {
     }
 
-    @Override
     public PhylogenyData parse( final XmlElement element ) throws PhylogenyParserException {
         final Confidence confidence = new Confidence();
         confidence.setValue( element.getValueAsDouble() );

@@ -62,7 +62,6 @@ public class Distribution implements PhylogenyData {
         _geodetic_datum = geodetic_datum;
     }
 
-    @Override
     public StringBuffer asSimpleText() {
         if ( ( getLatitude() != null ) || ( getLongitude() != null ) || ( getAltitude() != null ) ) {
             return new StringBuffer( getDesc() + " [" + getLatitude().toPlainString() + ","
@@ -74,12 +73,10 @@ public class Distribution implements PhylogenyData {
         }
     }
 
-    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
-    @Override
     public PhylogenyData copy() {
         return new Distribution( new String( getDesc() ),
                                  new BigDecimal( getLatitude().toPlainString() ),
@@ -108,17 +105,14 @@ public class Distribution implements PhylogenyData {
         return _longitude;
     }
 
-    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );

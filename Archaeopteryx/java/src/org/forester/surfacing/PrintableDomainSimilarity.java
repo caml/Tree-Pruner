@@ -307,7 +307,6 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
         return _max_difference;
     }
 
-    @Override
     public int getMaximalDifferenceInCounts() {
         return _max_difference_in_counts;
     }
