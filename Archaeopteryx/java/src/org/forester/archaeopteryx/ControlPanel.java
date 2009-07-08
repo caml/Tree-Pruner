@@ -55,6 +55,9 @@ import org.forester.phylogeny.PhylogenyMethods;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
 
+
+
+
 final class ControlPanel extends JPanel implements ActionListener {
 
     private static final String  RETURN_TO_SUPER_TREE_TEXT = "Back to Super Tree";
@@ -138,6 +141,10 @@ final class ControlPanel extends JPanel implements ActionListener {
     private JButton              _search_reset_button;
     private JLabel               _search_found_label;
 
+    //******************************************START**********************************************************//
+    private ControlPanelAdditionalGUI controlPanelAdditionalGUI;
+    private KeepRemoveConfiguration keepRemoveConfiguration;
+    //********************************************END**********************************************************//
     ControlPanel( final MainPanel ap, final Configuration config_settings ) {
         init();
         _mainpanel = ap;
@@ -862,14 +869,14 @@ final class ControlPanel extends JPanel implements ActionListener {
      * depending on the config.
      */
     void setCheckbox( final JCheckBox cb, final boolean state ) {
-        if ( cb != null ) {
+    	if ( cb != null ) {
             cb.setSelected( state );
         }
     }
 
     void setClickToAction( final int action ) {
         // Set click-to action
-        if ( action == _show_data_item ) {
+    	if ( action == _show_data_item ) {
             setActionWhenNodeClicked( NodeClickAction.SHOW_DATA );
         }
         else if ( action == _collapse_cb_item ) {
@@ -887,15 +894,20 @@ final class ControlPanel extends JPanel implements ActionListener {
         else if ( action == _color_subtree_cb_item ) {
             setActionWhenNodeClicked( NodeClickAction.COLOR_SUBTREE );
         }
+        //******************************************START**********************************************************//
+        else if(action == keepRemoveConfiguration._keepSequences || action == keepRemoveConfiguration._removeSequences){
+        	keepRemoveConfiguration.setClickToAction(action,this);
+        }
+        //********************************************END**********************************************************//
         else if ( action == _open_seq_web_item ) {
             setActionWhenNodeClicked( NodeClickAction.OPEN_SEQ_WEB );
         }
         else if ( action == _open_tax_web_item ) {
             setActionWhenNodeClicked( NodeClickAction.OPEN_TAX_WEB );
         }
-        else {
-            throw new IllegalStateException( "unknown action: " + action );
-        }
+        else{
+    		throw new IllegalStateException( "unknown action: " + action );
+    	}
         // make sure drop down is displaying the correct action
         // in case this was called from outside the class
         _click_to_combobox.setSelectedIndex( action );
@@ -952,6 +964,10 @@ final class ControlPanel extends JPanel implements ActionListener {
      * Set up the controls from the config settings. 11/26/05
      */
     void setupControls() {
+      //******************************************START**********************************************************//
+        controlPanelAdditionalGUI = new ControlPanelAdditionalGUI(this);
+        keepRemoveConfiguration = new KeepRemoveConfiguration(_configuration);
+      //********************************************END**********************************************************//
         // The tree display options:
         setupDisplayCheckboxes();
         // Click-to options
@@ -1421,6 +1437,20 @@ final class ControlPanel extends JPanel implements ActionListener {
             }
             cb_index++;
         }
+      //******************************************START**********************************************************//
+        if ( _configuration.doDisplayClickToOption( KeepRemoveConfiguration._KEEP_SEQUENCES)||
+        		( _configuration.doDisplayClickToOption( KeepRemoveConfiguration._REMOVE_SEQUENCES ) )) {
+        	
+	        int[] s = new int[2];
+	        int[] r = new int[2];
+	        s[0]= cb_index;s[1]=selected_index;
+	        r = keepRemoveConfiguration.setupClickToOptions(s,default_option,this);
+	        cb_index = r[0];
+	        selected_index = r[1];
+	    }
+        
+      //********************************************END**********************************************************//
+      
         // Set default selection and its action
         _click_to_combobox.setSelectedIndex( selected_index );
         setClickToAction( selected_index );
@@ -1578,6 +1608,21 @@ final class ControlPanel extends JPanel implements ActionListener {
     }
 
     enum NodeClickAction {
-        SHOW_DATA, COLLAPSE, REROOT, SUBTREE, SWAP, COLOR_SUBTREE, OPEN_TAX_WEB, OPEN_SEQ_WEB;
+        SHOW_DATA, COLLAPSE, REROOT, SUBTREE, SWAP, COLOR_SUBTREE
+      //******************************************START**********************************************************//
+        ,KEEP_SEQUENCES,REMOVE_SEQUENCES
+      //********************************************END**********************************************************//
+        ,OPEN_TAX_WEB, OPEN_SEQ_WEB;
     }
+  //******************************************START**********************************************************//
+    public void addClickToOptionKeepRemove( final int which, final String title ) {
+        _click_to_combobox.addItem( title );
+        _click_to_names.add( title );
+        _all_click_to_names.put( new Integer( which ), title );
+        if ( !_configuration.isUseNativeUI() ) {
+            _click_to_combobox.setBackground( Constants.BUTTON_BACKGROUND_COLOR_DEFAULT );
+            _click_to_combobox.setForeground( Constants.BUTTON_TEXT_COLOR_DEFAULT );
+        }
+    }
+  //********************************************END**********************************************************//
 }

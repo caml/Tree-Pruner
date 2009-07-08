@@ -73,6 +73,9 @@ final class Configuration {
     private boolean                         _show_scale                   = false;
     private boolean                         _show_branch_length_values    = false;
     private boolean                         _show_overview                = true;
+  //******************************************START**********************************************************//
+    public KeepRemoveConfiguration              keepRemoveConfiguration   = new KeepRemoveConfiguration(this);
+  //********************************************END**********************************************************//
     final static int                        display_as_phylogram          = 0;
     final static int                        show_node_names               = 1;
     final static int                        show_tax_code                 = 2;
@@ -104,8 +107,11 @@ final class Configuration {
     final static int                        subtree                       = 3;
     final static int                        swap                          = 4;
     final static int                        color_subtree                 = 5;
-    final static int                        open_seq_web                  = 6;
-    final static int                        open_tax_web                  = 7;
+  //******************************************START CHANGED**********************************************************//
+    final static int                        open_seq_web                  = 8;	//change this to higer number if TreeDecorator
+    final static int                        open_tax_web                  = 9;  //demands for it
+  //********************************************END**********************************************************//
+  
     // ---------------------------
     // Display options for trees
     // ---------------------------
@@ -128,8 +134,16 @@ final class Configuration {
             { "Annotation colorize", "nodisplay", "no" }, { "Property", "nodisplay", "no" } };
     String                                  clickto_options[][]           = { { "Display Node Data", "display" },
             { "Collapse/Uncollapse", "display" }, { "Root/Reroot", "display" }, { "Sub/Super Tree", "display" },
-            { "Swap Descendants", "display" }, { "Colorize Subtree", "display" }, { "Open Sequence Web", "nodisplay" },
-            { "Open Taxonomy Web", "nodisplay" }                         };
+            { "Swap Descendants", "display" }, { "Colorize Subtree", "display" },
+          //******************************************START**********************************************************//
+            {"Keep Sequences In Working Set", "display"},            //Display or no display depends upon the 
+            {"Remove/Restore Sequences From Working Set", "display"},  //TreePruner or TreeDecorator AppType. 
+            /**Later on change this to nodisplay if apptype is TreeDecorator from ArchaeA.java
+            Change Number in KeepRemoveConfiguration.java from 6 n 7 for keep and remove to higher number 
+            if TreeDecorator demands it*/
+         //********************************************END**********************************************************//
+            { "Open Sequence Web", "nodisplay" },
+            { "Open Taxonomy Web", "nodisplay" }                    };
     // This option is selected in the dropdown
     int                                     default_clickto               = Configuration.display_node_data;
     // --------------
@@ -483,6 +497,11 @@ final class Configuration {
             ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [go_to_swiss_prot] is deprecated" );
             return DEPRECATED;
         }
+      //******************************************START**********************************************************//
+        else{
+        	index = keepRemoveConfiguration.getClickToIndex(name,index);
+        }
+      //********************************************END**********************************************************//
         return index;
     }
 

@@ -97,6 +97,8 @@ import org.forester.util.ForesterUtil;
 import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 
+import com.lanl.application.treePruner.custom.data.WorkingSet;
+import com.lanl.application.treePruner.custom.data.Accession;
 import com.lanl.application.treePruner.applet.AppletParams;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 import java.net.URL;
@@ -193,8 +195,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     HashMap<Float, Integer>                _angles                           = new HashMap<Float, Integer>();
     Graphics2D                             _g2d                              = null;
     private AffineTransform                _at;
-    //******************************************START**********************************************************//
-    private SubTreePanel subTreePanel;
+  //******************************************START**********************************************************//
+    public SubTreePanel subTreePanel;
+    public TreePrunerPaint treePrunerPaint;
+    public WorkingSet workingSet;
     //********************************************END**********************************************************//
     
     TreePanel( final Phylogeny t, final Configuration configuration, final MainPanel tjp ) {
@@ -231,6 +235,8 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         subTreePanel.setPhylogeny(t);
         subTreePanel.setSubTreeNodeInfo();
         subTreePanel.setFullTreeNodeInfo();
+        workingSet = new WorkingSet();
+        treePrunerPaint = new TreePrunerPaint(this,workingSet);
         //********************************************END**********************************************************//
         setBackground( getTreeColorSet().getBackgroundColor() );
         final MouseListener mouse_listener = new MouseListener( this );
@@ -1367,7 +1373,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         return c;
     }
-    //******************************************START**********************************************************//
+    //******************************************START CHANGED**********************************************************//
     void subTree( final PhylogenyNode node ) {
     	int temp_count = _subtree_index;
     	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
@@ -1422,7 +1428,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     	_main_panel.getControlPanel().showWhole();
         repaint();
     }
-    /**
+    /** ENTIRE METHOD of subTree(node) has been overwritten - changed
     	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
             _phylogenies[ _subtree_index++ ] = _phylogeny;
             _phylogeny = _phylogeny.subTree( node.getNodeId() );
@@ -1456,7 +1462,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             updateSubSuperTreeButton();
     	}
     }
-    /**
+    /**  ENTIRE METHOD of superTree() has been overwritten - changed
     	_phylogenies[ _subtree_index ] = null;
         _phylogeny = _phylogenies[ --_subtree_index ];
         updateSubSuperTreeButton();
@@ -1599,7 +1605,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             g.setColor( getTreeColorSet().getBranchColorForPdf() );
         }
         else {
-            g.setColor( getTreeColorSet().getBranchColor() );
+        	//******************************************START CHANGED**********************************************************//
+        	treePrunerPaint.initArrayLists();
+            treePrunerPaint.paintKeepRemove(g,node);
+//            g.setColor( getTreeColorSet().getBranchColor() ); //commented -  changed
+           //********************************************END**********************************************************//
         }
     }
 
@@ -1902,6 +1912,14 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             case OPEN_TAX_WEB:
                 openTaxWeb( node );
                 break;
+          //******************************************START**********************************************************//
+            case KEEP_SEQUENCES:
+            	workingSet.memorizeKeepNodes(node, this);
+            	break;
+            case REMOVE_SEQUENCES:	
+            	workingSet.memorizeRemoveNodes(node);
+            	break;
+           //********************************************END**********************************************************//
             default:
                 throw new IllegalArgumentException( "unknown action: " + action );
         }
@@ -2373,7 +2391,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                         }
                     }
                     else {
-                        TreePanel.drawLine( x1a, y2, x2a, y2, g );
+                    	//******************************************START CHANGED**********************************************************//
+                        treePrunerPaint.drawThickLine(g,node, x1a, y2, x2a, y2);
+                      //TreePanel.drawLine( x1a, y2, x2a, y2, g );   //Commented changed
+                        //********************************************END**********************************************************//
+                        
                     }
                 }
                 else {
@@ -2563,7 +2585,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
     }
 
-    private void paintNode( final Graphics g,
+    private void paintNode( final Graphics g,			
                             final PhylogenyNode node,
                             final boolean to_pdf,
                             final boolean dynamically_hide,
@@ -2737,7 +2759,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             if ( _sb.length() > 0 ) {
                 _sb.append( " " );
             }
-            _sb.append( node.getNodeName() );
+            //******************************************START CHANGED**********************************************************//
+            _sb.append(Accession.extractAccessionFromStrain(node));
+            //_sb.append( node.getNodeName() );    //commented changed
+            //********************************************END**********************************************************//
+            
         }
         if ( node.getNodeData().isHasSequence() ) {
             if ( getControlPanel().isShowSequenceAcc() && ( node.getNodeData().getSequence().getAccession() != null ) ) {
@@ -2757,6 +2783,12 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                 _sb.append( node.getNodeData().getSequence().getName() );
             }
         }
+        
+      //******************************************START**********************************************************//
+     	treePrunerPaint.initArrayLists();
+        treePrunerPaint.paintKeepRemove(g,node);
+       //********************************************END**********************************************************//
+    	
         g.setFont( getTreeFontSet().getLargeFont() );
         if ( is_in_found_nodes ) {
             g.setFont( getTreeFontSet().getLargeFont().deriveFont( Font.BOLD ) );
@@ -3401,6 +3433,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     
     public Phylogeny getCurrentPhylogeny(){
     	return _phylogeny;
+    }
+    
+    public TreeColorSet getTheTreeColorSet() {
+        return getMainPanel().getTreeColorSet();
     }
     
     

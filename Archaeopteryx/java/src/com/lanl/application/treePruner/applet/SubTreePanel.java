@@ -50,7 +50,7 @@ public class SubTreePanel {
 	
 	public void setSubTreeNodeInfo(){
 		TreeInfo ti = new TreeInfo();
-		if ( ( getTree() != null ) && getTree().isEmpty() ) {
+		if ( ( getTree() != null ) && !getTree().isEmpty() ) {
 			subTreeNodeIds = ti.getAllNodeIdsAsArrayList(getTree());
 			subTreeNodeAcc = ti.getAllNodeACCAsArrayList(getTree());
 		}
@@ -71,6 +71,10 @@ public class SubTreePanel {
 	
 	public ArrayList<String> getSubTreeNodeAcc(){
 		return subTreeNodeAcc;
+	}
+	
+	public static ArrayList<PhylogenyNode> getAllNodes(){
+		return allNodes;
 	}
 	
 	public Phylogeny getTree() {

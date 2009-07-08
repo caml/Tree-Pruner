@@ -10,4 +10,7 @@ public class ExtraNodeInfo {
 	public String getNodeAcc(){
 		return _acc;
 	}
+	public void setNodeAcc(String acc){
+		this._acc=acc;
+	}
 }
