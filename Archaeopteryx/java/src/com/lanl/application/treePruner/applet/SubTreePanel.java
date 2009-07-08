@@ -65,6 +65,14 @@ public class SubTreePanel {
         }
 	}
 	
+	public static void clearListsOnClose(){
+		mainFrames.clear();
+        _phylogenies.clear();
+        _phylogenies_subtree.clear();
+        sub_frame_count=0;
+        TreePanel.reset_subtree_index();
+	}
+	
 	public ArrayList<Integer> getSubTreeNodeIds(){
 		return subTreeNodeIds;
 	}

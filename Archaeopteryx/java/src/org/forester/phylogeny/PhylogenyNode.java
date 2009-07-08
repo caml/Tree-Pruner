@@ -42,6 +42,7 @@ import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
+import com.lanl.application.treePruner.custom.data.Accession;
 import com.lanl.application.treePruner.tree.node.ExtraNodeInfo;
 //********************************************END**********************************************************//
 public class PhylogenyNode implements PhylogenyNodeI, Comparable {
@@ -914,6 +915,9 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
      *            the PhylogenyNode to add
      */
     private void addChildNode( final PhylogenyNode child ) {
+    	//******************************************START**********************************************************//
+        Accession.extractAccessionFromStrain(child);
+        //********************************************END**********************************************************//
         getDescendants().add( child );
     }
 

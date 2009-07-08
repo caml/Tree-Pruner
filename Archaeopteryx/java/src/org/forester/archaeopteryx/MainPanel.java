@@ -47,6 +47,11 @@ import javax.swing.event.ChangeListener;
 import org.forester.archaeopteryx.phylogeny.data.RenderableDomainArchitecture;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.applet.AppletTerminate;
+//********************************************END**********************************************************//
+
+
 
 public class MainPanel extends JPanel implements ComponentListener {
 
@@ -61,6 +66,9 @@ public class MainPanel extends JPanel implements ComponentListener {
     private TreeColorSet      _colorset;
     private TreeFontSet       _fontset;
 
+  //******************************************START**********************************************************//
+    AppletTerminate appletTerminate = new AppletTerminate(_mainframe);
+  //********************************************END**********************************************************//
     MainPanel() {
     }
 
@@ -353,6 +361,10 @@ public class MainPanel extends JPanel implements ComponentListener {
     }
 
     void terminate() {
+    	//******************************************START**********************************************************//
+    	appletTerminate.terminateAdditionalTasks(this);
+        //********************************************END**********************************************************//
+    	
         for( final TreePanel atvtreepanel : _treepanels ) {
             atvtreepanel.removeAllEditNodeJFrames();
         }
@@ -361,4 +373,18 @@ public class MainPanel extends JPanel implements ComponentListener {
     private Configuration getConfiguration() {
         return _configuration;
     }
+    
+  //******************************************START**********************************************************//
+    void terminateOnDelete() {
+    	appletTerminate.terminateOnDeleteAdditionalTasks();
+        for( final TreePanel atvtreepanel : _treepanels ) {
+            atvtreepanel.removeAllEditNodeJFrames();
+        }
+    }
+    
+    public MainFrame returnMainFrame(){
+    	return _mainframe;
+    }
+   //********************************************END**********************************************************//
 }
+

@@ -62,6 +62,11 @@ import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.applet.AppletTerminate;
+//********************************************END**********************************************************//
+
+
 public abstract class MainFrame extends JFrame implements ActionListener {
 
     static final String       USE_MOUSEWHEEL_SHIFT_TO_ROTATE     = "In this display type, use mousewheel + Shift to rotate [or A and S]";
@@ -174,7 +179,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     Configuration             _configuration;
     JMenuItem                 _remove_branch_color_item;
     Options                   _options;
-
+  //******************************************START**********************************************************//
+    AppletTerminate appletTerminate = new AppletTerminate(this);
+   //********************************************END**********************************************************//
     MainFrame() {
         // Empty constructor.
     }
@@ -439,6 +446,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     }
 
     void close() {
+      //******************************************START**********************************************************//
+        if(appletTerminate.check_terminate(this)){
+        //********************************************END**********************************************************//
         removeTextFrame();
         if ( _mainpanel != null ) {
             _mainpanel.terminate();
@@ -448,6 +458,13 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         }
         setVisible( false );
         dispose();
+      //******************************************START**********************************************************//
+        }
+        else{
+        	appletTerminate.closeAdditionalTasks();
+        }
+      //********************************************END**********************************************************//
+      
     }
 
     void confColor() {
@@ -1245,4 +1262,21 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             tree_panel.setTextAntialias();
         }
     }
+  //******************************************START**********************************************************//
+    public void closeOnDelete() {
+        removeTextFrame();
+        if ( _mainpanel != null ) {
+            _mainpanel.terminateOnDelete();
+        }
+        if ( _contentpane != null ) {
+            _contentpane.removeAll();
+        }
+        setVisible( false );
+        dispose();
+    }
+    
+    public void repaintPanel(){
+    	this.getMainPanel().repaint();
+    }
+    //********************************************END**********************************************************//
 }

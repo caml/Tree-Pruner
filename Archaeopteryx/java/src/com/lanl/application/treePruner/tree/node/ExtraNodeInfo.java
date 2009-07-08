@@ -11,6 +11,6 @@ public class ExtraNodeInfo {
 		return _acc;
 	}
 	public void setNodeAcc(String acc){
-		this._acc=acc;
+		this._acc = acc;
 	}
 }

@@ -34,7 +34,7 @@ public class TreePrunerPaint {
 		// parentToRootSeqIds = ws.getParentToRoot();
 		rmAllSeqACC = ws.getACC();
 		keepACC = ws.getkeepACC();
-		rem_ACC = ws.getRem_ACC();
+		rem_ACC = ws.getRemember_ACC();
 	}
 
 	public void paintKeepRemove(Graphics g, PhylogenyNode node) {
@@ -53,9 +53,9 @@ public class TreePrunerPaint {
 		// );
 		// System.out.println("parentToRoot     " +
 		// parentToRootSeqIds.toString() );
-		System.out.println("rmAllSeqACC     " + rmAllSeqACC.toString());
-		System.out.println("keepACC     " + keepACC.toString());
-		System.out.println("rem_ACC     " + rem_ACC.toString());
+//		System.out.println("rmAllSeqACC     " + rmAllSeqACC.toString());
+//		System.out.println("keepACC     " + keepACC.toString());
+//		System.out.println("rem_ACC     " + rem_ACC.toString());
 		/*
 		 * if( ignoreRevert == false){ if( ignoreRevert == false){ if(
 		 * revertSeqIds.isEmpty() && rmAllSeqIds.contains( node.getNodeId()))

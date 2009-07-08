@@ -145,7 +145,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     private int                            _node_frame_index                 = 0;
     private Phylogeny                      _phylogeny                        = null;
     private final Phylogeny[]              _phylogenies                      = new Phylogeny[ TreePanel.MAX_SUBTREES ];
-    private int                            _subtree_index                    = 0;
+  //******************************************START CHANGED**********************************************************//
+    private static int                            _subtree_index                    = 0;
+    //changed from instance vatiable to static variable
+  //********************************************END**********************************************************//
+    
     private MainPanel                      _main_panel                       = null;
     private Set<PhylogenyNode>             _found_nodes                      = null;
     private PhylogenyNode                  _highlight_node                   = null;
@@ -2760,7 +2764,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                 _sb.append( " " );
             }
             //******************************************START CHANGED**********************************************************//
-            _sb.append(Accession.extractAccessionFromStrain(node));
+            _sb.append(Accession.removeAccessionFromStrain(node));
             //_sb.append( node.getNodeName() );    //commented changed
             //********************************************END**********************************************************//
             
@@ -3439,6 +3443,15 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         return getMainPanel().getTreeColorSet();
     }
     
+    public static void reset_subtree_index(){
+    	_subtree_index = 0; 
+    }
     
+    public static void set_subtree_index(int n){
+    	_subtree_index = n; 
+    }
+    public static int get_subtree_index(){
+    	return _subtree_index; 
+    }
     //********************************************END**********************************************************//
 }

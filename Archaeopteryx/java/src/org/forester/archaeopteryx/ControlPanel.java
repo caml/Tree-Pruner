@@ -142,7 +142,7 @@ final class ControlPanel extends JPanel implements ActionListener {
     private JLabel               _search_found_label;
 
     //******************************************START**********************************************************//
-    private ControlPanelAdditionalGUI controlPanelAdditionalGUI;
+    private ControlPanelAdditions controlPanelAdditions;
     private KeepRemoveConfiguration keepRemoveConfiguration;
     //********************************************END**********************************************************//
     ControlPanel( final MainPanel ap, final Configuration config_settings ) {
@@ -267,6 +267,9 @@ final class ControlPanel extends JPanel implements ActionListener {
                     displayedPhylogenyMightHaveChanged( true );
                 }
                 else {
+               //******************************************START**********************************************************//
+                	controlPanelAdditions.addTreePrunerButtonFunctions(e);
+               //********************************************END**********************************************************//
                     displayedPhylogenyMightHaveChanged( true );
                 }
             }
@@ -372,6 +375,10 @@ final class ControlPanel extends JPanel implements ActionListener {
         addJButton( _return_to_super_tree, this );
         addJButton( _order, this );
         addJButton( _uncollapse_all, this );
+      //******************************************START**********************************************************//
+        controlPanelAdditions.addTreePrunerButtons();
+      //********************************************END**********************************************************//
+        
         final JLabel spacer3 = new JLabel( "" );
         add( spacer3 );
         setVisibilityOfDomainStrucureControls();
@@ -965,7 +972,7 @@ final class ControlPanel extends JPanel implements ActionListener {
      */
     void setupControls() {
       //******************************************START**********************************************************//
-        controlPanelAdditionalGUI = new ControlPanelAdditionalGUI(this);
+        controlPanelAdditions = new ControlPanelAdditions(this);
         keepRemoveConfiguration = new KeepRemoveConfiguration(_configuration);
       //********************************************END**********************************************************//
         // The tree display options:
@@ -1623,6 +1630,13 @@ final class ControlPanel extends JPanel implements ActionListener {
             _click_to_combobox.setBackground( Constants.BUTTON_BACKGROUND_COLOR_DEFAULT );
             _click_to_combobox.setForeground( Constants.BUTTON_TEXT_COLOR_DEFAULT );
         }
+    }
+    
+    public void addLabel(JLabel j_label){
+    	add (j_label);
+    }
+    public void addPanel(JPanel j_panel){
+    	add (j_panel);
     }
   //********************************************END**********************************************************//
 }

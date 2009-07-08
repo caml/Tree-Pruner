@@ -26,8 +26,8 @@ public class WorkingSet {
 
 	//mira 052108 - delete DBAccess stuff again when replaced with server-client interaction mechanism
 	
-	final static public int 			set_id 										= 6787;
-	private boolean 					rmFromWS;
+//	final static public int 			set_id 										= 6787;
+//	private boolean 					rmFromWS;
     //per session - these ArrayLists get emptied out after committing to the WS
 	//mira 052008 - no type sepcified for ArrayLists because they are int not of type Object
 	//mira 071408: "ACTIVE" - to paint node in black; "INACTIVE" - to paint node in gray; - this is for toggling back and forth
@@ -41,10 +41,11 @@ public class WorkingSet {
     final static ArrayList 				COLOR_NODES									= new ArrayList(); //kmohan 07/25 - Intermediate list to check which are to be colored 
 //    final static ArrayList				PARENT_TO_ROOT								= new ArrayList(); //not used anymore
     final static ArrayList<String>              ACC                                 = new ArrayList<String>(); //kmohan 10/16  used to store the external nodes node accessions.
-    final static ArrayList<String>              rem_ACC                             = new ArrayList<String>(); //kmohan 10/20  used to remember the last the external nodes node accessions.used for comparison b/w ACC and rem_ACC
-    final static ArrayList<String>              keepACC                             = new ArrayList<String>();
+    final static ArrayList<String>              remember_ACC                      = new ArrayList<String>(); //kmohan 10/20  used to remember the last  external nodes node accessions.used for comparison b/w ACC and rem_ACC
+    final static ArrayList<String>              keepACC                             = new ArrayList<String>(); //Accession to keeps
     final        ArrayList<String>               temp                                = new ArrayList<String>(); //storing accession temporily of all external nodes in keep and remove
-    
+    final static   ArrayList    		    savedREMOVE_ALL = new ArrayList();
+    final static   ArrayList    		    savedACC = new ArrayList();
     static int action = 0;  // kmohan 0729 action being performed (keep or un-keep)
     //per ATV application (while ATV window is open) - get emptied out with garbage collection
 	
@@ -82,7 +83,9 @@ public class WorkingSet {
      * 
      * 
      */
-	
+	//################################## KEEP/REMOVE ALGO BEGIN ###########################################//
+    
+    
 	public void memorizeKeepNodes( final PhylogenyNode n, TreePanel treePanel){
 		PhylogenyNode r = SubTreePanel.getTree_always_full().getNode(n.getNodeId());
 		boolean cant_revert_remove=false;
@@ -202,7 +205,6 @@ public class WorkingSet {
 	    		}
 			}
 			ArrayList allNodeACC = treePanel.subTreePanel.getSubTreeNodeAcc();
-	    	//System.out.println("123"+allNodeACC);
 	    	for( Object o : allNodeACC){
 	    		if(!keepACC.contains(o)){
 	    			if(!keepACC.contains(o) && !ACC.contains(o)){
@@ -339,6 +341,10 @@ public class WorkingSet {
 			} //end of add==true case 4
 		}// end of !n.isExternal
 	} //end of method remove
+	
+	//################################## KEEP/REMOVE ALGO FINISH ###########################################//
+	
+	//################################## CRASH RECOVERY ALGO BEGIN ###########################################//
     public void crashRecovery(ArrayList<String> ACC_in){
     	
    // 	PARENT_TO_ROOT.clear();
@@ -379,51 +385,63 @@ public class WorkingSet {
 		COLOR_NODES.clear();
 //		remClicked.clear();
 //		REVERT_ACTIVE.clear();
-		rem_ACC.clear();
+		remember_ACC.clear();
 //		PARENT_TO_ROOT.clear();
     	//for ( PhylogenyNode n : removed_nodes){
     	//	memorizeRemoveNodes(n);
     	//}
-    	
-    	
-    	
     }
-    public String get_rem_acc(){
-    	String rmSeqs = "";
-    	
-    	if(ACC.isEmpty() ||(rem_ACC.containsAll(ACC) && ACC.containsAll(rem_ACC)))
-    		setRmFromWS( false );
-    	else setRmFromWS( true );
+  //################################## CRASH RECOVERY ALGO FINISH ###########################################//
+    
+  //################################## SERVER COMM HELPERS BEGIN ###########################################//
+    public boolean toCommunicateWithServer(){
+    	if(ACC.isEmpty() ||(remember_ACC.containsAll(ACC) && ACC.containsAll(remember_ACC)))
+    		return( false );
+    	else return( true );
+    }
+    
+    public boolean notToCommunicateWithServerForDelete(){
+    	return(getACC().isEmpty());
+    }
+    public String getACCasString(){
     	String s2="";
-    	 //String a1[] = new Array()
     	Object a1[] = ACC.toArray();
     	for(int i =0; i<a1.length;i++){
     	   s2 += a1[i].toString() +" ";
     	}
     	System.out.println("S2"+" "+s2);
-    	//rmSeqs=ACC.toString();
-    	//String s1 = rmSeqs.replaceAll("\\[", "");
-	    //String s2 = s1.replaceAll("\\]", "");
-	    //System.out.println("returning from WorkingSet.getRemoveSequences() with: " + s2 + "\n\n");
-	    return s2;
-    }
-    public void copy_acc(){
-    	rem_ACC.clear();
-        rem_ACC.addAll(ACC);	
-    		
-    	
+    	return s2;
     }
     
-    public void resetACC(ArrayList a1){
-    	ACC.clear();
-    	ACC.addAll(a1);
-    	rem_ACC.clear();
-    	rem_ACC.addAll(a1);
+  //################################## SERVER COMM HELPERS FINISH ###########################################//
+    
+  //################################## COPY ARRAYLISTS BEGIN ###########################################//
+    public void copyAccToRememberAcc(){
+    	remember_ACC.clear();
+    	remember_ACC.addAll(ACC);	
     }
-    public void resetRemoveALL(ArrayList a1){
+    
+    public void copyStuffToSavedStuff(){
+    	savedREMOVE_ALL.addAll(getRemoveAllSequenceIds());
+    	savedACC.addAll(getACC());
+    }
+  //################################## COPY ARRAYLISTS FINISH ###########################################//
+    
+  //################################## RESET ARRAYLISTS BEGIN ###########################################//
+    public void resetACC(){
+//    	ACC.clear();
+    	ACC.addAll(savedACC);
+    	remember_ACC.clear();
+    	remember_ACC.addAll(savedACC);
+    }
+    public void resetRemoveALL(){
     	REMOVE_ALL.clear();
-    	REMOVE_ALL.addAll(a1);
+    	REMOVE_ALL.addAll(savedREMOVE_ALL);
     }
+    
+    //################################## RESET ARRAYLISTS FINISH ###########################################//
+    
+    //################################## CLEAR ARRAYLISTS BEGIN ###########################################//
 	public void clear( String type){
     	for(Object o: COLOR_NODES){
     		if(!REMOVE_ALL.contains(o)){
@@ -460,7 +478,7 @@ public class WorkingSet {
     		ACC.clear();
     	}
     	else if( type.equals( "rem_ACC")){
-    		rem_ACC.clear();
+    		remember_ACC.clear();
     	}
     	else if( type.equals( "rm_all")){
     		REMOVE_ALL.clear();
@@ -472,15 +490,45 @@ public class WorkingSet {
     		//handle this
     	}
     }
+	
+	public void clearListsForNextSession(){
+		clear( "keep");
+        clear( "removeActive");
+ //       clear( "removeInactive");
+        clear( "colorNodes");
+//        clear( "remClicked");
+//        clear("parentToRoot");
+        clear("keepACC");
+	}
+	
+	public void clearAllLists(){
+		clear("ACC");
+    	clear("rem_ACC");
+    	clear("rm_all");
+    	clear( "keep");
+        clear( "removeActive");
+//        clear( "removeInactive");
+        clear( "colorNodes");
+//        clear( "remClicked");
+//        clear("parentToRoot");
+        clear("keepACC");
+	}
+	
+	public void clearSavedStuff(){
+		savedACC.clear();
+    	savedREMOVE_ALL.clear();
+	}
     
-    private void setRmFromWS( boolean b){
+	//################################## CLEAR ARRAYLISTS FINISH ###########################################//
+/*    private void setRmFromWS( boolean b){
 		rmFromWS = b;
-	}
+	}*/
 	
-	public boolean getRmFromWS(){
+/*	public boolean getRmFromWS(){
 		return rmFromWS;
-	}
+	}*/
 	
+	//################################## GETTERS FOR ARRAYLISTS BEGIN ###########################################//
 	public ArrayList getKeepSequenceIds(){
 		return KEEP_ACTIVE;
 	}
@@ -512,11 +560,13 @@ public class WorkingSet {
 	public ArrayList getACC(){
 		return ACC;
 	}
-	public ArrayList getRem_ACC(){
-		return rem_ACC;
+	public ArrayList getRemember_ACC(){
+		return remember_ACC;
 	}
 	public ArrayList getkeepACC(){
 		return keepACC;
 	}
+	
+	//################################## GETTERS FOR ARRAYLISTS FINISH ###########################################//
 	
 }
