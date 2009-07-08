@@ -17,7 +17,7 @@ public class Accession {
         	start=m.group(1);
         	j=m.end(1);
 	        while(start.contains("-")){
-	        	System.out.println("START in ATV treePANEL 1 " + start);
+//	        	System.out.println("START in ATV treePANEL 1 " + start);
 	        	p=Pattern.compile("(.*)-(.*)");
 	        	m=p.matcher(start);
 	        	if(m.matches()){
@@ -32,7 +32,7 @@ public class Accession {
         	start=m1.group(1);
         	j=m1.end(1);
 	        while(start.contains("-")){
-	        	System.out.println("START in ATV treePANEL 2 " + start);
+//	        	System.out.println("START in ATV treePANEL 2 " + start);
 	        	p1=Pattern.compile("(.*)-(.*)");
 	        	m1=p1.matcher(start);
 	        	if(m1.matches()){
@@ -62,7 +62,7 @@ public class Accession {
         	start=m.group(1);
         	j=m.end(1);
 	        while(start.contains("-")){
-	        	System.out.println("START in ATV treePANEL 1 " + start);
+//	        	System.out.println("START in ATV treePANEL 1 " + start);
 	        	p=Pattern.compile("(.*)-(.*)");
 	        	m=p.matcher(start);
 	        	if(m.matches()){
@@ -77,7 +77,7 @@ public class Accession {
         	start=m1.group(1);
         	j=m1.end(1);
 	        while(start.contains("-")){
-	        	System.out.println("START in ATV treePANEL 2 " + start);
+//	        	System.out.println("START in ATV treePANEL 2 " + start);
 	        	p1=Pattern.compile("(.*)-(.*)");
 	        	m1=p1.matcher(start);
 	        	if(m1.matches()){

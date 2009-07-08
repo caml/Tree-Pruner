@@ -2,13 +2,25 @@ package org.forester.archaeopteryx;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.forester.atv.ATVapplet;
 
+
+import com.Extropia.net.JavaCGIBridge;
+import com.Extropia.net.JavaBridge;
+import com.Extropia.net.JavaBridgeTimeOutException;
+import com.Extropia.net.JavaCGIBridgeTimeOutException;
+
+import com.lanl.application.treePruner.applet.AppletParams;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 import com.lanl.application.treePruner.applet.TreePrunerCommunicationMessageWarningWindow;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
@@ -262,28 +274,231 @@ public class ControlPanelAdditions {
 		
 		
 	}
-	//dont use controlPanel variable as call from AppletTerminate uses the empty constructore
+	//dont use controlPanel variable as call from AppletTerminate uses the empty constructor
 	//Beware of nullPointerException
 	public String saveToFileComm(String accToRemove){
 		lastAction="save";
 		String returnedString = "";
+
+		//################
+		Vector returnedDataSet = null;
+        URL u = null;
+        Hashtable formVars = new Hashtable();
+        String filename = AppletParams.filename;
+        if(isCommunicationGET()){
+        	JavaBridge jb = new JavaBridge();
+        	String getURL = getSetupFileForGET();
+        	try {
+                if (getURL.startsWith("http")) {
+                     u = new URL(getURL); 
+                } else {
+                     u = new URL( getURL);
+                }
+                jb.addFormValue(formVars,"comm", "on");
+                jb.addFormValue(formVars,
+                        "mark_in_DB",accToRemove);
+                jb.addFormValue(formVars,
+                            "filename",filename);
+                jb.addFormValue(formVars, "action", "save");  //BHB06--09
+                returnedDataSet = jb.getParsedData(u,formVars);
+        	}
+        	catch (MalformedURLException e) {
+                System.out.println("Malformed URL Exception:" + e);
+            } catch (JavaBridgeTimeOutException e) {   //BHB06--09
+                System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
+            }
+		}
+		else{
+			JavaCGIBridge jcb = new JavaCGIBridge();
+			String postURL =getSetupFileForPOST();
+			try {
+	            if (postURL.startsWith("http")) {
+	                 u = new URL(postURL); 
+	            } else {
+	                 u = new URL( postURL);
+	            }
+	            
+	            jcb.addFormValue(formVars,"comm", "on");
+	            jcb.addFormValue(formVars,
+	                "mark_in_DB",accToRemove);
+	            jcb.addFormValue(formVars,
+	                    "filename",filename);
+	            returnedDataSet = jcb.getParsedData(u,formVars);
+			}
+			catch (MalformedURLException e) {
+				System.out.println("Malformed URL Exception:" + e);
+			} catch (JavaCGIBridgeTimeOutException e) {
+				System.out.println("JavaCGIBridge Timed Out:" + e);
+			}
+		}
+        returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+	    System.out.println("returned string AT SaveToFile"+returnedString);
+
+		
+		//#################
+		
+		
 		return returnedString;
 	}
-	//dont use controlPanel variable as call from AppletTerminate uses the empty constructore
+	//dont use controlPanel variable as call from AppletTerminate uses the empty constructor
 	//Beware of nullPointerException
 	public String deleteFromDbComm (String accToRemove){
 		lastAction="delete";
 		String returnedString = "";
+		
+		//################
+		Vector returnedDataSet = null;
+        URL u = null;
+        Hashtable formVars = new Hashtable();
+        String filename = AppletParams.filename;
+        if(isCommunicationGET()){
+        	JavaBridge jb = new JavaBridge();
+        	String getURL = getSetupFileForGET();
+        	try {
+                if (getURL.startsWith("http")) {
+                     u = new URL(getURL); 
+                } else {
+                     u = new URL( getURL);
+                }
+                jb.addFormValue(formVars,"comm", "on");
+                jb.addFormValue(formVars,
+                    "delete_from_DB",accToRemove);
+                jb.addFormValue(formVars,
+                        "filename",filename);
+                jb.addFormValue(formVars, "action", "commit");  //BHB06--09
+                returnedDataSet = jb.getParsedData(u,formVars);
+        	}
+        	catch (MalformedURLException e) {
+                System.out.println("Malformed URL Exception:" + e);
+            } catch (JavaBridgeTimeOutException e) {   //BHB06--09
+                System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
+            }
+		}
+		else{
+			JavaCGIBridge jcb = new JavaCGIBridge();
+			String postURL =getSetupFileForPOST();
+			try {
+	            if (postURL.startsWith("http")) {
+	                 u = new URL(postURL); 
+	            } else {
+	                 u = new URL( postURL);
+	            }
+	            
+	            jcb.addFormValue(formVars,"comm", "on");
+	            jcb.addFormValue(formVars,
+	                "delete_from_DB",accToRemove);
+	            jcb.addFormValue(formVars,
+	                    "filename",filename);
+	            returnedDataSet = jcb.getParsedData(u,formVars);
+			}
+			catch (MalformedURLException e) {
+				System.out.println("Malformed URL Exception:" + e);
+			} catch (JavaCGIBridgeTimeOutException e) {
+				System.out.println("JavaCGIBridge Timed Out:" + e);
+			}
+		}
+	    returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+	    System.out.println("returned string AT SaveToFile"+returnedString);
+
+		
+		//#################
+
+		
 		return returnedString;
 	}
-	//dont use controlPanel variable as call from AppletTerminate uses the empty constructore
+	//dont use controlPanel variable as call from AppletTerminate uses the empty constructor
 	//Beware of nullPointerException
 	public String discardComm(){
 		lastAction="discard";
 		String returnedString ="";
+		
+		//################
+		Vector returnedDataSet = null;
+        URL u = null;
+        Hashtable formVars = new Hashtable();
+        String filename = AppletParams.filename;
+        if(isCommunicationGET()){
+        	JavaBridge jb = new JavaBridge();
+        	String getURL = getSetupFileForGET();
+        	try {
+                if (getURL.startsWith("http")) {
+                     u = new URL(getURL); 
+                } else {
+                     u = new URL( getURL);
+                }
+                jb.addFormValue(formVars,"comm", "on");
+                jb.addFormValue(formVars,
+                    "del_file","Delete filename");
+                jb.addFormValue(formVars,
+                        "filename",filename);
+                jb.addFormValue(formVars, "action", "discard");  //BHB06--09
+                returnedDataSet = jb.getParsedData(u,formVars);
+        	}
+        	catch (MalformedURLException e) {
+                System.out.println("Malformed URL Exception:" + e);
+            } catch (JavaBridgeTimeOutException e) {   //BHB06--09
+                System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
+            }
+		}
+		else{
+			JavaCGIBridge jcb = new JavaCGIBridge();
+			String postURL =getSetupFileForPOST();
+			try {
+	            if (postURL.startsWith("http")) {
+	                 u = new URL(postURL); 
+	            } else {
+	                 u = new URL( postURL);
+	            }
+	            
+	            jcb.addFormValue(formVars,"comm", "on");
+	            jcb.addFormValue(formVars,
+	                "del_file","Delete filename");
+	            jcb.addFormValue(formVars,
+	                    "filename",filename);
+	            returnedDataSet = jcb.getParsedData(u,formVars);
+			}
+			catch (MalformedURLException e) {
+				System.out.println("Malformed URL Exception:" + e);
+			} catch (JavaCGIBridgeTimeOutException e) {
+				System.out.println("JavaCGIBridge Timed Out:" + e);
+			}
+		}
+	    returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+	    System.out.println("returned string AT SaveToFile"+returnedString);
+
+		
+		//#################
+
+		
 		return returnedString;
 	}
 	
+	private String getSetupFileForPOST() {
+        String postURL = null;
+        try {
+            URL u = new URL(AppletParams.codeBase,"ATVserver.cgi");
+            postURL= u.toString();
+        } catch (MalformedURLException e) {
+            System.out.println("Malformed URL Exception:" + e);
+        } 
+        return postURL;
+    } // end of getSetupFilePOST
+	
+	private String getSetupFileForGET() {
+        String getURL = null;
+        try {
+        	URL u = new URL(AppletParams.URLprefix + "?"); //BHB06--09
+            System.out.println("URL in getSetupFile in ATVControl" + u); //BHB06--09 //changed text
+            getURL= u.toString();
+        } catch (MalformedURLException e) {
+            System.out.println("Malformed URL Exception:" + e);
+        } 
+        return getURL;
+    } // end of getSetupFileGET
+	
+	private boolean isCommunicationGET(){
+		return(AppletParams.URLprefix.length()>0);
+	}
 	
 
 }

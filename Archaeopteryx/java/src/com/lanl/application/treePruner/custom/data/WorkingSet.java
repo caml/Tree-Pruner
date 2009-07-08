@@ -347,49 +347,25 @@ public class WorkingSet {
 	//################################## CRASH RECOVERY ALGO BEGIN ###########################################//
     public void crashRecovery(ArrayList<String> ACC_in){
     	
-   // 	PARENT_TO_ROOT.clear();
-    	REMOVE_ALL.clear();
-  //  	REMOVE_INACTIVE.clear();
-//		REVERT_ACTIVE.clear();
-		keepACC.clear();
-		KEEP_ACTIVE.clear();
-		COLOR_NODES.clear();
-//		remClicked.clear();
-//		REVERT_ACTIVE.clear();
-//		rem_ACC.clear();
- //   	ACC.clear();
-    	//last_saved_ACC.clear();
+    	clearAllLists();
     	ACC.addAll(ACC_in);
     	ArrayList<PhylogenyNode> removed_nodes = new ArrayList<PhylogenyNode>();
     	ArrayList<PhylogenyNode> allNodes = SubTreePanel.getAllNodes();
     	
     	for ( PhylogenyNode pn : allNodes){
     		for( String o: ACC){
-    			
     			if(pn.extraNodeInfo.getNodeAcc()!=null){
 	    			if(pn.extraNodeInfo.getNodeAcc().equals(o)){
 	    				memorizeRemoveNodes(pn);
-	    				//if(!REMOVE_ALL.contains(pn.getNodeId())){
-	    					//REMOVE_ALL.add(pn.getNodeId());
-	    					//removed_nodes.add(pn);
-	    					
-	    				//}
 	    			}
     			}
     		}
     	}
-  //  	REMOVE_INACTIVE.clear();
-//		REVERT_ACTIVE.clear();
-		keepACC.clear();
+
+    	keepACC.clear();
 		KEEP_ACTIVE.clear();
 		COLOR_NODES.clear();
-//		remClicked.clear();
-//		REVERT_ACTIVE.clear();
 		remember_ACC.clear();
-//		PARENT_TO_ROOT.clear();
-    	//for ( PhylogenyNode n : removed_nodes){
-    	//	memorizeRemoveNodes(n);
-    	//}
     }
   //################################## CRASH RECOVERY ALGO FINISH ###########################################//
     

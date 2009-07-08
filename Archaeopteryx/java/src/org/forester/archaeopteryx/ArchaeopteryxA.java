@@ -41,8 +41,9 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
-import com.lanl.application.treePruner.applet.*;
-
+import com.lanl.application.treePruner.applet.AppletParams;
+import com.lanl.application.treePruner.applet.CrashRevovery;
+import com.lanl.application.treePruner.applet.SubTreePanel;
 //********************************************END**********************************************************//
 
 public class ArchaeopteryxA extends JApplet {
@@ -58,7 +59,9 @@ public class ArchaeopteryxA extends JApplet {
     private String             _message_1          = "";
     private String             _message_2          = "";
     public final static String NAME                = "ArchaeopteryxA";
-
+    //******************************************START**********************************************************//
+    private CrashRevovery crashRecovery = new CrashRevovery();
+    //********************************************END**********************************************************//
     @Override
     public void destroy() {
         Util.printAppletMessage( NAME, "going to be destroyed" );
@@ -136,7 +139,7 @@ public class ArchaeopteryxA extends JApplet {
       //******************************************START**********************************************************//
         SubTreePanel.mainAppletFrame = _mainframe_applet;
         getParams();
-        //crashRecovery();
+        crashRecovery.crashRecoveryInit();
       //********************************************END**********************************************************//
     }
 
@@ -203,10 +206,10 @@ public class ArchaeopteryxA extends JApplet {
     								URLprefix1, applicationType1, savedAcc1, savedAccFlag1);
     	
     	
-    //	System.out.println(AppletParams.applicationType + " " +AppletParams.configFilename+ " " +
-    //			AppletParams.filename + " " +AppletParams.codeBase + " " +
-    //			AppletParams.urlOfTreeToLoad + " " +AppletParams.savedAcc + " " + AppletParams.savedAccFlag +" "
-    // 			+ AppletParams.URLprefix);
+    	System.out.println(AppletParams.applicationType + " " +AppletParams.configFilename+ " " +
+    			AppletParams.filename + " " +AppletParams.codeBase + " " +
+    			AppletParams.urlOfTreeToLoad + " " +AppletParams.savedAcc + " " + AppletParams.savedAccFlag +" "
+     			+ "URL Prefix: "+AppletParams.URLprefix);
     }
     
     protected MainFrameApplet create_new_Frame(){
