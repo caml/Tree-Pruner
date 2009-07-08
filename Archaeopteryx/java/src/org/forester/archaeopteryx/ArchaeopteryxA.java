@@ -26,6 +26,8 @@
 package org.forester.archaeopteryx;
 
 import java.awt.Color;
+
+
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
@@ -37,6 +39,11 @@ import javax.swing.UIManager;
 
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
+
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.applet.*;
+
+//********************************************END**********************************************************//
 
 public class ArchaeopteryxA extends JApplet {
 
@@ -85,6 +92,7 @@ public class ArchaeopteryxA extends JApplet {
             setMessage2( "[Your Java version: " + s + "]" );
             repaint();
         }
+        
         final String config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL );
         Util.printAppletMessage( NAME, "URL for configuration file is: " + config_filename );
         final Configuration configuration = new Configuration( config_filename, true, true );
@@ -124,6 +132,12 @@ public class ArchaeopteryxA extends JApplet {
         getMainFrameApplet().requestFocus();
         getMainFrameApplet().requestFocusInWindow();
         getMainFrameApplet().requestFocus();
+        
+      //******************************************START**********************************************************//
+        SubTreePanel.mainAppletFrame = _mainframe_applet;
+        getParams();
+        //crashRecovery();
+      //********************************************END**********************************************************//
     }
 
     /**
@@ -173,4 +187,34 @@ public class ArchaeopteryxA extends JApplet {
     private void setUrlString( final String url_string ) {
         _url_string = url_string;
     }
+    
+    //******************************************START**********************************************************//
+    
+    private void getParams(){
+    	String urlOfTreeToLoad1 = getParameter(Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD);
+    	String configFileName1 = getParameter(Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL);
+    	String filename1 = getParameter("filename");
+    	String URLprefix1 = getParameter("URLPrefix");
+    	int applicationType1 = Integer.parseInt(getParameter("app_type"));
+    	String savedAcc1 = getParameter("saved_acc");
+    	String savedAccFlag1 = getParameter("saved_acc_flag");
+    	
+    	AppletParams.setAppletParams(urlOfTreeToLoad1, configFileName1, getCodeBase(), filename1,
+    								URLprefix1, applicationType1, savedAcc1, savedAccFlag1);
+    	
+    	
+    //	System.out.println(AppletParams.applicationType + " " +AppletParams.configFilename+ " " +
+    //			AppletParams.filename + " " +AppletParams.codeBase + " " +
+    //			AppletParams.urlOfTreeToLoad + " " +AppletParams.savedAcc + " " + AppletParams.savedAccFlag +" "
+    // 			+ AppletParams.URLprefix);
+    }
+    
+    protected MainFrameApplet create_new_Frame(){
+    		setUrlString(AppletParams.urlOfTreeToLoad);
+    		final Configuration configuration = new Configuration( AppletParams.configFilename, true, true );
+    		MainFrameApplet mfa = new MainFrameApplet( this, configuration );
+        	return mfa;
+        }
+    
+    //********************************************END**********************************************************//
 }

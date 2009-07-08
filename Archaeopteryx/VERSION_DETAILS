@@ -1,8 +1,0 @@
-This document will contain the version details for each tags in the GIT commit
-
-v0 : This is the as is checkin of the Archaeopteryx code base, directly checked in to archaeopteryx.git repository from sourceforge CVS
-TS: July 2 2009 1400(-4)
-
-v0.1: Removed all @overrides and changed TreePanel and perfume to get rid of errors. 
-      Added VERSION_DETAILS file 
-TS: July 2 2009 1545(-4)

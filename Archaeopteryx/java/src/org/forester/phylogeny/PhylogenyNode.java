@@ -41,6 +41,9 @@ import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
 import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.tree.node.ExtraNodeInfo;
+//********************************************END**********************************************************//
 public class PhylogenyNode implements PhylogenyNodeI, Comparable {
 
     /** Value of -99.0 is used as default value. */
@@ -61,6 +64,9 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
     private BranchData               _branch_data;
     private float                    _x_secondary;
     private float                    _y_secondary;
+//******************************************START**********************************************************//
+    public ExtraNodeInfo extraNodeInfo;
+//********************************************END**********************************************************//
 
     /**
      * Default constructor for PhylogenyNode.
@@ -916,6 +922,9 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
         _parent = null;
         _id = 0;
         initializeData();
+      //******************************************START**********************************************************//
+        extraNodeInfo = new ExtraNodeInfo();
+      //********************************************END**********************************************************//
     }
 
     // ---------------------------------------------------------

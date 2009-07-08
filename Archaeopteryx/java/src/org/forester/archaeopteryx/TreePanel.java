@@ -93,6 +93,15 @@ import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
+
+import com.lanl.application.treePruner.applet.AppletParams;
+import com.lanl.application.treePruner.applet.SubTreePanel;
+import java.net.URL;
+//********************************************END**********************************************************//
+
 public class TreePanel extends JPanel implements ActionListener, MouseWheelListener, Printable {
 
     private static final float             PI                                = ( float ) ( Math.PI );
@@ -184,7 +193,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     HashMap<Float, Integer>                _angles                           = new HashMap<Float, Integer>();
     Graphics2D                             _g2d                              = null;
     private AffineTransform                _at;
-
+    //******************************************START**********************************************************//
+    private SubTreePanel subTreePanel;
+    //********************************************END**********************************************************//
+    
     TreePanel( final Phylogeny t, final Configuration configuration, final MainPanel tjp ) {
         requestFocusInWindow();
         addKeyListener( new KeyAdapter() {
@@ -214,6 +226,12 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         if ( !_phylogeny.isEmpty() ) {
             _phylogeny.recalculateNumberOfExternalDescendants( true );
         }
+        //******************************************START**********************************************************//
+        subTreePanel = new SubTreePanel(this);
+        subTreePanel.setPhylogeny(t);
+        subTreePanel.setSubTreeNodeInfo();
+        subTreePanel.setFullTreeNodeInfo();
+        //********************************************END**********************************************************//
         setBackground( getTreeColorSet().getBackgroundColor() );
         final MouseListener mouse_listener = new MouseListener( this );
         addMouseListener( mouse_listener );
@@ -1349,9 +1367,63 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         return c;
     }
-
+    //******************************************START**********************************************************//
     void subTree( final PhylogenyNode node ) {
-        if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
+    	int temp_count = _subtree_index;
+    	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
+            SubTreePanel._phylogenies.add(_phylogeny);
+            SubTreePanel._phylogenies_subtree.add(_phylogeny.subTree( node.getNodeId() ));
+            
+            SubTreePanel.mainFrames.add(subTreePanel.archaeA.create_new_Frame());
+            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().repaint();
+            _subtree_index++;
+            Phylogeny[] phys=null;
+			try {
+				phys = Util.readPhylogeniesFromUrl( new URL(AppletParams.urlOfTreeToLoad) );
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            try {
+				Util.addPhylogeniesToTabs( phys, new File( new URL(AppletParams.urlOfTreeToLoad).getFile() ).getName(), 
+						AppletParams.urlOfTreeToLoad, SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getConfiguration(),
+						SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel() );
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().getControlPanel().showWholeAll();
+            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().adjustJScrollPane();
+            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().getCurrentTreePanel().repaint();
+            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).repaint();
+            
+            
+            this.updateSubSuperTreeButton();
+            SubTreePanel.sub_frame_count++;
+            SubTreePanel.mainAppletFrame.getMainPanel().getCurrentTreePanel().updateSubSuperTreeButton();
+        }
+        else if ( node.isRoot() && ( _subtree_index >= 1 ) ) {
+        	if(SubTreePanel._phylogenies_subtree.get(temp_count-1).getRoot().getNodeId()==node.getNodeId()){
+                int temp = SubTreePanel.sub_frame_count;
+                MainFrame mf=SubTreePanel.mainFrames.get(--temp);
+                mf.close();
+                updateSubSuperTreeButton();
+        	}
+        	else{
+        		JOptionPane.showMessageDialog( this, "You can only close on the most recent subtree window." );
+        	}
+        }
+    	_main_panel.getControlPanel().showWhole();
+        repaint();
+    }
+    /**
+    	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
             _phylogenies[ _subtree_index++ ] = _phylogeny;
             _phylogeny = _phylogeny.subTree( node.getNodeId() );
             updateSubSuperTreeButton();
@@ -1362,13 +1434,36 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         _main_panel.getControlPanel().showWhole();
         repaint();
     }
-
+     **/
+    
     void superTree() {
-        _phylogenies[ _subtree_index ] = null;
+    	Object[] options = {"Yes",
+							"No"};
+    	int n = JOptionPane.showOptionDialog(this,"You can only close the most recent subtree window. \n  "
+								+ "This action will close the most recent subtree window.\n" +
+										"Are you sure you would like to continue?",
+								"Action Interrupted",
+								JOptionPane.YES_NO_OPTION,
+								JOptionPane.QUESTION_MESSAGE,
+								null,
+								options,
+								options[0]);
+    	
+    	if(n==JOptionPane.YES_OPTION){
+    		int temp = SubTreePanel.sub_frame_count;
+            MainFrame mf=SubTreePanel.mainFrames.get(--temp);
+            mf.close();
+            updateSubSuperTreeButton();
+    	}
+    }
+    /**
+    	_phylogenies[ _subtree_index ] = null;
         _phylogeny = _phylogenies[ --_subtree_index ];
         updateSubSuperTreeButton();
     }
-
+    */
+    
+  //********************************************END**********************************************************//
     void swap( final PhylogenyNode node ) {
         if ( !node.isExternal() ) {
             _phylogeny.swapChildren( node );
@@ -3297,4 +3392,17 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             }
         }
     }
+    
+    //******************************************START**********************************************************//
+    
+    public void setPhylogeny(Phylogeny phylogeny){
+    	_phylogeny = phylogeny;
+    }
+    
+    public Phylogeny getCurrentPhylogeny(){
+    	return _phylogeny;
+    }
+    
+    
+    //********************************************END**********************************************************//
 }
