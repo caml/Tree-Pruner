@@ -101,6 +101,8 @@ import com.lanl.application.treePruner.custom.data.WorkingSet;
 import com.lanl.application.treePruner.custom.data.Accession;
 import com.lanl.application.treePruner.applet.AppletParams;
 import com.lanl.application.treePruner.applet.SubTreePanel;
+import com.lanl.application.treePruner.applet.TreePrunerColorSet;
+
 import java.net.URL;
 //********************************************END**********************************************************//
 
@@ -385,7 +387,12 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             g.setColor( PhylogenyMethods.getBranchColorValue( node ) );
         }
         else {
-            g.setColor( getTreeColorSet().getBranchColor() );
+        	//******************************************START CHANGED**********************************************************//
+        	treePrunerPaint.initArrayLists();
+            treePrunerPaint.paintKeepRemove(g,node);
+        //	g.setColor( getTreeColorSet().getBranchColor() ); //commented - changed
+            //********************************************END**********************************************************//
+            
         }
     }
 
@@ -1006,7 +1013,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                     + ( TreePanel.MOVE / 2.0f ) );
             // Color the background
             if ( !to_pdf ) {
-                g.setColor( getTreeColorSet().getBackgroundColor() );
+            	//******************************************START CHANGED**********************************************************//
+            	g.setColor(TreePrunerColorSet.getBackgroundColor());
+            	//g.setColor( getTreeColorSet().getBackgroundColor() );	  //Changed the background color from Back to white - changed
+            															  //(FOR TP only for now) - DO if else for TD and archae(origonal)
+                //********************************************END**********************************************************//
                 if ( to_graphics_file ) {
                     if ( getOptions().isPrintBlackAndWhite() ) {
                         g.setColor( Color.WHITE );

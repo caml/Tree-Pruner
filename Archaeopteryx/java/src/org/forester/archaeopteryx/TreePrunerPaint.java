@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
 
+import com.lanl.application.treePruner.applet.TreePrunerColorSet;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class TreePrunerPaint {
@@ -79,17 +80,17 @@ public class TreePrunerPaint {
 		 */
 
 		if (rmAllSeqIds.contains(node.getNodeId())) {
-			g.setColor(treePanel.getTheTreeColorSet().get_inactive_color());
+			g.setColor(TreePrunerColorSet.getRemoveColor());
 
 		} else if (colorNodesSeqIds.contains(node.getNodeId())) {
-			g.setColor(treePanel.getTheTreeColorSet().get_untouched_color());
+			g.setColor(TreePrunerColorSet.getInactiveInKeepColor());
 
 			// } else if (remClickedSeqIds.contains(node.getNodeId())) {
 			// g.setColor(treePanel.getTheTreeColorSet().get_species_name_color());
 		}
 
 		else {
-			g.setColor(treePanel.getTheTreeColorSet().getBranchColor());
+			g.setColor(TreePrunerColorSet.getDefaultBranchColor());
 
 		}
 	}

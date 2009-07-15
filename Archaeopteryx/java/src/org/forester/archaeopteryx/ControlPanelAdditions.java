@@ -36,7 +36,7 @@ public class ControlPanelAdditions {
 	private JButton refresh;
 	public static String lastAction="";
 	public static String autoSaveTime; //TODO
-
+	static TreePrunerCommunicationMessageWarningWindow warningWindow;
 	public ControlPanel controlPanel;
 	//public ControlPanelAdditions controlPanelExtras;
 	
@@ -101,8 +101,7 @@ public class ControlPanelAdditions {
 			String returnedString="";
             
             if(ws.toCommunicateWithServer()){
-            	TreePrunerCommunicationMessageWarningWindow warningWindow 
-            	= new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
+            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
                         " Please wait...","                                                  " +
                         		"                                                              ");
             	returnedString = saveToFileComm(accToRemove);
@@ -113,7 +112,7 @@ public class ControlPanelAdditions {
             	ws.copyStuffToSavedStuff();
             	
             	//System.out.println("++++++++++++_________________"+savedACC.toString() + savedREMOVE_ALL.toString());
-            	warningWindow.close();
+            	destroyWarningWindow();
             }
             else if(!ws.toCommunicateWithServer()){
             	
@@ -156,12 +155,12 @@ public class ControlPanelAdditions {
 	                String returnedString="";
 	                
 	                if (ws.toCommunicateWithServer()) {
-	                	TreePrunerCommunicationMessageWarningWindow warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-		                        " Please wait...","                                                  " +
-		                        		"                                                              ");
+	                	warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
+	                            " Please wait...","                                                  " +
+	                            		"                                                              ");
 						returnedString=deleteFromDbComm(accToRemove);
 						ws.copyAccToRememberAcc();
-						warningWindow.close();
+						destroyWarningWindow();
 						if(returnedString.equals("Accessions successfully deleted")){
 		                	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
 		                	
@@ -208,12 +207,12 @@ public class ControlPanelAdditions {
                 String returnedString="";
                 if (ws.toCommunicateWithServer()) {
                 	
-                	TreePrunerCommunicationMessageWarningWindow warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-	                        " Please wait...","                                                  " +
-	                        		"                                                              ");
+                	warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
+                            " Please wait...","                                                  " +
+                            		"                                                              ");
 					returnedString = deleteFromDbComm(accToRemove);
 					ws.copyAccToRememberAcc();
-					warningWindow.close();
+					destroyWarningWindow();
 					if(returnedString.equals("Accessions successfully deleted")){
 	                	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
 	                	
@@ -232,11 +231,11 @@ public class ControlPanelAdditions {
 	    }//end of delete from ws  //SIGMA END
         else if(e.getSource() == discard){
             String returnedString = "";
-            TreePrunerCommunicationMessageWarningWindow atvw = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
+            warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
                     " Please wait...","                                                  " +
                     		"                                                              ");
             returnedString = discardComm();
-            atvw.close();
+            destroyWarningWindow();
             if(returnedString.equals("success")){
             	System.out.println("Discard PRESSED \n");
             	System.out.println(this.toString() + "\n Server reurned: file successfully deleted");
@@ -302,9 +301,15 @@ public class ControlPanelAdditions {
                 jb.addFormValue(formVars, "action", "save");  //BHB06--09
                 returnedDataSet = jb.getParsedData(u,formVars);
         	}
+        	catch (NullPointerException e){            // Caught because the getURL is null when the Archae is run as TP/TD-Application
+				destroyWarningWindow();
+				System.out.println("Null Pointer Exception: " + e);
+			}
         	catch (MalformedURLException e) {
+        		destroyWarningWindow();
                 System.out.println("Malformed URL Exception:" + e);
             } catch (JavaBridgeTimeOutException e) {   //BHB06--09
+            	destroyWarningWindow();
                 System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
             }
 		}
@@ -325,13 +330,21 @@ public class ControlPanelAdditions {
 	                    "filename",filename);
 	            returnedDataSet = jcb.getParsedData(u,formVars);
 			}
+			catch (NullPointerException e){            // Caught because the postURL is null when the Archae is run as TP/TD-Application
+				destroyWarningWindow();
+				System.out.println("Null Pointer Exception: " + e);
+			}
 			catch (MalformedURLException e) {
+				destroyWarningWindow();
 				System.out.println("Malformed URL Exception:" + e);
 			} catch (JavaCGIBridgeTimeOutException e) {
+				destroyWarningWindow();
 				System.out.println("JavaCGIBridge Timed Out:" + e);
 			}
 		}
-        returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+        if(!returnedDataSet.isEmpty()){
+        	returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+        }
 	    System.out.println("returned string AT SaveToFile"+returnedString);
 
 		
@@ -368,9 +381,15 @@ public class ControlPanelAdditions {
                 jb.addFormValue(formVars, "action", "commit");  //BHB06--09
                 returnedDataSet = jb.getParsedData(u,formVars);
         	}
+        	catch (NullPointerException e){            // Caught because the getURL is null when the Archae is run as TP/TD-Application
+				destroyWarningWindow();
+				System.out.println("Null Pointer Exception: " + e);
+			}
         	catch (MalformedURLException e) {
+        		destroyWarningWindow();
                 System.out.println("Malformed URL Exception:" + e);
             } catch (JavaBridgeTimeOutException e) {   //BHB06--09
+            	destroyWarningWindow();
                 System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
             }
 		}
@@ -391,13 +410,21 @@ public class ControlPanelAdditions {
 	                    "filename",filename);
 	            returnedDataSet = jcb.getParsedData(u,formVars);
 			}
+			catch (NullPointerException e){            // Caught because the postURL is null when the Archae is run as TP/TD-Application
+				destroyWarningWindow();
+				System.out.println("Null Pointer Exception: " + e);
+			}
 			catch (MalformedURLException e) {
+				destroyWarningWindow();
 				System.out.println("Malformed URL Exception:" + e);
 			} catch (JavaCGIBridgeTimeOutException e) {
+				destroyWarningWindow();
 				System.out.println("JavaCGIBridge Timed Out:" + e);
 			}
 		}
-	    returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+        if(!returnedDataSet.isEmpty()){
+        	returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+        }
 	    System.out.println("returned string AT SaveToFile"+returnedString);
 
 		
@@ -434,9 +461,15 @@ public class ControlPanelAdditions {
                 jb.addFormValue(formVars, "action", "discard");  //BHB06--09
                 returnedDataSet = jb.getParsedData(u,formVars);
         	}
+        	catch (NullPointerException e){            // Caught because the getURL is null when the Archae is run as TP/TD-Application
+				destroyWarningWindow();
+				System.out.println("Null Pointer Exception: " + e);
+			}
         	catch (MalformedURLException e) {
+        		destroyWarningWindow();
                 System.out.println("Malformed URL Exception:" + e);
             } catch (JavaBridgeTimeOutException e) {   //BHB06--09
+            	destroyWarningWindow();
                 System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
             }
 		}
@@ -457,13 +490,21 @@ public class ControlPanelAdditions {
 	                    "filename",filename);
 	            returnedDataSet = jcb.getParsedData(u,formVars);
 			}
+			catch (NullPointerException e){            // Caught because the postURL is null when the Archae is run as TP/TD-Application
+				destroyWarningWindow();
+				System.out.println("Null Pointer Exception: " + e);
+			}
 			catch (MalformedURLException e) {
+				destroyWarningWindow();
 				System.out.println("Malformed URL Exception:" + e);
 			} catch (JavaCGIBridgeTimeOutException e) {
+				destroyWarningWindow();
 				System.out.println("JavaCGIBridge Timed Out:" + e);
 			}
 		}
-	    returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+        if(!returnedDataSet.isEmpty()){
+        	returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
+        }
 	    System.out.println("returned string AT SaveToFile"+returnedString);
 
 		
@@ -500,5 +541,11 @@ public class ControlPanelAdditions {
 		return(AppletParams.URLprefix.length()>0);
 	}
 	
+	private static void destroyWarningWindow(){
+        if(warningWindow!=null){
+        	warningWindow.close();
+                
+        }
+    }
 
 }
