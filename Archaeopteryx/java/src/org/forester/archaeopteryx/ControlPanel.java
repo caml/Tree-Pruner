@@ -57,6 +57,7 @@ import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
 import com.lanl.application.treePruner.applet.ControlPanelAdditions;
+import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
 //********************************************END**********************************************************//
 
 
@@ -1619,8 +1620,10 @@ public class ControlPanel extends JPanel implements ActionListener {
         }
         return label;
     }
-
-    enum NodeClickAction {
+  //******************************************START CHANGED**********************************************************//
+    public enum NodeClickAction {
+    //enum NodeClickAction {   none -> public - changed 	
+  //********************************************END**********************************************************//  	
         SHOW_DATA, COLLAPSE, REROOT, SUBTREE, SWAP, COLOR_SUBTREE
       //******************************************START**********************************************************//
         ,KEEP_SEQUENCES,REMOVE_SEQUENCES
@@ -1628,6 +1631,7 @@ public class ControlPanel extends JPanel implements ActionListener {
         ,OPEN_TAX_WEB, OPEN_SEQ_WEB;
     }
   //******************************************START**********************************************************//
+    
     public void addClickToOptionKeepRemove( final int which, final String title ) {
         _click_to_combobox.addItem( title );
         _click_to_names.add( title );
@@ -1709,6 +1713,10 @@ public class ControlPanel extends JPanel implements ActionListener {
     }
     public void addPanel(JPanel j_panel){
     	add (j_panel);
+    }
+    
+    public void set_action_whenNodeClicked( final NodeClickAction action ) {
+        _action_when_node_clicked = action;
     }
   //********************************************END**********************************************************//
 }

@@ -47,8 +47,15 @@ import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.archaeopteryx.Options.OVERVIEW_PLACEMENT_TYPE;
 import org.forester.archaeopteryx.Options.PHYLOGENY_GRAPHICS_TYPE;
 import org.forester.util.ForesterUtil;
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
+//********************************************END**********************************************************//
 
-final class Configuration {
+//******************************************START CHANGED**********************************************************//
+public class Configuration {
+//final class Configuration {   // final->public - changed
+//********************************************END**********************************************************//
+
 
     private static final String             WEB_LINK_KEY                  = "web_link";
     private static final String             DISPLAY_COLOR_KEY             = "display_color";
@@ -971,4 +978,14 @@ final class Configuration {
     static String getDefaultFontFamilyName() {
         return DEFAULT_FONT_FAMILY;
     }
+    
+  //******************************************START**********************************************************//
+    public boolean do_display_clickToOption( final int which ) {
+        return clickto_options[ which ][ 1 ].equals( "display" );
+    }
+    
+    public String get_click_toTitle( final int which ) {
+        return clickto_options[ which ][ 0 ];
+    }
+  //********************************************END**********************************************************//
 }

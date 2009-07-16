@@ -1,6 +1,8 @@
-package org.forester.archaeopteryx;
+package com.lanl.application.treePruner.applet;
 
-import org.forester.archaeopteryx.ControlPanel.NodeClickAction;
+import org.forester.archaeopteryx.Configuration;
+import org.forester.archaeopteryx.ControlPanel;
+import org.forester.archaeopteryx.ControlPanel.NodeClickAction;;
 
 
 
@@ -26,20 +28,20 @@ public class KeepRemoveConfiguration {
 	}
 	public int[] setupClickToOptions(int[] s, int defaultOption, ControlPanel cp) {
 		
-		if ( configuration.doDisplayClickToOption( KeepRemoveConfiguration._KEEP_SEQUENCES ) ) {
+		if ( configuration.do_display_clickToOption( KeepRemoveConfiguration._KEEP_SEQUENCES ) ) {
             _keepSequences = s[0];
             cp.addClickToOptionKeepRemove( KeepRemoveConfiguration._KEEP_SEQUENCES, 
-            							  configuration.getClickToTitle( KeepRemoveConfiguration._KEEP_SEQUENCES ) );
+            							  configuration.get_click_toTitle( KeepRemoveConfiguration._KEEP_SEQUENCES ) );
             if ( defaultOption == KeepRemoveConfiguration._KEEP_SEQUENCES ) {
                 s[1] = s[0];
             }
             s[0]++;
         }
 		
-		if ( configuration.doDisplayClickToOption( KeepRemoveConfiguration._REMOVE_SEQUENCES ) ) {
+		if ( configuration.do_display_clickToOption( KeepRemoveConfiguration._REMOVE_SEQUENCES ) ) {
             _removeSequences = s[0];
             cp.addClickToOptionKeepRemove( KeepRemoveConfiguration._REMOVE_SEQUENCES, 
-            							  configuration.getClickToTitle( KeepRemoveConfiguration._REMOVE_SEQUENCES ) );
+            							  configuration.get_click_toTitle( KeepRemoveConfiguration._REMOVE_SEQUENCES ) );
             if ( defaultOption == KeepRemoveConfiguration._REMOVE_SEQUENCES ) {
                 s[1] = s[0];
             }
@@ -49,10 +51,11 @@ public class KeepRemoveConfiguration {
 	}
 	public void setClickToAction( final int action, ControlPanel cp) {
 		if(action == _keepSequences ){
-			cp.setActionWhenNodeClicked( NodeClickAction.KEEP_SEQUENCES );
+			cp.set_action_whenNodeClicked( NodeClickAction.KEEP_SEQUENCES );
 		}
 		else if(action == _removeSequences){
-			cp.setActionWhenNodeClicked( NodeClickAction.REMOVE_SEQUENCES );
+			cp.set_action_whenNodeClicked( NodeClickAction.REMOVE_SEQUENCES );
 		}
 	}
+	
 }
