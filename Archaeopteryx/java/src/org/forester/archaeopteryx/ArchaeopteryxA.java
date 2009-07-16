@@ -212,7 +212,7 @@ public class ArchaeopteryxA extends JApplet {
      			+ "URL Prefix: "+AppletParams.URLprefix);
     }
     
-    protected MainFrameApplet create_new_Frame(){
+    public MainFrameApplet create_new_Frame(){
     		setUrlString(AppletParams.urlOfTreeToLoad);
     		final Configuration configuration = new Configuration( AppletParams.configFilename, true, true );
     		MainFrameApplet mfa = new MainFrameApplet( this, configuration );

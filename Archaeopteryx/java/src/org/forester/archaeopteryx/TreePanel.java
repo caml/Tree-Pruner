@@ -100,6 +100,7 @@ import java.net.MalformedURLException;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 import com.lanl.application.treePruner.custom.data.Accession;
 import com.lanl.application.treePruner.applet.AppletParams;
+import com.lanl.application.treePruner.applet.NewWindowSubtree;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
 
@@ -205,6 +206,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     public SubTreePanel subTreePanel;
     public TreePrunerPaint treePrunerPaint;
     public WorkingSet workingSet;
+    public NewWindowSubtree newWindowSubtree = new NewWindowSubtree(this);
     //********************************************END**********************************************************//
     
     TreePanel( final Phylogeny t, final Configuration configuration, final MainPanel tjp ) {
@@ -1388,62 +1390,12 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         return c;
     }
-    //******************************************START CHANGED**********************************************************//
+    
     void subTree( final PhylogenyNode node ) {
-    	int temp_count = _subtree_index;
-    	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
-            SubTreePanel._phylogenies.add(_phylogeny);
-            SubTreePanel._phylogenies_subtree.add(_phylogeny.subTree( node.getNodeId() ));
-            
-            SubTreePanel.mainFrames.add(subTreePanel.archaeA.create_new_Frame());
-            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().repaint();
-            _subtree_index++;
-            Phylogeny[] phys=null;
-			try {
-				phys = Util.readPhylogeniesFromUrl( new URL(AppletParams.urlOfTreeToLoad) );
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            try {
-				Util.addPhylogeniesToTabs( phys, new File( new URL(AppletParams.urlOfTreeToLoad).getFile() ).getName(), 
-						AppletParams.urlOfTreeToLoad, SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getConfiguration(),
-						SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel() );
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().getControlPanel().showWholeAll();
-            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().adjustJScrollPane();
-            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).getMainPanel().getCurrentTreePanel().repaint();
-            SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count).repaint();
-            
-            
-            this.updateSubSuperTreeButton();
-            SubTreePanel.sub_frame_count++;
-            SubTreePanel.mainAppletFrame.getMainPanel().getCurrentTreePanel().updateSubSuperTreeButton();
-        }
-        else if ( node.isRoot() && ( _subtree_index >= 1 ) ) {
-        	if(SubTreePanel._phylogenies_subtree.get(temp_count-1).getRoot().getNodeId()==node.getNodeId()){
-                int temp = SubTreePanel.sub_frame_count;
-                MainFrame mf=SubTreePanel.mainFrames.get(--temp);
-                mf.close();
-                updateSubSuperTreeButton();
-        	}
-        	else{
-        		JOptionPane.showMessageDialog( this, "You can only close on the most recent subtree window." );
-        	}
-        }
-    	_main_panel.getControlPanel().showWhole();
-        repaint();
-    }
-    /** ENTIRE METHOD of subTree(node) has been overwritten - changed
+    	//******************************************START CHANGED**********************************************************//
+    	newWindowSubtree.subTree(node, _phylogeny, subTreePanel);
+    	
+    	/** ENTIRE METHOD of subTree(node) has been overwritten - changed
     	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
             _phylogenies[ _subtree_index++ ] = _phylogeny;
             _phylogeny = _phylogeny.subTree( node.getNodeId() );
@@ -1454,37 +1406,27 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         _main_panel.getControlPanel().showWhole();
         repaint();
-    }
+    
      **/
+    	//********************************************END**********************************************************//
+    }
+    
     
     void superTree() {
-    	Object[] options = {"Yes",
-							"No"};
-    	int n = JOptionPane.showOptionDialog(this,"You can only close the most recent subtree window. \n  "
-								+ "This action will close the most recent subtree window.\n" +
-										"Are you sure you would like to continue?",
-								"Action Interrupted",
-								JOptionPane.YES_NO_OPTION,
-								JOptionPane.QUESTION_MESSAGE,
-								null,
-								options,
-								options[0]);
+    	//******************************************START CHANGED**********************************************************//
+    	newWindowSubtree.superTree();
     	
-    	if(n==JOptionPane.YES_OPTION){
-    		int temp = SubTreePanel.sub_frame_count;
-            MainFrame mf=SubTreePanel.mainFrames.get(--temp);
-            mf.close();
-            updateSubSuperTreeButton();
-    	}
-    }
-    /**  ENTIRE METHOD of superTree() has been overwritten - changed
+    	/**  ENTIRE METHOD of superTree() has been overwritten - changed
     	_phylogenies[ _subtree_index ] = null;
         _phylogeny = _phylogenies[ --_subtree_index ];
         updateSubSuperTreeButton();
-    }
-    */
     
-  //********************************************END**********************************************************//
+    */
+    	//********************************************END**********************************************************//
+    }
+    
+    
+  
     void swap( final PhylogenyNode node ) {
         if ( !node.isExternal() ) {
             _phylogeny.swapChildren( node );
@@ -3450,10 +3392,6 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     	return _phylogeny;
     }
     
-    public TreeColorSet getTheTreeColorSet() {
-        return getMainPanel().getTreeColorSet();
-    }
-    
     public static void reset_subtree_index(){
     	_subtree_index = 0; 
     }
@@ -3463,6 +3401,15 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     }
     public static int get_subtree_index(){
     	return _subtree_index; 
+    }
+    
+    public void update_subSuperTree_button() {
+        if ( _subtree_index < 1 ) {
+            getControlPanel().deactivateButtonToReturnToSuperTree();
+        }
+        else {
+            getControlPanel().activateButtonToReturnToSuperTree( _subtree_index );
+        }
     }
     //********************************************END**********************************************************//
 }

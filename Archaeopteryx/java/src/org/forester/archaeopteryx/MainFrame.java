@@ -446,6 +446,11 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     }
 
     void close() {
+    	/**
+    	 * NOTE TO PROGRAMMER
+    	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT public void closeSubTree(){...}. Hence whenever you make any changes here, also make changes in 
+    	 * public void closeSubTree(){...} 
+    	 */
       //******************************************START**********************************************************//
         if(appletTerminate.check_terminate(this)){
         //********************************************END**********************************************************//
@@ -1274,9 +1279,42 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         setVisible( false );
         dispose();
     }
-    
+    public MainPanel get_main_panel() {
+        return _mainpanel;
+    }
     public void repaintPanel(){
     	this.getMainPanel().repaint();
+    }
+    
+    public Configuration get_configuration() {
+        return _configuration;
+    }
+    
+    public void closeSubTree() {
+    	/**
+    	 * NOTE TO PROGRAMMER
+    	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT void close(){...}. Hence whenever you make any changes here, also make changes in 
+    	 * void close(){...} 
+    	 */
+      //******************************************START**********************************************************//
+        if(appletTerminate.check_terminate(this)){
+        //********************************************END**********************************************************//
+        removeTextFrame();
+        if ( _mainpanel != null ) {
+            _mainpanel.terminate();
+        }
+        if ( _contentpane != null ) {
+            _contentpane.removeAll();
+        }
+        setVisible( false );
+        dispose();
+      //******************************************START**********************************************************//
+        }
+        else{
+        	appletTerminate.closeAdditionalTasks();
+        }
+      //********************************************END**********************************************************//
+      
     }
     //********************************************END**********************************************************//
 }

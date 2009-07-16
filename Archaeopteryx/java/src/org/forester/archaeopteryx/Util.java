@@ -65,8 +65,11 @@ import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
 import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
+//******************************************START CHANGED**********************************************************//
+public class Util {
+//final class Util {  //changed class from final to public - changed	
+//********************************************END**********************************************************//
 
-final class Util {
 
     private final static String[] AVAILABLE_FONT_FAMILIES_SORTED = GraphicsEnvironment.getLocalGraphicsEnvironment()
                                                                          .getAvailableFontFamilyNames();
@@ -661,4 +664,53 @@ final class Util {
             return _suffix;
         }
     }
+    //******************************************START**********************************************************//
+    public static void addPhylogeniesToTabsForSubtree( final Phylogeny[] phys,
+            final String default_name,
+            final String full_path,
+            final Configuration configuration,
+            final MainPanel main_panel ) {
+    	int i = 1;
+    	if ( phys.length > Constants.MAX_TREES_TO_LOAD ) {
+    		JOptionPane.showMessageDialog( main_panel, "Attempt to load " + phys.length
+    				+ " phylogenies,\ngoing to load only the first " + Constants.MAX_TREES_TO_LOAD, Constants.PRG_NAME
+    				+ " more than " + Constants.MAX_TREES_TO_LOAD + " phylogenies", JOptionPane.WARNING_MESSAGE );
+    	}
+    	for( final Phylogeny phy : phys ) {
+    		if ( i <= Constants.MAX_TREES_TO_LOAD ) {
+    			String my_name = new String( default_name );
+    			String my_name_for_file = new String( default_name );
+    			if ( phys.length > 1 ) {
+    				if ( !ForesterUtil.isEmpty( my_name ) && ForesterUtil.isEmpty( phy.getName() )
+    						&& ( phy.getIdentifier() == null ) ) {
+    					my_name = my_name + " [" + i + "]";
+    				}
+    				if ( !ForesterUtil.isEmpty( my_name ) && !ForesterUtil.isEmpty( phy.getName() ) ) {
+    					my_name_for_file = phy.getName();
+    				}
+    				else if ( !ForesterUtil.isEmpty( my_name ) ) {
+    					my_name_for_file = i + "_" + my_name_for_file;
+    				}
+    			}
+    			main_panel.addPhylogenyInNewTab( phy, configuration, my_name, full_path );
+    			main_panel.getCurrentTreePanel().setTreeFile( new File( my_name_for_file ) );
+    			lookAtSomeTreePropertiesForAptxControlSettings( phy, main_panel.getControlPanel(), configuration );
+    		}
+    		++i;
+    	}
+    }
+    
+    public static Phylogeny[] readPhylogeniesFromUrlForSubtree( final URL url ) throws FileNotFoundException, IOException {
+        final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
+        PhylogenyParser parser = null;
+        if ( url.getHost().toLowerCase().indexOf( "tolweb" ) >= 0 ) {
+            parser = new TolParser();
+        }
+        else {
+            parser = ForesterUtil.createParserDependingOnUrlContents( url );
+        }
+        return factory.create( url.openStream(), parser );
+    }
+    
+    //********************************************END**********************************************************//
 }

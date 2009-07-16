@@ -385,6 +385,32 @@ public class MainPanel extends JPanel implements ComponentListener {
     public MainFrame returnMainFrame(){
     	return _mainframe;
     }
+    public ControlPanel get_control_panel() {
+        return _control_panel;
+    }
+    
+    public void adjust_JScroll_pane() {
+        if ( getTabbedPane() != null ) {
+            getCurrentScrollPanePanel().remove( getCurrentScrollPane() );
+            getCurrentScrollPanePanel().add( getCurrentScrollPane(), BorderLayout.CENTER );
+        }
+        getCurrentScrollPane().revalidate();
+    }
+    
+    public  TreePanel get_current_treePanel() {
+        final int selected = getTabbedPane().getSelectedIndex();
+        if ( selected >= 0 ) {
+            return _treepanels.get( selected );
+        }
+        else {
+            if ( _treepanels.size() == 1 ) {
+                return _treepanels.get( 0 );
+            }
+            else {
+                return null;
+            }
+        }
+    }
    //********************************************END**********************************************************//
 }
 

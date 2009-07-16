@@ -57,8 +57,11 @@ import org.forester.util.ForesterUtil;
 
 
 
+//******************************************START CHANGED**********************************************************//
+public class ControlPanel extends JPanel implements ActionListener {
+//final class ControlPanel extends JPanel implements ActionListener {  //final->public - changed
+//********************************************END**********************************************************//
 
-final class ControlPanel extends JPanel implements ActionListener {
 
     private static final String  RETURN_TO_SUPER_TREE_TEXT = "Back to Super Tree";
     final static Font            jcb_font                  = new Font( Configuration.getDefaultFontFamilyName(),
@@ -1630,6 +1633,42 @@ final class ControlPanel extends JPanel implements ActionListener {
             _click_to_combobox.setBackground( Constants.BUTTON_BACKGROUND_COLOR_DEFAULT );
             _click_to_combobox.setForeground( Constants.BUTTON_TEXT_COLOR_DEFAULT );
         }
+    }
+    
+    public void show_whole_all() {
+        for( final TreePanel tree_panel : _mainpanel.getTreePanels() ) {
+            if ( tree_panel != null ) {
+                tree_panel.validate();
+                tree_panel.setParametersForPainting( _mainpanel.getSizeOfViewport().width, _mainpanel
+                        .getSizeOfViewport().height, true );
+                tree_panel.resetPreferredSize();
+                tree_panel.repaint();
+            }
+        }
+    }
+    
+    public void show_whole() {
+        if ( _mainpanel.getCurrentScrollPane() == null ) {
+            return;
+        }
+        _mainpanel.getCurrentTreePanel().updateOvSettings();
+        _mainpanel.getCurrentTreePanel().validate();
+        _mainpanel.validate();
+        _mainpanel.getCurrentTreePanel().setParametersForPainting( _mainpanel.getSizeOfViewport().width,
+                                                                   _mainpanel.getSizeOfViewport().height,
+                                                                   true );
+        _mainpanel.getCurrentTreePanel().resetPreferredSize();
+        _mainpanel.adjustJScrollPane();
+        _mainpanel.getCurrentTreePanel().repaint();
+        _mainpanel.getCurrentTreePanel().validate();
+        _mainpanel.validate();
+        _mainpanel.getCurrentTreePanel().setParametersForPainting( _mainpanel.getSizeOfViewport().width,
+                                                                   _mainpanel.getSizeOfViewport().height,
+                                                                   true );
+        _mainpanel.getCurrentTreePanel().resetPreferredSize();
+        _mainpanel.adjustJScrollPane();
+        _mainpanel.getCurrentTreePanel().repaint();
+        _mainpanel.getCurrentTreePanel().updateOvSizes();
     }
     
     public void addLabel(JLabel j_label){
