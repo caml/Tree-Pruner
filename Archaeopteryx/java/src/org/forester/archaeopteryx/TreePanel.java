@@ -94,17 +94,13 @@ import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
-import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
 
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 import com.lanl.application.treePruner.custom.data.Accession;
-import com.lanl.application.treePruner.applet.AppletParams;
 import com.lanl.application.treePruner.applet.NewWindowSubtree;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
-
-import java.net.URL;
+import com.lanl.application.treePruner.applet.TreePrunerPaint;
 //********************************************END**********************************************************//
 
 public class TreePanel extends JPanel implements ActionListener, MouseWheelListener, Printable {

@@ -1,4 +1,4 @@
-package org.forester.archaeopteryx;
+package com.lanl.application.treePruner.applet;
 
 import java.awt.Color;
 
@@ -6,10 +6,10 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 
 
+import org.forester.archaeopteryx.TreePanel;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
 
-import com.lanl.application.treePruner.applet.TreePrunerColorSet;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class TreePrunerPaint {
