@@ -55,6 +55,9 @@ import org.forester.phylogeny.PhylogenyMethods;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.applet.ControlPanelAdditions;
+//********************************************END**********************************************************//
 
 
 //******************************************START CHANGED**********************************************************//
@@ -1669,6 +1672,36 @@ public class ControlPanel extends JPanel implements ActionListener {
         _mainpanel.adjustJScrollPane();
         _mainpanel.getCurrentTreePanel().repaint();
         _mainpanel.getCurrentTreePanel().updateOvSizes();
+    }
+    
+    public void add_additional_JButton( final JButton jb, final JPanel p ) {
+        jb.setFocusPainted( false );
+        jb.setFont( ControlPanel.jcb_font );
+        if ( !_configuration.isUseNativeUI() ) {
+            jb.setBorder( BorderFactory.createLineBorder( ControlPanel.button_border_color ) );
+            jb.setBackground( ControlPanel.button_background_color );
+            jb.setForeground( ControlPanel.button_text_color );
+        }
+        p.add( jb );
+        jb.addActionListener( this );
+    }
+    
+    public void displayed_phylogeny_mightHaveChanged( final boolean recalc_longest_ext_node_info ) {
+        if ( ( _mainpanel != null ) && ( _mainpanel.getCurrentPhylogeny() != null ) ) {
+            if ( getOptions().isShowOverview() ) {
+                _mainpanel.getCurrentTreePanel().updateOvSizes();
+            }
+            setVisibilityOfDomainStrucureControls();
+            updateDomainStructureEvaluethresholdDisplay();
+            _mainpanel.getCurrentTreePanel().calculateScaleDistance();
+            _mainpanel.getCurrentTreePanel().calcMaxDepth();
+            _mainpanel.adjustJScrollPane();
+            if ( recalc_longest_ext_node_info ) {
+                _mainpanel.getCurrentTreePanel().initNodeData();
+                _mainpanel.getCurrentTreePanel().calculateLongestExtNodeInfo();
+            }
+            _mainpanel.getCurrentTreePanel().repaint();
+        }
     }
     
     public void addLabel(JLabel j_label){

@@ -2,7 +2,6 @@ package com.lanl.application.treePruner.applet;
 
 import javax.swing.JOptionPane;
 
-import org.forester.archaeopteryx.ControlPanelAdditions;
 import org.forester.archaeopteryx.MainFrame;
 import org.forester.archaeopteryx.MainPanel;
 import org.forester.archaeopteryx.TreePanel;

@@ -1,4 +1,4 @@
-package org.forester.archaeopteryx;
+package com.lanl.application.treePruner.applet;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -12,6 +12,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.forester.archaeopteryx.ControlPanel;
+import org.forester.archaeopteryx.MainFrame;
 import org.forester.atv.ATVapplet;
 
 
@@ -20,9 +22,6 @@ import com.Extropia.net.JavaBridge;
 import com.Extropia.net.JavaBridgeTimeOutException;
 import com.Extropia.net.JavaCGIBridgeTimeOutException;
 
-import com.lanl.application.treePruner.applet.AppletParams;
-import com.lanl.application.treePruner.applet.SubTreePanel;
-import com.lanl.application.treePruner.applet.TreePrunerCommunicationMessageWarningWindow;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class ControlPanelAdditions {
@@ -67,17 +66,17 @@ public class ControlPanelAdditions {
 		final JLabel spacer2 = new JLabel("");
 		final JLabel spacer3 = new JLabel("");
 		controlPanel.addLabel(spacer2);
-		controlPanel.addJButton(refresh, controlPanel);
+		controlPanel.add_additional_JButton(refresh, controlPanel);
 		
 		controlPanel.addLabel(spacer);
 		controlPanel.addLabel(spacer2);
-		controlPanel.addJButton(save_to_file, controlPanel);
+		controlPanel.add_additional_JButton(save_to_file, controlPanel);
 		final JPanel discard_panel = new JPanel(new GridLayout(1, 2, 0, 0));
 		discard_panel.setBackground(controlPanel.getBackground());
 		controlPanel.addPanel(discard_panel);
-		controlPanel.addJButton(discard, discard_panel);
-		controlPanel.addJButton(undo, discard_panel);
-		controlPanel.addJButton(delete_from_db, controlPanel);
+		controlPanel.add_additional_JButton(discard, discard_panel);
+		controlPanel.add_additional_JButton(undo, discard_panel);
+		controlPanel.add_additional_JButton(delete_from_db, controlPanel);
 		
 		controlPanel.addLabel(spacer3);
 
@@ -88,10 +87,10 @@ public class ControlPanelAdditions {
         	for(MainFrame o: SubTreePanel.mainFrames){
         		if(o!=null)
         			//paint all slave windows
-        			o.getMainPanel().repaint();
+        			o.repaintPanel();
         	}
         	//paint the master window
-        	SubTreePanel.mainAppletFrame.getMainPanel().repaint();
+        	SubTreePanel.mainAppletFrame.repaintPanel();
         }
 		
 		//#######################
@@ -247,7 +246,7 @@ public class ControlPanelAdditions {
 			
             ws.clearAllLists();
             
-           controlPanel.displayedPhylogenyMightHaveChanged(true);
+           controlPanel.displayed_phylogeny_mightHaveChanged(true);
             ws.clear("rm_all");
             /*if(s.equals("Accessions successfully deleted")){
             	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);

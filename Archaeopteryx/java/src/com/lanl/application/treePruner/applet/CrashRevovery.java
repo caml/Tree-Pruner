@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.forester.archaeopteryx.ControlPanelAdditions;
 
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
