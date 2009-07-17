@@ -35,7 +35,7 @@ public class AutoSave {
 		
 	}
 	
-	private void refreshAutoSaveTimeInAllFrames(){
+	public void refreshAutoSaveTimeInAllFrames(){
 		for(MainFrame mf : SubTreePanel.mainFrames){
 			mf.get_main_panel().get_control_panel().controlPanelAdditions.autoSave.autoSaveTimeLabel.setText(autoSaveTimeTEXT + autoSaveDateTime);
 		}

@@ -276,6 +276,7 @@ public class ControlPanelAdditions {
 			
             ws.clearAllLists();
             AutoSave.resetAutoSave();
+            autoSave.refreshAutoSaveTimeInAllFrames();
             
            controlPanel.displayed_phylogeny_mightHaveChanged(true);
             ws.clear("rm_all");
