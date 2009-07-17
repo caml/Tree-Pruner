@@ -119,7 +119,7 @@ public final class MainFrameApplet extends MainFrame {
         setSize( FRAME_X_SIZE, FRAME_Y_SIZE );
       //******************************************START CHANGED**********************************************************//
         addWindowListener(closeWindowAdapter);
-        /**addWindowListener( new WindowAdapter() {  //Using predefined variable closeWindowAdapter
+        /**addWindowListener( new WindowAdapter() {  //Using predefined variable closeWindowAdapter - changed
 
             @Override
             public void windowClosing( final WindowEvent e ) {
