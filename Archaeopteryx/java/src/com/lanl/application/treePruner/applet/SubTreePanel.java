@@ -30,6 +30,7 @@ public class SubTreePanel {
 	public SubTreePanel(TreePanel tp){
 		this.treePanel = tp;
 	}
+	public static ArrayList<Integer> subTreeHierarchy = new ArrayList<Integer>();
 	public static MainFrameApplet mainAppletFrame;
 	
 	public void setPhylogeny(Phylogeny t){
@@ -68,6 +69,7 @@ public class SubTreePanel {
 	public static void clearListsOnClose(){
 		mainFrames.clear();
         _phylogenies.clear();
+        subTreeHierarchy.clear();
         _phylogenies_subtree.clear();
         sub_frame_count=0;
         TreePanel.reset_subtree_index();

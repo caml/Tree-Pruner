@@ -63,7 +63,10 @@ import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import com.lanl.application.treePruner.applet.AppletTerminate;
+import com.lanl.application.treePruner.applet.NewWindowSubtree;
 //********************************************END**********************************************************//
 
 
@@ -181,6 +184,13 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     Options                   _options;
   //******************************************START**********************************************************//
     AppletTerminate appletTerminate = new AppletTerminate(this);
+    public WindowAdapter closeWindowAdapter = new WindowAdapter(){
+
+        @Override
+        public void windowClosing( final WindowEvent e ) {
+            close();
+        }
+    };
    //********************************************END**********************************************************//
     MainFrame() {
         // Empty constructor.
@@ -464,6 +474,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         setVisible( false );
         dispose();
       //******************************************START**********************************************************//
+        NewWindowSubtree.handleBackToSubTreeButton();
+        NewWindowSubtree.handleCloseXButton();
         }
         else{
         	appletTerminate.closeAdditionalTasks();
@@ -1290,7 +1302,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         return _configuration;
     }
     
-    public void closeSubTree() {
+    public void close_() {
     	/**
     	 * NOTE TO PROGRAMMER
     	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT void close(){...}. Hence whenever you make any changes here, also make changes in 
@@ -1309,6 +1321,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         setVisible( false );
         dispose();
       //******************************************START**********************************************************//
+        NewWindowSubtree.handleBackToSubTreeButton();
+        NewWindowSubtree.handleCloseXButton();
         }
         else{
         	appletTerminate.closeAdditionalTasks();

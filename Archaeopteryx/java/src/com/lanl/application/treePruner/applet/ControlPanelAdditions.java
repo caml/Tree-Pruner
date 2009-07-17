@@ -34,9 +34,13 @@ public class ControlPanelAdditions {
 	private JButton undo;
 	private JButton refresh;
 	public static String lastAction="";
-	public static String autoSaveTime; //TODO
+	public static JLabel autoSaveTime; //TODO
+	public static String autoSaveTimeTEXT = "Last Autosaved at: ";
+	public JLabel subTreeWindowHierarchy;
+	public static String subTreeWindowHierarchyTEXT ="Subtree: ";
 	static TreePrunerCommunicationMessageWarningWindow warningWindow;
 	public ControlPanel controlPanel;
+	
 	//public ControlPanelAdditions controlPanelExtras;
 	
 	public ControlPanelAdditions() {
@@ -78,10 +82,34 @@ public class ControlPanelAdditions {
 		controlPanel.add_additional_JButton(undo, discard_panel);
 		controlPanel.add_additional_JButton(delete_from_db, controlPanel);
 		
-		controlPanel.addLabel(spacer3);
+	//	controlPanel.addLabel(spacer3);
 
 	}
 	
+	public void addSubTreeWindowHierarchyLabel(){
+		String hierarchyNumber="1.";
+		for(int i = 0;i <= SubTreePanel.subTreeHierarchy.size()-1;i++){
+			hierarchyNumber+= SubTreePanel.subTreeHierarchy.get(i).toString();
+			if(i==SubTreePanel.subTreeHierarchy.size()-1){
+				
+			}
+			else{
+				hierarchyNumber+=".";
+			}
+		}
+		if(hierarchyNumber=="1."){
+			hierarchyNumber = "1";
+		}
+		final JLabel spacer = new JLabel("");
+		subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT+ hierarchyNumber,JLabel.CENTER);
+		subTreeWindowHierarchy.setVerticalTextPosition(JLabel.TOP);
+		subTreeWindowHierarchy.setHorizontalTextPosition(JLabel.CENTER);
+		controlPanel.addLabel(subTreeWindowHierarchy);
+	}
+	public void addAutoSaveLabel(){
+	
+	}
+
 	public void addTreePrunerButtonFunctions(ActionEvent e){
 		if ( e.getSource() == refresh ) {
         	for(MainFrame o: SubTreePanel.mainFrames){

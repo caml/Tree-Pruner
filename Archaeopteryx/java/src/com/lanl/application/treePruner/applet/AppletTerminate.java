@@ -19,7 +19,8 @@ public class AppletTerminate {
 	public AppletTerminate(MainFrame mf) {
 		this.mainFrame = mf;
 	}
-
+	
+	@Deprecated
 	public void closeAdditionalTasks() {
 		JOptionPane
 				.showMessageDialog(
@@ -64,6 +65,7 @@ public class AppletTerminate {
 		// empty
 	}
 
+	
 	public void terminateAdditionalTasks(MainPanel mainPanel) {
 		if(SubTreePanel.mainFrames.isEmpty()||SubTreePanel.mainFrames.size()<1 
 				|| SubTreePanel.sub_frame_count==0){
@@ -181,6 +183,7 @@ public class AppletTerminate {
 	    		
     			SubTreePanel._phylogenies_subtree.remove(n);
     			SubTreePanel._phylogenies.remove(n);
+    			SubTreePanel.subTreeHierarchy.remove(n);
     			SubTreePanel.sub_frame_count = SubTreePanel.sub_frame_count-1;
 	    		TreePanel.set_subtree_index(TreePanel.get_subtree_index()-1);
 	    		//ATVappletFrame atvf=ATVtreePanel.atvFrames.get(--ATVtreePanel.sub_frame_count);

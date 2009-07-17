@@ -990,6 +990,10 @@ public class ControlPanel extends JPanel implements ActionListener {
         endClickToOptions();
         // Zoom and quick edit buttons
         addButtons();
+      //******************************************START**********************************************************//
+     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
+     controlPanelAdditions.addAutoSaveLabel();
+      //********************************************END**********************************************************//
         setupSearchTools();
     }
 

@@ -3399,12 +3399,12 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     	return _subtree_index; 
     }
     
-    public void update_subSuperTree_button() {
-        if ( _subtree_index < 1 ) {
+    public void updateSubSuperTreeButton(boolean deactivate) {
+        if ( deactivate ) {
             getControlPanel().deactivateButtonToReturnToSuperTree();
         }
         else {
-            getControlPanel().activateButtonToReturnToSuperTree( _subtree_index );
+            getControlPanel().activateButtonToReturnToSuperTree( 0 );
         }
     }
     //********************************************END**********************************************************//

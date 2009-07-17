@@ -53,7 +53,7 @@ public final class MainFrameApplet extends MainFrame {
     private static final long    serialVersionUID = 1941019292746717053L;
     private final static int     FRAME_X_SIZE     = 640, FRAME_Y_SIZE = 580;
     private final ArchaeopteryxA _applet;
-
+  
     MainFrameApplet( final ArchaeopteryxA parent_applet, final Configuration configuration ) {
         setTitle( ArchaeopteryxA.NAME );
         _applet = parent_applet;
@@ -117,14 +117,18 @@ public final class MainFrameApplet extends MainFrame {
         _contentpane.setLayout( new BorderLayout() );
         _contentpane.add( _mainpanel, BorderLayout.CENTER );
         setSize( FRAME_X_SIZE, FRAME_Y_SIZE );
-        addWindowListener( new WindowAdapter() {
+      //******************************************START CHANGED**********************************************************//
+        addWindowListener(closeWindowAdapter);
+        /**addWindowListener( new WindowAdapter() {  //Using predefined variable closeWindowAdapter
 
             @Override
             public void windowClosing( final WindowEvent e ) {
                 close();
             }
-        } );
-        addComponentListener( new ComponentAdapter() {
+        } );*/
+
+        //********************************************END**********************************************************//
+                addComponentListener( new ComponentAdapter() {
 
             @Override
             public void componentResized( final ComponentEvent e ) {
