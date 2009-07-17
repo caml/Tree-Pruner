@@ -149,7 +149,7 @@ public class ControlPanel extends JPanel implements ActionListener {
     private JLabel               _search_found_label;
 
     //******************************************START**********************************************************//
-    private ControlPanelAdditions controlPanelAdditions;
+    public ControlPanelAdditions controlPanelAdditions;
     private KeepRemoveConfiguration keepRemoveConfiguration;
     //********************************************END**********************************************************//
     ControlPanel( final MainPanel ap, final Configuration config_settings ) {
@@ -992,7 +992,7 @@ public class ControlPanel extends JPanel implements ActionListener {
         addButtons();
       //******************************************START**********************************************************//
      controlPanelAdditions.addSubTreeWindowHierarchyLabel();
-     controlPanelAdditions.addAutoSaveLabel();
+     controlPanelAdditions.callAutosaveToAdd();
       //********************************************END**********************************************************//
         setupSearchTools();
     }

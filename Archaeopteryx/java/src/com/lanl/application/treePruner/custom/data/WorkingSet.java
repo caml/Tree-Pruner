@@ -18,6 +18,7 @@ import org.forester.archaeopteryx.TreePanel;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 
+import com.lanl.application.treePruner.applet.AutoSave;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 
 import java.util.*;
@@ -346,8 +347,9 @@ public class WorkingSet {
 	
 	//################################## CRASH RECOVERY ALGO BEGIN ###########################################//
     public void crashRecovery(ArrayList<String> ACC_in){
-    	
+    	SubTreePanel.clearListsOnClose();
     	clearAllLists();
+    	AutoSave.resetAutoSave();
     	ACC.addAll(ACC_in);
     	ArrayList<PhylogenyNode> removed_nodes = new ArrayList<PhylogenyNode>();
     	ArrayList<PhylogenyNode> allNodes = SubTreePanel.getAllNodes();

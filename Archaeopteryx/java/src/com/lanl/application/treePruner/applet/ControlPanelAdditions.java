@@ -34,13 +34,11 @@ public class ControlPanelAdditions {
 	private JButton undo;
 	private JButton refresh;
 	public static String lastAction="";
-	public static JLabel autoSaveTime; //TODO
-	public static String autoSaveTimeTEXT = "Last Autosaved at: ";
-	public JLabel subTreeWindowHierarchy;
+	public JLabel subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT,JLabel.CENTER);;
 	public static String subTreeWindowHierarchyTEXT ="Subtree: ";
 	static TreePrunerCommunicationMessageWarningWindow warningWindow;
 	public ControlPanel controlPanel;
-	
+	public AutoSave autoSave = new AutoSave();
 	//public ControlPanelAdditions controlPanelExtras;
 	
 	public ControlPanelAdditions() {
@@ -100,15 +98,19 @@ public class ControlPanelAdditions {
 		if(hierarchyNumber=="1."){
 			hierarchyNumber = "1";
 		}
-		final JLabel spacer = new JLabel("");
-		subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT+ hierarchyNumber,JLabel.CENTER);
+		subTreeWindowHierarchy.setText(subTreeWindowHierarchyTEXT + hierarchyNumber);
 		subTreeWindowHierarchy.setVerticalTextPosition(JLabel.TOP);
 		subTreeWindowHierarchy.setHorizontalTextPosition(JLabel.CENTER);
 		controlPanel.addLabel(subTreeWindowHierarchy);
 	}
-	public void addAutoSaveLabel(){
-	
+	public void callAutosaveToAdd(){
+		AutoSave.doAutoSave(this, ws, warningWindow);
+		autoSave.addAutoSaveLabel(controlPanel);
 	}
+	 public void callAutoSaveToRefresh(){
+		AutoSave.doAutoSave(this, ws, warningWindow);
+		autoSave.refreshAutoSaveLabel(); 
+	 }
 
 	public void addTreePrunerButtonFunctions(ActionEvent e){
 		if ( e.getSource() == refresh ) {
@@ -273,6 +275,7 @@ public class ControlPanelAdditions {
             }	
 			
             ws.clearAllLists();
+            AutoSave.resetAutoSave();
             
            controlPanel.displayed_phylogeny_mightHaveChanged(true);
             ws.clear("rm_all");
@@ -300,9 +303,13 @@ public class ControlPanelAdditions {
 		
 		
 	}
-	//dont use controlPanel variable as call from AppletTerminate uses the empty constructor
-	//Beware of nullPointerException
+	
 	public String saveToFileComm(String accToRemove){
+		/**
+		 * Note to programmer:
+		 * dont use controlPanel variable as call from AppletTerminate uses the empty constructor
+	 	 *	Beware of nullPointerException
+		 */
 		lastAction="save";
 		String returnedString = "";
 
@@ -380,9 +387,13 @@ public class ControlPanelAdditions {
 		
 		return returnedString;
 	}
-	//dont use controlPanel variable as call from AppletTerminate uses the empty constructor
-	//Beware of nullPointerException
+	
 	public String deleteFromDbComm (String accToRemove){
+		/**
+		 * Note to programmer:
+		 * dont use controlPanel variable as call from AppletTerminate uses the empty constructor
+	 	 *	Beware of nullPointerException
+		 */
 		lastAction="delete";
 		String returnedString = "";
 		
@@ -460,9 +471,13 @@ public class ControlPanelAdditions {
 		
 		return returnedString;
 	}
-	//dont use controlPanel variable as call from AppletTerminate uses the empty constructor
-	//Beware of nullPointerException
+	
 	public String discardComm(){
+		/**
+		 * Note to programmer:
+		 * dont use controlPanel variable as call from AppletTerminate uses the empty constructor
+	 	 *	Beware of nullPointerException
+		 */
 		lastAction="discard";
 		String returnedString ="";
 		

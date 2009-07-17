@@ -59,6 +59,7 @@ public class AppletTerminate {
 		SubTreePanel.clearListsOnClose();
 		ControlPanelAdditions.lastAction = "";
 		ws.clearAllLists();
+		AutoSave.resetAutoSave();
 	}
 
 	public void closeOnDeleteAdditionalTasks() {
@@ -169,6 +170,7 @@ public class AppletTerminate {
 	    	else {}
 	    	
 	    	ws.clearAllLists();
+	    	AutoSave.resetAutoSave();
 //	        atvp.set_base(0);
 	    	ControlPanelAdditions.lastAction = "";
 	        SubTreePanel.clearListsOnClose();
@@ -208,6 +210,7 @@ public class AppletTerminate {
 		PhylogenyNode.setNodeCount(0);
 
 		ws.clearAllLists();
+		AutoSave.resetAutoSave();
 //		atvp.set_base(0);
 //		atvc.set_last_action("");
 		

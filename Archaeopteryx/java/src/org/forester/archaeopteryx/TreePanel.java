@@ -97,6 +97,7 @@ import org.forester.util.ForesterUtil;
 
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 import com.lanl.application.treePruner.custom.data.Accession;
+import com.lanl.application.treePruner.applet.ControlPanelAdditions;
 import com.lanl.application.treePruner.applet.NewWindowSubtree;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
@@ -388,6 +389,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         	//******************************************START CHANGED**********************************************************//
         	treePrunerPaint.initArrayLists();
             treePrunerPaint.paintKeepRemove(g,node);
+            _control_panel.controlPanelAdditions.callAutoSaveToRefresh();
         //	g.setColor( getTreeColorSet().getBranchColor() ); //commented - changed
             //********************************************END**********************************************************//
             
