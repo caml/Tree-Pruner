@@ -78,7 +78,13 @@ public class ArchaeopteryxA extends JApplet {
     public void init() {
         boolean has_exception = false;
         setName( NAME );
-        setUrlString( getParameter( Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD ) );
+      //******************************************START CHANGED**********************************************************//
+        getParams();
+        setUrlString(AppletParams.urlOfTreeToLoad);
+        //setUrlString( getParameter( Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD ) ); // take url of tree 2 load from applet params and not 
+        																						// from parameter -changed
+      //********************************************END**********************************************************//
+        
         Util.printAppletMessage( NAME, "URL of phylogenies to load: \"" + getUrlString() + "\"" );
         setBackground( background_color );
         setForeground( font_color );
@@ -95,8 +101,12 @@ public class ArchaeopteryxA extends JApplet {
             setMessage2( "[Your Java version: " + s + "]" );
             repaint();
         }
+      //******************************************START CHANGED**********************************************************//
+        final String config_filename = AppletParams.configFilename;
+        //final String config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL ); // take config filename from applet params  
+																										  // and not from parameter -changed
+      //********************************************END**********************************************************//
         
-        final String config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL );
         Util.printAppletMessage( NAME, "URL for configuration file is: " + config_filename );
         final Configuration configuration = new Configuration( config_filename, true, true );
         try {
@@ -138,7 +148,6 @@ public class ArchaeopteryxA extends JApplet {
         
       //******************************************START**********************************************************//
         SubTreePanel.mainAppletFrame = _mainframe_applet;
-        getParams();
         crashRecovery.crashRecoveryInit();
       //********************************************END**********************************************************//
     }
