@@ -910,7 +910,9 @@ public class ControlPanel extends JPanel implements ActionListener {
         }
         //******************************************START**********************************************************//
         else if(action == keepRemoveConfiguration._keepSequences || action == keepRemoveConfiguration._removeSequences){
-        	keepRemoveConfiguration.setClickToAction(action,this);
+            int x = keepRemoveConfiguration.setClickToAction(action,this);
+            _click_to_combobox.setSelectedIndex( x );
+            return;
         }
         //********************************************END**********************************************************//
         else if ( action == _open_seq_web_item ) {

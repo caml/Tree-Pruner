@@ -511,7 +511,7 @@ public class WorkingSet {
 		return KEEP_ACTIVE;
 	}
 	
-	public ArrayList getRemoveActiveSequenceIds(){
+	public static ArrayList getRemoveActiveSequenceIds(){
 		return REMOVE_ACTIVE;
 	}
 	
@@ -541,7 +541,7 @@ public class WorkingSet {
 	public ArrayList getRemember_ACC(){
 		return remember_ACC;
 	}
-	public ArrayList getkeepACC(){
+	public static ArrayList getkeepACC(){
 		return keepACC;
 	}
 	

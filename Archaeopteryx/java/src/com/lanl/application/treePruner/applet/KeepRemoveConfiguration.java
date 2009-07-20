@@ -1,8 +1,12 @@
 package com.lanl.application.treePruner.applet;
 
+import javax.swing.JOptionPane;
+
 import org.forester.archaeopteryx.Configuration;
 import org.forester.archaeopteryx.ControlPanel;
-import org.forester.archaeopteryx.ControlPanel.NodeClickAction;;
+import org.forester.archaeopteryx.ControlPanel.NodeClickAction;
+
+import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 
 
@@ -49,13 +53,49 @@ public class KeepRemoveConfiguration {
         }
 		return s;
 	}
-	public void setClickToAction( final int action, ControlPanel cp) {
-		if(action == _keepSequences ){
-			cp.set_action_whenNodeClicked( NodeClickAction.KEEP_SEQUENCES );
+
+	private boolean isOtherSessionActive(int action) {
+		if (action == _keepSequences) {
+			if (WorkingSet.getRemoveActiveSequenceIds().isEmpty()) {
+				return false;
+			} else {
+				return true;
+			}
+		} else if (action == _removeSequences) {
+			if (WorkingSet.getkeepACC().isEmpty()) {
+				return false;
+			} else {
+				return true;
+			}
 		}
-		else if(action == _removeSequences){
-			cp.set_action_whenNodeClicked( NodeClickAction.REMOVE_SEQUENCES );
-		}
+		return false;
 	}
-	
+
+	public int setClickToAction(final int action, ControlPanel cp) {
+		String error = "You are attempting to change your choice of pruning action  \n";
+		error += "(keep/remove/restore) without first concluding your existing pruning session.\n\n";
+		error += "Please click the \"Save\", \"Discard All\" or \"Discard recent\" menu button \n";
+		error += "before proceeding with this new pruning action.";
+		if (!isOtherSessionActive(action)) {
+			if (action == _keepSequences) {
+				cp.set_action_whenNodeClicked(NodeClickAction.KEEP_SEQUENCES);
+				return _keepSequences;
+			} else if (action == _removeSequences) {
+				cp.set_action_whenNodeClicked(NodeClickAction.REMOVE_SEQUENCES);
+				return _removeSequences;
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, error, "Error Message",
+					JOptionPane.ERROR_MESSAGE);
+			if (action == _keepSequences) {
+				cp.set_action_whenNodeClicked(NodeClickAction.REMOVE_SEQUENCES);
+				return _removeSequences;
+			} else if (action == _removeSequences) {
+				cp.set_action_whenNodeClicked(NodeClickAction.KEEP_SEQUENCES);
+				return _keepSequences;
+			}
+		}
+		return -1;
+	}
+
 }
