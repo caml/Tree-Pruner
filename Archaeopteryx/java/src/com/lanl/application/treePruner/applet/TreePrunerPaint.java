@@ -42,7 +42,7 @@ public class TreePrunerPaint {
 //		System.out.println("--------->ATVtreePanel.paintNodeData() with"); // commented-
 																			// kmohan
 																			// 07/24
-		// System.out.println("remove active:   " + rmActiveSeqIds.toString());
+//		System.out.println("remove active:   " + rmActiveSeqIds.toString());
 		// System.out.println("remove inactive: " +
 		// rmInactiveSeqIds.toString());
 //		System.out.println("remove_all:      " + rmAllSeqIds.toString());
