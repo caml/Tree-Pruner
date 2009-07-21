@@ -42,6 +42,7 @@ import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
 import com.lanl.application.treePruner.applet.AppletParams;
+import com.lanl.application.treePruner.applet.AppletTerminate;
 import com.lanl.application.treePruner.applet.CrashRevovery;
 import com.lanl.application.treePruner.applet.SubTreePanel;
 //********************************************END**********************************************************//
@@ -148,6 +149,7 @@ public class ArchaeopteryxA extends JApplet {
         
       //******************************************START**********************************************************//
         SubTreePanel.mainAppletFrame = _mainframe_applet;
+        AppletTerminate.appletContext = getAppletContext();
         crashRecovery.crashRecoveryInit();
       //********************************************END**********************************************************//
     }

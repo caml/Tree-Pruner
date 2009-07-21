@@ -126,8 +126,7 @@ public class NewWindowSubtree {
 			int temp = SubTreePanel.sub_frame_count;
 			MainFrame mf = SubTreePanel.mainFrames.get(--temp);
 			mf.close_();
-			handleBackToSubTreeButton();
-			handleCloseXButton();
+			
 
 		} else {
 			// this should not happen as if only the root parent window is

@@ -1,5 +1,9 @@
 package com.lanl.application.treePruner.applet;
 
+import java.applet.AppletContext;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import javax.swing.JOptionPane;
 
 import org.forester.archaeopteryx.MainFrame;
@@ -15,7 +19,7 @@ public class AppletTerminate {
 	ControlPanelAdditions controlPanelAdditions = new ControlPanelAdditions();
 	WorkingSet ws = new WorkingSet();
 	MainFrame mainFrame;
-
+	public static AppletContext appletContext;
 	public AppletTerminate(MainFrame mf) {
 		this.mainFrame = mf;
 	}
@@ -226,6 +230,23 @@ public class AppletTerminate {
 			return true;
 		} else{
 			return false;
+		}
+	}
+	
+	public static void openSearchPageOnTerminate(MainFrame mf){
+		if (SubTreePanel.mainAppletFrame == mf){
+			if(AppletParams.URLprefix.equals("")){  //LANL
+				try {
+					URL searchPage = new URL(AppletParams.codeBase,"../search/");
+					appletContext.showDocument(searchPage,"_parent");
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+				
+			}
+			else{
+				//BHB dont do anything
+			}
 		}
 	}
 }

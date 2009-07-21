@@ -209,11 +209,12 @@ public class ControlPanelAdditions {
 	                		o.closeOnDelete();
 	                	}
 	                }
+                    SubTreePanel.clearListsOnClose();
 	                if(SubTreePanel.mainAppletFrame!=null){
 	                	SubTreePanel.mainAppletFrame.closeOnDelete();
 	                }
 		            
-		            SubTreePanel.clearListsOnClose();
+		            
 		 //           stored_levels.clear();
 	            
             /*
