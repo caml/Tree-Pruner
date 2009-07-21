@@ -143,8 +143,8 @@ public class Configuration {
             { "Collapse/Uncollapse", "display" }, { "Root/Reroot", "display" }, { "Sub/Super Tree", "display" },
             { "Swap Descendants", "display" }, { "Colorize Subtree", "display" },
           //******************************************START**********************************************************//
-            {"Keep Sequences In Working Set", "display"},            //Display or no display depends upon the 
-            {"Remove/Restore Sequences From Working Set", "display"},  //TreePruner or TreeDecorator AppType. 
+            {"<html><b>Keep Sequences In Working Set</b></html>", "display"},            //Display or no display depends upon the 
+            {"<html><b>Remove/Restore Sequences From Working Set</b></html>", "display"},  //TreePruner or TreeDecorator AppType. 
             /**Later on change this to nodisplay if apptype is TreeDecorator from ArchaeA.java
             Change Number in KeepRemoveConfiguration.java from 6 n 7 for keep and remove to higher number 
             if TreeDecorator demands it*/
