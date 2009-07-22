@@ -47,13 +47,17 @@ import javax.swing.event.ChangeListener;
 import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
-
+//******************************************START**********************************************************//
+import com.lanl.application.treePruner.applet.AppletFileMenu;
+//********************************************END**********************************************************//
 public final class MainFrameApplet extends MainFrame {
 
     private static final long    serialVersionUID = 1941019292746717053L;
     private final static int     FRAME_X_SIZE     = 640, FRAME_Y_SIZE = 580;
     private final ArchaeopteryxA _applet;
-  
+    //******************************************START**********************************************************//
+    AppletFileMenu appletFileMenu = new AppletFileMenu(this);
+    //********************************************END**********************************************************//
     MainFrameApplet( final ArchaeopteryxA parent_applet, final Configuration configuration ) {
         setTitle( ArchaeopteryxA.NAME );
         _applet = parent_applet;
@@ -106,6 +110,9 @@ public final class MainFrameApplet extends MainFrame {
         if ( !_configuration.isUseNativeUI() ) {
             _jmenubar.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
         }
+      //******************************************START**********************************************************//
+        appletFileMenu.buildFileMenu(_jmenubar, _configuration.isUseNativeUI());
+      //********************************************END**********************************************************//
         buildToolsMenu();
         buildViewMenu();
         buildFontSizeMenu();

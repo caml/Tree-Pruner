@@ -411,6 +411,13 @@ public class MainPanel extends JPanel implements ComponentListener {
             }
         }
     }
+    
+    public Phylogeny get_current_phylogeny() {
+    	if ( getCurrentTreePanel() == null ) {
+    		return null;
+    	}
+    	return getCurrentTreePanel().getPhylogeny();
+    }
    //********************************************END**********************************************************//
 }
 

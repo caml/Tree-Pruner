@@ -1333,5 +1333,12 @@ public abstract class MainFrame extends JFrame implements ActionListener {
       //********************************************END**********************************************************//
       
     }
+    public Options get_options() {
+    	return _options;
+    }
+    
+    public Container get_content_pane(){
+    	return _contentpane;
+   }
     //********************************************END**********************************************************//
 }

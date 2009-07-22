@@ -987,7 +987,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
 
     //TODO FIXME once pdf issue is settled, used Graphics2D where ever possible!!!!!!!!!!!!!!!!
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    void paintPhylogeny( final Graphics g,
+  //******************************************START CHANGED**********************************************************//
+    public void paintPhylogeny( final Graphics g,
+    // void paintPhylogeny( final Graphics g, // default->public - changed
+    //********************************************END**********************************************************//
                          final boolean to_pdf,
                          final boolean to_graphics_file,
                          final int graphics_file_width,
@@ -1130,7 +1133,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         repaint();
     }
 
-    void resetPreferredSize() {
+  //******************************************START CHANGED**********************************************************//
+    public void resetPreferredSize() {
+    //void resetPreferredSize() { //changed default -> public	
+    //********************************************END**********************************************************//
         if ( ( getPhylogeny() == null ) || getPhylogeny().isEmpty() ) {
             return;
         }
@@ -1206,7 +1212,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
      * @param x
      * @param y
      */
-    void setParametersForPainting( final int x, final int y, final boolean recalc_longest_ext_node_info ) {
+  //******************************************START CHANGED**********************************************************//
+    public void setParametersForPainting( final int x, final int y, final boolean recalc_longest_ext_node_info ) {
+  // void setParametersForPainting( final int x, final int y, final boolean recalc_longest_ext_node_info ) { default -> public - changed
+  //********************************************END**********************************************************//
         // updateStyle(); not needed?
         if ( ( _phylogeny != null ) && !_phylogeny.isEmpty() ) {
             initNodeData();
@@ -3409,5 +3418,22 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             getControlPanel().activateButtonToReturnToSuperTree( 0 );
         }
     }
+    
+	public File get_tree_file() {
+		return _treefile;
+	}
+
+	public void set_tree_file(final File treefile) {
+		_treefile = treefile;
+	}
+
+	public void set_arrow_cursor() {
+		setCursor(ARROW_CURSOR);
+		repaint();
+	}
+
+	public PHYLOGENY_GRAPHICS_TYPE get_phylogeny_graphicsType() {
+		return _graphics_type;
+	}
     //********************************************END**********************************************************//
 }
