@@ -74,7 +74,7 @@ public class KeepRemoveConfiguration {
 	public int setClickToAction(final int action, ControlPanel cp) {
 		String error = "You are attempting to change your choice of pruning action  \n";
 		error += "(keep/remove/restore) without first concluding your existing pruning session.\n\n";
-		error += "Please click the \"Save\", \"Discard All\" or \"Discard recent\" menu button \n";
+		error += "Please click the \"Save\", \"Discard all\" or \"Discard recent\" menu button \n";
 		error += "before proceeding with this new pruning action.";
 		if (!isOtherSessionActive(action)) {
 			if (action == _keepSequences) {

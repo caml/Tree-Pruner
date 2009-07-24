@@ -149,6 +149,7 @@ public class ControlPanel extends JPanel implements ActionListener {
     private JLabel               _search_found_label;
 
     //******************************************START**********************************************************//
+    private static String UpOneLevelTEXT ="Up one level";
     public ControlPanelAdditions controlPanelAdditions;
     private KeepRemoveConfiguration keepRemoveConfiguration;
     //********************************************END**********************************************************//
@@ -315,10 +316,16 @@ public class ControlPanel extends JPanel implements ActionListener {
     void activateButtonToReturnToSuperTree( int index ) {
         --index;
         if ( index > 0 ) {
-            _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT + " " + index );
+        	//******************************************START CHANGED**********************************************************//
+            //  _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT + " " + index ); //return to super tree -> up one level - changed
+                  _return_to_super_tree.setText( UpOneLevelTEXT + " " + index );
+            //********************************************END**********************************************************//
         }
         else {
-            _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT );
+        	//******************************************START CHANGED**********************************************************//
+            //  _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT); //return to super tree -> up one level - changed
+                _return_to_super_tree.setText( UpOneLevelTEXT);
+            //********************************************END**********************************************************//
         }
         _return_to_super_tree.setForeground( Constants.BUTTON_TEXT_COLOR_ON_DEFAULT );
         _return_to_super_tree.setEnabled( true );
@@ -364,7 +371,10 @@ public class ControlPanel extends JPanel implements ActionListener {
         _zoom_out_x.setMinimumSize( new Dimension( 10, 10 ) );
         _zoom_in_x.setMinimumSize( new Dimension( 10, 10 ) );
         _show_whole.setPreferredSize( new Dimension( 10, 10 ) );
-        _return_to_super_tree = new JButton( RETURN_TO_SUPER_TREE_TEXT );
+      //******************************************START CHANGED**********************************************************//
+        // _return_to_super_tree = new JButton( RETURN_TO_SUPER_TREE_TEXT ); //return to super tree -> up one level - changed
+         _return_to_super_tree = new JButton( UpOneLevelTEXT );
+       //********************************************END**********************************************************//
         _return_to_super_tree.setEnabled( false );
         _order = new JButton( "Order Subtrees" );
         _uncollapse_all = new JButton( "Uncollapse All" );
@@ -549,7 +559,10 @@ public class ControlPanel extends JPanel implements ActionListener {
     }
 
     void deactivateButtonToReturnToSuperTree() {
-        _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT );
+    	//******************************************START CHANGED**********************************************************//
+        //_return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT ); //return to super tree -> up one level - changed
+        _return_to_super_tree.setText( UpOneLevelTEXT );
+        //********************************************END**********************************************************//
         _return_to_super_tree.setForeground( Constants.BUTTON_TEXT_COLOR_DEFAULT );
         _return_to_super_tree.setEnabled( false );
     }

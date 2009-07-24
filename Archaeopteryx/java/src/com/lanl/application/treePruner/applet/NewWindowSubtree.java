@@ -28,7 +28,7 @@ public class NewWindowSubtree {
 	private static TreePrunerCommunicationMessageWarningWindow warningWindow;
 	static WindowAdapter doNothingWindowAdapter = new WindowAdapter(){
 		public void windowClosing( final WindowEvent e ) {
-			JOptionPane.showMessageDialog( null, "You can only close on the most recent subtree window.\n");
+			JOptionPane.showMessageDialog( null, "You can only close the lowest level subtree.\n");
 		}
 	};
 	public NewWindowSubtree(TreePanel tp) {
@@ -106,9 +106,7 @@ public class NewWindowSubtree {
 				JOptionPane
 						.showMessageDialog(
 								treePanel,
-								"You already have a child tree to this tree open.\n"
-										+ "You cannot open another child tree to this tree unless you close the already open child tree.\n"
-										+ "Please close the clild tree window and try again.");
+								"You already have one subtree of this tree open. You cannot open a second subtree.");
 			}
 		} else if (node.isRoot() && (TreePanel.get_subtree_index() >= 1)) {
 			if (SubTreePanel._phylogenies_subtree.get(temp_count - 1).getRoot()
@@ -120,7 +118,7 @@ public class NewWindowSubtree {
 			} else {
 				JOptionPane
 						.showMessageDialog(treePanel,
-								"You can only close on the most recent subtree window.");
+								"You can only close the lowest level subtree.");
 			}
 		}
 		treePanel.getMainPanel().get_control_panel().show_whole();
