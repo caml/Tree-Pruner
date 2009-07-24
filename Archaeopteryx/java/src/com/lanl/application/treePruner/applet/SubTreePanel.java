@@ -1,6 +1,8 @@
 package com.lanl.application.treePruner.applet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.forester.archaeopteryx.MainFrame;
 import org.forester.archaeopteryx.MainFrameApplet;
@@ -25,7 +27,10 @@ public class SubTreePanel {
     public static ArrayList<Phylogeny>                         _phylogenies_subtree =new ArrayList<Phylogeny>();
     //to store the atvframes
     final static ArrayList<MainFrame>							appletFrames =new ArrayList<MainFrame>();
-	public static int sub_frame_count =0;
+    //to store the subtree root node ids and their x n y co ord
+    public static Map<Integer,ArrayList<Double>> subTreeRootNode
+    															= new HashMap<Integer,ArrayList<Double>>();
+    public static int sub_frame_count =0;
 	public ArchaeopteryxA archaeA= new ArchaeopteryxA();
 	public SubTreePanel(TreePanel tp){
 		this.treePanel = tp;
@@ -72,6 +77,7 @@ public class SubTreePanel {
         subTreeHierarchy.clear();
         _phylogenies_subtree.clear();
         sub_frame_count=0;
+        subTreeRootNode.clear();
         TreePanel.reset_subtree_index();
 	}
 	

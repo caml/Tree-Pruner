@@ -2643,6 +2643,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             TreePanel.drawOval( x - 9, y - 8, 17, 17, g );
             TreePanel.drawOval( x - 9, y - 9, 18, 18, g );
         }
+      //******************************************START**********************************************************//
+        newWindowSubtree.paintNodeTracker(g, x, y, node, to_pdf, to_graphics_file);
+      //********************************************END**********************************************************//
+        
         if ( is_in_found_nodes ) {
             paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
         }

@@ -8,6 +8,7 @@ public class TreePrunerColorSet {
 	private static Color removeColor = new Color(190,190,190); // gray // for inactive nodes
 	private static Color backgroundColor = Color.WHITE; // white // for background
 	private static Color defaultBranchColor = Color.BLACK; // black // default color for branch,node,nodeBox, strain color
+	private static Color trackSubtreeCircleColor = Color.RED; //red // for the circle that colors the subtree roots on all windows
 	
 	public static Color getKeepColor() {
         return notRemoveColor;
@@ -27,6 +28,10 @@ public class TreePrunerColorSet {
     
     public static Color getDefaultBranchColor() {
         return defaultBranchColor;
+    }
+    
+    public static Color getTrackSubtreeCircleColor(){
+        return trackSubtreeCircleColor;
     }
     
     

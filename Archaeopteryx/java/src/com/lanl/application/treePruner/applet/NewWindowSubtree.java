@@ -1,5 +1,6 @@
 package com.lanl.application.treePruner.applet;
 
+import java.awt.Graphics;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -8,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -17,6 +19,7 @@ import org.forester.archaeopteryx.TreePanel;
 import org.forester.archaeopteryx.Util; //import org.forester.archaeopteryx.Util;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
+import org.forester.util.ForesterUtil;
 
 public class NewWindowSubtree {
 	private final static int MAX_SUBTREES = 100;
@@ -49,6 +52,7 @@ public class NewWindowSubtree {
 				SubTreePanel.subTreeHierarchy.add(1);
 				SubTreePanel._phylogenies_subtree.add(_phylogeny.subTree(node
 						.getNodeId()));
+				SubTreePanel.subTreeRootNode.put(node.getNodeId(), null);
 
 				SubTreePanel.mainFrames.add(subTreePanel.archaeA
 						.create_new_Frame());
@@ -186,4 +190,37 @@ public class NewWindowSubtree {
 			mf.removeWindowListener(x[i]);
 		}
 	}
+
+	public void paintNodeTracker(Graphics g, double x, double y,
+			PhylogenyNode node, boolean toPdf, boolean toGraphicsFile) {
+		if (SubTreePanel.subTreeRootNode.containsKey(node.getNodeId())
+				&& !toPdf && !toGraphicsFile) {
+			ArrayList<Double> temp = new ArrayList<Double>();
+			temp.add(x);
+			temp.add(y);
+			SubTreePanel.subTreeRootNode.put(node.getNodeId(), temp);
+			g.setColor(TreePrunerColorSet.getTrackSubtreeCircleColor());
+			drawOval(
+					SubTreePanel.subTreeRootNode.get(node.getNodeId()).get(0) - 8,
+					SubTreePanel.subTreeRootNode.get(node.getNodeId()).get(1) - 8,
+					16, 16, g);
+			drawOval(
+					SubTreePanel.subTreeRootNode.get(node.getNodeId()).get(0) - 9,
+					SubTreePanel.subTreeRootNode.get(node.getNodeId()).get(1) - 8,
+					17, 17, g);
+			drawOval(
+					SubTreePanel.subTreeRootNode.get(node.getNodeId()).get(0) - 9,
+					SubTreePanel.subTreeRootNode.get(node.getNodeId()).get(1) - 9,
+					18, 18, g);
+
+		}
+	}
+
+	private static void drawOval(final double x, final double y,
+			final double width, final double heigth, final Graphics g) {
+		g.drawOval(ForesterUtil.roundToInt(x), ForesterUtil
+						.roundToInt(y), ForesterUtil.roundToInt(width),
+						ForesterUtil.roundToInt(heigth));
+	}
+	
 }

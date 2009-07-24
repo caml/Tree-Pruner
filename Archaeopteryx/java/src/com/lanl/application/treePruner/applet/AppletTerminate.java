@@ -180,13 +180,10 @@ public class AppletTerminate {
 	        SubTreePanel.clearListsOnClose();
     	}
     	else{
-    		System.out.println("I AM IN APPLET TM 3");
     		if(SubTreePanel.mainFrames.contains(mainPanel.returnMainFrame())){
-    			System.out.println("I AM IN APPLET TM 3.1");
     			int n = SubTreePanel.mainFrames.indexOf(mainPanel.returnMainFrame());
     			SubTreePanel.mainFrames.remove(SubTreePanel.mainFrames.indexOf(mainPanel.returnMainFrame()));
-	    		
-	    		
+    			SubTreePanel.subTreeRootNode.remove(SubTreePanel._phylogenies_subtree.get(n).getRoot().getNodeId());
     			SubTreePanel._phylogenies_subtree.remove(n);
     			SubTreePanel._phylogenies.remove(n);
     			SubTreePanel.subTreeHierarchy.remove(n);
