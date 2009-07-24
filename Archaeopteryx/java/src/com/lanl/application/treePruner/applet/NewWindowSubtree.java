@@ -25,6 +25,7 @@ public class NewWindowSubtree {
 	private final static int MAX_SUBTREES = 100;
 	public SubTreePanel subTreePanel;
 	TreePanel treePanel;
+	private static TreePrunerCommunicationMessageWarningWindow warningWindow;
 	static WindowAdapter doNothingWindowAdapter = new WindowAdapter(){
 		public void windowClosing( final WindowEvent e ) {
 			JOptionPane.showMessageDialog( null, "You can only close on the most recent subtree window.\n");
@@ -48,6 +49,7 @@ public class NewWindowSubtree {
 		if (!node.isExternal() && !node.isRoot()
 				&& (TreePanel.get_subtree_index() <= (MAX_SUBTREES - 1))) {
 			if (!alreadyClickedOnPhylogeny) {
+				warningWindow = new TreePrunerCommunicationMessageWarningWindow();
 				SubTreePanel._phylogenies.add(_phylogeny);
 				SubTreePanel.subTreeHierarchy.add(1);
 				SubTreePanel._phylogenies_subtree.add(_phylogeny.subTree(node
@@ -64,13 +66,13 @@ public class NewWindowSubtree {
 					phys = Util.readPhylogeniesFromUrlForSubtree(new URL(
 							AppletParams.urlOfTreeToLoad));
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
+					destroyWarningWindow();
 					e.printStackTrace();
 				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
+					destroyWarningWindow();
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					destroyWarningWindow();
 					e.printStackTrace();
 				}
 				try {
@@ -84,7 +86,7 @@ public class NewWindowSubtree {
 									SubTreePanel.sub_frame_count)
 									.get_main_panel());
 				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
+					destroyWarningWindow();
 					e.printStackTrace();
 				}
 				SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count)
@@ -99,6 +101,7 @@ public class NewWindowSubtree {
 				SubTreePanel.sub_frame_count++;
 				handleBackToSubTreeButton();
 				handleCloseXButton();
+				destroyWarningWindow();
 			} else {
 				JOptionPane
 						.showMessageDialog(
@@ -188,6 +191,13 @@ public class NewWindowSubtree {
 		WindowListener x[] = mf.getWindowListeners();
 		for(int i = 0; i < x.length; i++){
 			mf.removeWindowListener(x[i]);
+		}
+	}
+	
+	public static void destroyWarningWindow() {
+		if (warningWindow != null) {
+			warningWindow.close();
+
 		}
 	}
 

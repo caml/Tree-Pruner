@@ -130,9 +130,7 @@ public class ControlPanelAdditions {
 			String returnedString="";
             
             if(ws.toCommunicateWithServer()){
-            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-                        " Please wait...","                                                  " +
-                        		"                                                              ");
+            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow();
             	returnedString = saveToFileComm(accToRemove);
             	ws.copyAccToRememberAcc();
             //	ws.clear("");
@@ -184,9 +182,7 @@ public class ControlPanelAdditions {
 	                String returnedString="";
 	                
 	                if (ws.toCommunicateWithServer()) {
-	                	warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-	                            " Please wait...","                                                  " +
-	                            		"                                                              ");
+	                	warningWindow = new TreePrunerCommunicationMessageWarningWindow();
 						returnedString=deleteFromDbComm(accToRemove);
 						ws.copyAccToRememberAcc();
 						destroyWarningWindow();
@@ -237,9 +233,7 @@ public class ControlPanelAdditions {
                 String returnedString="";
                 if (ws.toCommunicateWithServer()) {
                 	
-                	warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-                            " Please wait...","                                                  " +
-                            		"                                                              ");
+                	warningWindow = new TreePrunerCommunicationMessageWarningWindow();
 					returnedString = deleteFromDbComm(accToRemove);
 					ws.copyAccToRememberAcc();
 					destroyWarningWindow();
@@ -261,9 +255,7 @@ public class ControlPanelAdditions {
 	    }//end of delete from ws  //SIGMA END
         else if(e.getSource() == discard){
             String returnedString = "";
-            warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-                    " Please wait...","                                                  " +
-                    		"                                                              ");
+            warningWindow = new TreePrunerCommunicationMessageWarningWindow();
             returnedString = discardComm();
             destroyWarningWindow();
             if(returnedString.equals("success")){

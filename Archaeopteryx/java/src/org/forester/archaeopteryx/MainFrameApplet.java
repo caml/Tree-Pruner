@@ -49,6 +49,7 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
 import com.lanl.application.treePruner.applet.AppletFileMenu;
+import com.lanl.application.treePruner.applet.NewWindowSubtree;
 //********************************************END**********************************************************//
 public final class MainFrameApplet extends MainFrame {
 
@@ -73,6 +74,9 @@ public final class MainFrameApplet extends MainFrame {
             }
             catch ( final Exception e ) {
                 ForesterUtil.printErrorMessage( ArchaeopteryxA.NAME, e.toString() );
+              //******************************************START**********************************************************//
+                NewWindowSubtree.destroyWarningWindow();
+               //********************************************END**********************************************************//
                 e.printStackTrace();
                 JOptionPane
                         .showMessageDialog( this,

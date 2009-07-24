@@ -17,8 +17,10 @@ public class TreePrunerCommunicationMessageWarningWindow
    
 //---------------------------------------------------------------------//      
     /** Creates new PriorityHelpGui */
-    public TreePrunerCommunicationMessageWarningWindow( String title,String msg) 
+    public TreePrunerCommunicationMessageWarningWindow() 
     {
+    	String title = "Your Action is being performed Please wait...";
+    	String msg = "                                                                                                                ";
     	JLabel label = new JLabel(msg);
         Container rx = makeFrame(title, 40, 100, 300, 200);
         rx.add(label,BorderLayout.SOUTH);

@@ -73,9 +73,7 @@ public class AutoSave {
 			String returnedString="";
             
             if(ws.toCommunicateWithServer()){
-            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow("Your Action is being performed" +
-                        " Please wait...","                                                  " +
-                        		"                                                              ");
+            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow();
             	returnedString = controlPanelAdditions.saveToFileComm(accToRemove);
             	ws.copyAccToRememberAcc();
             //	ws.clear("");
