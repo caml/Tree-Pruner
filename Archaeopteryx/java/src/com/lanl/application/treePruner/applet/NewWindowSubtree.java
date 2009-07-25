@@ -75,20 +75,15 @@ public class NewWindowSubtree {
 					destroyWarningWindow();
 					e.printStackTrace();
 				}
-				try {
-					Util.addPhylogeniesToTabsForSubtree(phys, new File(new URL(
-							AppletParams.urlOfTreeToLoad).getFile()).getName(),
-							AppletParams.urlOfTreeToLoad,
-							SubTreePanel.mainFrames.get(
-									SubTreePanel.sub_frame_count)
-									.get_configuration(),
-							SubTreePanel.mainFrames.get(
-									SubTreePanel.sub_frame_count)
-									.get_main_panel());
-				} catch (MalformedURLException e) {
-					destroyWarningWindow();
-					e.printStackTrace();
-				}
+				Util.addPhylogeniesToTabsForSubtree(phys, AppletParams.tabName,
+						AppletParams.urlOfTreeToLoad,
+						SubTreePanel.mainFrames.get(
+								SubTreePanel.sub_frame_count)
+								.get_configuration(),
+						SubTreePanel.mainFrames.get(
+								SubTreePanel.sub_frame_count)
+								.get_main_panel());
+				
 				SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count)
 						.get_main_panel().get_control_panel().show_whole_all();
 				SubTreePanel.mainFrames.get(SubTreePanel.sub_frame_count)

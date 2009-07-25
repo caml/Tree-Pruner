@@ -13,9 +13,10 @@ public class AppletParams {
 	public static int applicationType = -1;
 	public static String savedAcc = "";
 	public static String savedAccFlag = "";
+	public static String tabName = "";
 	
 	public static void setAppletParams(String urlOfTreeToLoad1,String configFileName1,URL codeBase1, String filename1,
-												String URLprefix1,int applicationType1, String savedAcc1, String savedAccFlag1){
+												String URLprefix1,int applicationType1, String savedAcc1, String savedAccFlag1, String tabName1){
 		codeBase = codeBase1;
 		if(urlOfTreeToLoad1.startsWith("http")){
 			urlOfTreeToLoad = urlOfTreeToLoad1;
@@ -34,6 +35,7 @@ public class AppletParams {
 		applicationType = applicationType1;
 		savedAcc = savedAcc1;
 		savedAccFlag = savedAccFlag1;
+		tabName = tabName1;
 		
 	}
 	

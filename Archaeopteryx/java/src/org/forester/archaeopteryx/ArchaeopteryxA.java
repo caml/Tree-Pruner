@@ -122,8 +122,13 @@ public class ArchaeopteryxA extends JApplet {
             URL url = null;
             url = new URL( getUrlString() );
             final Phylogeny[] phys = Util.readPhylogeniesFromUrl( url );
-            Util.addPhylogeniesToTabs( phys, new File( url.getFile() ).getName(), getUrlString(), getMainFrameApplet()
-                    .getConfiguration(), getMainFrameApplet().getMainPanel() );
+          //******************************************START CHANGED**********************************************************//
+            Util.addPhylogeniesToTabs( phys, AppletParams.tabName, getUrlString(), getMainFrameApplet()
+            			.getConfiguration(), getMainFrameApplet().getMainPanel() );
+      //      Util.addPhylogeniesToTabs( phys, new File( url.getFile() ).getName(), getUrlString(), getMainFrameApplet()
+      //           .getConfiguration(), getMainFrameApplet().getMainPanel() );  // changes from name of file to AppletParams.tabName - changed
+          /**when doing TP TD and archae take this as a string and modify the string if TP or TD and as url.getFile() ).getName() when archae*/
+            //********************************************END**********************************************************//
             getMainFrameApplet().getMainPanel().getControlPanel().showWholeAll();
             getMainFrameApplet().getMainPanel().getControlPanel().showWhole();
             setVisible( true );
@@ -212,9 +217,10 @@ public class ArchaeopteryxA extends JApplet {
     	int applicationType1 = Integer.parseInt(getParameter("app_type"));
     	String savedAcc1 = getParameter("saved_acc");
     	String savedAccFlag1 = getParameter("saved_acc_flag");
+    	String tabName1 = getParameter("tree_panel_tab_name"); 
     	
     	AppletParams.setAppletParams(urlOfTreeToLoad1, configFileName1, getCodeBase(), filename1,
-    								URLprefix1, applicationType1, savedAcc1, savedAccFlag1);
+    								URLprefix1, applicationType1, savedAcc1, savedAccFlag1,tabName1);
     	
     	
     	System.out.println(AppletParams.applicationType + " " +AppletParams.configFilename+ " " +
