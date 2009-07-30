@@ -234,7 +234,7 @@ public class AppletTerminate {
 		if (SubTreePanel.mainAppletFrame == mf){
 			if(AppletParams.URLprefix.equals("")){  //LANL
 				try {
-					URL searchPage = new URL(AppletParams.codeBase,"../search/");
+					URL searchPage = new URL(AppletParams.codeBase,"close.html");
 					appletContext.showDocument(searchPage,"_parent");
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
