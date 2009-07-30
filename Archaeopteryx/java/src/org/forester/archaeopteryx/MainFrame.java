@@ -476,7 +476,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
        //******************************************START**********************************************************//
         NewWindowSubtree.handleBackToSubTreeButton();
         NewWindowSubtree.handleCloseXButton();
-        AppletTerminate.openSearchPageOnTerminate(this);
+        AppletTerminate.closePageOnTerminate(this);
         }
         else{
         	appletTerminate.closeAdditionalTasks();
@@ -1291,7 +1291,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         }
         setVisible( false );
         dispose();
-        AppletTerminate.openSearchPageOnTerminate(this);
+        AppletTerminate.closePageOnTerminate(this);
     }
     public MainPanel get_main_panel() {
         return _mainpanel;
@@ -1325,7 +1325,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
       //******************************************START**********************************************************//
         NewWindowSubtree.handleBackToSubTreeButton();
         NewWindowSubtree.handleCloseXButton();
-        AppletTerminate.openSearchPageOnTerminate(this);
+        AppletTerminate.closePageOnTerminate(this);
         }
         else{
         	appletTerminate.closeAdditionalTasks();

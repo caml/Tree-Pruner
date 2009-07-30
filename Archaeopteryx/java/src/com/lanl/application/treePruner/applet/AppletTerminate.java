@@ -230,7 +230,7 @@ public class AppletTerminate {
 		}
 	}
 	
-	public static void openSearchPageOnTerminate(MainFrame mf){
+	public static void closePageOnTerminate(MainFrame mf){
 		if (SubTreePanel.mainAppletFrame == mf){
 			if(AppletParams.URLprefix.equals("")){  //LANL
 				try {
