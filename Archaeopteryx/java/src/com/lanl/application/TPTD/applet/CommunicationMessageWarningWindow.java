@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -11,13 +11,13 @@ import javax.swing.*;
  *
  * @version 
  */
-public class TreePrunerCommunicationMessageWarningWindow 
+public class CommunicationMessageWarningWindow 
 {
     private JFrame      jf;
    
 //---------------------------------------------------------------------//      
     /** Creates new PriorityHelpGui */
-    public TreePrunerCommunicationMessageWarningWindow() 
+    public CommunicationMessageWarningWindow() 
     {
     	String title = "Your Action is being performed Please wait...";
     	String msg = "                                                                                                                ";

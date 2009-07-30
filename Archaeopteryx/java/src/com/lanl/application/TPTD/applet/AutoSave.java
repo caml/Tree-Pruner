@@ -8,8 +8,6 @@ import javax.swing.JLabel;
 import org.forester.archaeopteryx.ControlPanel;
 import org.forester.archaeopteryx.MainFrame;
 
-import com.lanl.application.treePruner.applet.ControlPanelAdditions;
-import com.lanl.application.treePruner.applet.TreePrunerCommunicationMessageWarningWindow;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class AutoSave {
@@ -69,13 +67,13 @@ public class AutoSave {
 		}
 	}
 	
-	public static void doAutoSave(ControlPanelAdditions controlPanelAdditions, WorkingSet ws,TreePrunerCommunicationMessageWarningWindow warningWindow){
+	public static void doAutoSave(ControlPanelAdditions controlPanelAdditions, WorkingSet ws,CommunicationMessageWarningWindow warningWindow){
 		if(timeToAutoSave()){
 			String accToRemove = ws.getACCasString();   //acc ==accToRemove //get_rem_acc == toCommunicateWithServer && getACCasString
 			String returnedString="";
             
             if(ws.toCommunicateWithServer()){
-            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow();
+            	 warningWindow = new CommunicationMessageWarningWindow();
             	returnedString = controlPanelAdditions.saveToFileComm(accToRemove);
             	ws.copyAccToRememberAcc();
             //	ws.clear("");
@@ -112,7 +110,7 @@ public class AutoSave {
 			autoSaved = false;
 		}
 	}
-	private static void destroyWarningWindow(TreePrunerCommunicationMessageWarningWindow warningWindow){
+	private static void destroyWarningWindow(CommunicationMessageWarningWindow warningWindow){
         if(warningWindow!=null){
         	warningWindow.close();
                 

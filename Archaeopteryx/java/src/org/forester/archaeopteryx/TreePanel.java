@@ -95,11 +95,11 @@ import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
 
+import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.applet.NewWindowSubtree;
 import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.TPTD.custom.data.Accession;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
-import com.lanl.application.treePruner.applet.ControlPanelAdditions;
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
 import com.lanl.application.treePruner.applet.TreePrunerPaint;
 //********************************************END**********************************************************//
@@ -236,12 +236,14 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             _phylogeny.recalculateNumberOfExternalDescendants( true );
         }
         //******************************************START**********************************************************//
-        subTreePanel = new SubTreePanel(this);
-        subTreePanel.setPhylogeny(t);
-        subTreePanel.setSubTreeNodeInfo();
-        subTreePanel.setFullTreeNodeInfo();
-        workingSet = new WorkingSet();
-        treePrunerPaint = new TreePrunerPaint(this,workingSet);
+        if(AppletParams.isEitherTPorTD()){
+        	subTreePanel = new SubTreePanel(this);
+            subTreePanel.setPhylogeny(t);
+            subTreePanel.setSubTreeNodeInfo();
+            subTreePanel.setFullTreeNodeInfo();
+            workingSet = new WorkingSet();
+            treePrunerPaint = new TreePrunerPaint(this,workingSet);
+        }
         //********************************************END**********************************************************//
         setBackground( getTreeColorSet().getBackgroundColor() );
         final MouseListener mouse_listener = new MouseListener( this );
@@ -387,10 +389,18 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         else {
         	//******************************************START CHANGED**********************************************************//
-        	treePrunerPaint.initArrayLists();
-            treePrunerPaint.paintKeepRemove(g,node);
-            _control_panel.controlPanelAdditions.callAutoSaveToRefresh();
-        //	g.setColor( getTreeColorSet().getBranchColor() ); //commented - changed
+        	if(AppletParams.isTreePruner() ){
+        		treePrunerPaint.initArrayLists();
+                treePrunerPaint.paintKeepRemove(g,node);
+                _control_panel.controlPanelAdditions.callAutoSaveToRefresh();
+            }
+        	else if (AppletParams.isTreeDecorator()){
+        		_control_panel.controlPanelAdditions.callAutoSaveToRefresh();
+        	}
+        	else{
+        		g.setColor( getTreeColorSet().getBranchColor() );
+        	}
+        	//changed
             //********************************************END**********************************************************//
             
         }
@@ -1017,9 +1027,15 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             // Color the background
             if ( !to_pdf ) {
             	//******************************************START CHANGED**********************************************************//
-            	g.setColor(TreePrunerColorSet.getBackgroundColor());
-            	//g.setColor( getTreeColorSet().getBackgroundColor() );	  //Changed the background color from Back to white - changed
-            															  //(FOR TP only for now) - DO if else for TD and archae(origonal)
+            	if(AppletParams.isTreePruner() ){
+            		g.setColor(TreePrunerColorSet.getBackgroundColor());
+                }
+            	else{
+            		g.setColor( getTreeColorSet().getBackgroundColor() );
+            	}
+            	
+            	//	  //Changed the background color from Back to white - changed
+            															 
                 //********************************************END**********************************************************//
                 if ( to_graphics_file ) {
                     if ( getOptions().isPrintBlackAndWhite() ) {
@@ -1400,35 +1416,38 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     
     void subTree( final PhylogenyNode node ) {
     	//******************************************START CHANGED**********************************************************//
-    	newWindowSubtree.subTree(node, _phylogeny, subTreePanel);
-    	
-    	/** ENTIRE METHOD of subTree(node) has been overwritten - changed
-    	if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
-            _phylogenies[ _subtree_index++ ] = _phylogeny;
-            _phylogeny = _phylogeny.subTree( node.getNodeId() );
-            updateSubSuperTreeButton();
+    	if(AppletParams.isEitherTPorTD()){
+    		newWindowSubtree.subTree(node, _phylogeny, subTreePanel);
         }
-        else if ( node.isRoot() && ( _subtree_index >= 1 ) ) {
-            superTree();
-        }
-        _main_panel.getControlPanel().showWhole();
-        repaint();
-    
-     **/
+    	else{
+    		if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
+                _phylogenies[ _subtree_index++ ] = _phylogeny;
+                _phylogeny = _phylogeny.subTree( node.getNodeId() );
+                updateSubSuperTreeButton();
+            }
+            else if ( node.isRoot() && ( _subtree_index >= 1 ) ) {
+                superTree();
+            }
+            _main_panel.getControlPanel().showWhole();
+            repaint();
+    	}
+   // 	 ENTIRE METHOD of subTree(node) has been overwritten - changed
     	//********************************************END**********************************************************//
     }
     
     
     void superTree() {
     	//******************************************START CHANGED**********************************************************//
-    	newWindowSubtree.superTree();
-    	
-    	/**  ENTIRE METHOD of superTree() has been overwritten - changed
-    	_phylogenies[ _subtree_index ] = null;
-        _phylogeny = _phylogenies[ --_subtree_index ];
-        updateSubSuperTreeButton();
+    	if(AppletParams.isEitherTPorTD()){
+    		newWindowSubtree.superTree();
+    	}
+    	//  ENTIRE METHOD of superTree() has been overwritten - changed
+    	else{
+	    	_phylogenies[ _subtree_index ] = null;
+	        _phylogeny = _phylogenies[ --_subtree_index ];
+	        updateSubSuperTreeButton();
+    	}
     
-    */
     	//********************************************END**********************************************************//
     }
     
@@ -1570,9 +1589,14 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         else {
         	//******************************************START CHANGED**********************************************************//
-        	treePrunerPaint.initArrayLists();
-            treePrunerPaint.paintKeepRemove(g,node);
-//            g.setColor( getTreeColorSet().getBranchColor() ); //commented -  changed
+        	if(AppletParams.isTreePruner() ){
+        		treePrunerPaint.initArrayLists();
+                treePrunerPaint.paintKeepRemove(g,node);
+            }
+        	else{
+        		g.setColor( getTreeColorSet().getBranchColor() ); 
+        	}
+            //commented -  changed
            //********************************************END**********************************************************//
         }
     }
@@ -2356,8 +2380,13 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                     }
                     else {
                     	//******************************************START CHANGED**********************************************************//
-                        treePrunerPaint.drawThickLine(g,node, x1a, y2, x2a, y2);
-                      //TreePanel.drawLine( x1a, y2, x2a, y2, g );   //Commented changed
+                    	if(AppletParams.isTreePruner() ){
+                    		treePrunerPaint.drawThickLine(g,node, x1a, y2, x2a, y2);
+                    	}
+                    	else{
+                    		TreePanel.drawLine( x1a, y2, x2a, y2, g );
+                    	}
+                         //Commented changed
                         //********************************************END**********************************************************//
                         
                     }
@@ -2644,7 +2673,9 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             TreePanel.drawOval( x - 9, y - 9, 18, 18, g );
         }
       //******************************************START**********************************************************//
-        newWindowSubtree.paintNodeTracker(g, x, y, node, to_pdf, to_graphics_file);
+        if(AppletParams.isEitherTPorTD()){
+        	newWindowSubtree.paintNodeTracker(g, x, y, node, to_pdf, to_graphics_file);
+        }
       //********************************************END**********************************************************//
         
         if ( is_in_found_nodes ) {
@@ -2728,8 +2759,13 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                 _sb.append( " " );
             }
             //******************************************START CHANGED**********************************************************//
-            _sb.append(Accession.removeAccessionFromStrain(node));
-            //_sb.append( node.getNodeName() );    //commented changed
+            if(AppletParams.isEitherTPorTD()){
+            	_sb.append(Accession.removeAccessionFromStrain(node));
+            }
+            else{
+            	_sb.append( node.getNodeName() );
+            }
+                //commented changed
             //********************************************END**********************************************************//
             
         }
@@ -2753,8 +2789,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         
       //******************************************START**********************************************************//
-     	treePrunerPaint.initArrayLists();
-        treePrunerPaint.paintKeepRemove(g,node);
+        if(AppletParams.isTreePruner() ){
+        	treePrunerPaint.initArrayLists();
+            treePrunerPaint.paintKeepRemove(g,node);
+        }
        //********************************************END**********************************************************//
     	
         g.setFont( getTreeFontSet().getLargeFont() );

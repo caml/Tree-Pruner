@@ -66,9 +66,9 @@ import org.forester.util.ForesterUtil;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AppletTerminate;
 import com.lanl.application.TPTD.applet.NewWindowSubtree;
-import com.lanl.application.treePruner.applet.AppletTerminate;
-//********************************************END**********************************************************//
 
 public abstract class MainFrame extends JFrame implements ActionListener {
 
@@ -462,27 +462,41 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     	 * public void closeSubTree(){...} 
     	 */
       //******************************************START**********************************************************//
-        if(appletTerminate.check_terminate(this)){
-        //********************************************END**********************************************************//
-        removeTextFrame();
-        if ( _mainpanel != null ) {
-            _mainpanel.terminate();
-        }
-        if ( _contentpane != null ) {
-            _contentpane.removeAll();
-        }
-        setVisible( false );
-        dispose();
-       //******************************************START**********************************************************//
-        NewWindowSubtree.handleBackToSubTreeButton();
-        NewWindowSubtree.handleCloseXButton();
-        AppletTerminate.closePageOnTerminate(this);
-        }
-        else{
-        	appletTerminate.closeAdditionalTasks();
-        }
+    	if(AppletParams.isEitherTPorTD() ){
+    		if(appletTerminate.check_terminate(this)){
+        
+	        removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+	     
+	        NewWindowSubtree.handleBackToSubTreeButton();
+	        NewWindowSubtree.handleCloseXButton();
+	        AppletTerminate.closePageOnTerminate(this);
+	        }
+	        else{
+	        	appletTerminate.closeAdditionalTasks();
+	        }
+    	}
+    	else{
       //********************************************END**********************************************************//
-      
+    		removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+     //******************************************START**********************************************************//     
+    	} //end of else
+  	//********************************************END**********************************************************//
     }
 
     void confColor() {
@@ -1310,27 +1324,42 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT void close(){...}. Hence whenever you make any changes here, also make changes in 
     	 * void close(){...} 
     	 */
-      //******************************************START**********************************************************//
-        if(appletTerminate.check_terminate(this)){
-        //********************************************END**********************************************************//
-        removeTextFrame();
-        if ( _mainpanel != null ) {
-            _mainpanel.terminate();
-        }
-        if ( _contentpane != null ) {
-            _contentpane.removeAll();
-        }
-        setVisible( false );
-        dispose();
-      //******************************************START**********************************************************//
-        NewWindowSubtree.handleBackToSubTreeButton();
-        NewWindowSubtree.handleCloseXButton();
-        AppletTerminate.closePageOnTerminate(this);
-        }
-        else{
-        	appletTerminate.closeAdditionalTasks();
-        }
+        //******************************************START**********************************************************//
+    	if(AppletParams.isEitherTPorTD() ){
+    		if(appletTerminate.check_terminate(this)){
+        
+	        removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+	     
+	        NewWindowSubtree.handleBackToSubTreeButton();
+	        NewWindowSubtree.handleCloseXButton();
+	        AppletTerminate.closePageOnTerminate(this);
+	        }
+	        else{
+	        	appletTerminate.closeAdditionalTasks();
+	        }
+    	}
+    	else{
       //********************************************END**********************************************************//
+    		removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+     //******************************************START**********************************************************//     
+    	} //end of else
+  	//********************************************END**********************************************************//
       
     }
     public Options get_options() {

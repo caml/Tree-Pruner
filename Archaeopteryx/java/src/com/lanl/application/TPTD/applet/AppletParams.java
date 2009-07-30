@@ -10,7 +10,7 @@ public class AppletParams {
 	public static URL codeBase = null;
 	public static String filename = "";
 	public static String URLprefix = "";
-	public static int applicationType = -1;    // 0= TP 1 = TD else Archae
+	public static int applicationType = -1;    // 0= TP, 1 = TD, 2 BHB/LANL Archae, else Archae (-1)
 	public static String savedAcc = "";
 	public static String savedAccFlag = "";
 	public static String tabName = "";
@@ -18,13 +18,13 @@ public class AppletParams {
 	public static void setAppletParams(String urlOfTreeToLoad1,String configFileName1,URL codeBase1, String filename1,
 												String URLprefix1,int applicationType1, String savedAcc1, String savedAccFlag1, String tabName1){
 		codeBase = codeBase1;
-		if(urlOfTreeToLoad1.startsWith("http")){
+		if(urlOfTreeToLoad1.startsWith("http")||urlOfTreeToLoad1.startsWith("file")){
 			urlOfTreeToLoad = urlOfTreeToLoad1;
 		}
 		else{
 			urlOfTreeToLoad = getFullURLString(urlOfTreeToLoad1);
 		}
-		if(configFileName1.startsWith("http")){
+		if(configFileName1.startsWith("http")||configFileName1.startsWith("file")){
 			configFilename = configFileName1;
 		}
 		else{
@@ -49,4 +49,26 @@ public class AppletParams {
 		}
 		return fullURL;
 	}
+	
+	public static boolean isEitherTPorTD(){
+		if(applicationType == 0 || applicationType == 1){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreePruner(){
+		if(applicationType == 0){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreeDecorator(){
+		if(applicationType == 1){
+			return true;
+		}
+		return false;
+	}
+	
 }

@@ -49,6 +49,7 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
 import com.lanl.application.TPTD.applet.AppletFileMenu;
+import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.applet.NewWindowSubtree;
 //********************************************END**********************************************************//
 public final class MainFrameApplet extends MainFrame {
@@ -75,7 +76,9 @@ public final class MainFrameApplet extends MainFrame {
             catch ( final Exception e ) {
                 ForesterUtil.printErrorMessage( ArchaeopteryxA.NAME, e.toString() );
               //******************************************START**********************************************************//
-                NewWindowSubtree.destroyWarningWindow();
+                if(AppletParams.isTreePruner() ){
+                	NewWindowSubtree.destroyWarningWindow();
+                }
                //********************************************END**********************************************************//
                 e.printStackTrace();
                 JOptionPane
@@ -115,7 +118,9 @@ public final class MainFrameApplet extends MainFrame {
             _jmenubar.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
         }
       //******************************************START**********************************************************//
-        appletFileMenu.buildFileMenu(_jmenubar, _configuration.isUseNativeUI());
+        if(AppletParams.isEitherTPorTD()){
+        	appletFileMenu.buildFileMenu(_jmenubar, _configuration.isUseNativeUI());
+        }
       //********************************************END**********************************************************//
         buildToolsMenu();
         buildViewMenu();

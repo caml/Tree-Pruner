@@ -22,13 +22,12 @@ import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
 
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
-import com.lanl.application.treePruner.applet.TreePrunerCommunicationMessageWarningWindow;
 
 public class NewWindowSubtree {
 	private final static int MAX_SUBTREES = 100;
 	public SubTreePanel subTreePanel;
 	TreePanel treePanel;
-	private static TreePrunerCommunicationMessageWarningWindow warningWindow;
+	private static CommunicationMessageWarningWindow warningWindow;
 	static WindowAdapter doNothingWindowAdapter = new WindowAdapter(){
 		public void windowClosing( final WindowEvent e ) {
 			JOptionPane.showMessageDialog( null, "You can only close the lowest level subtree.\n");
@@ -52,7 +51,7 @@ public class NewWindowSubtree {
 		if (!node.isExternal() && !node.isRoot()
 				&& (TreePanel.get_subtree_index() <= (MAX_SUBTREES - 1))) {
 			if (!alreadyClickedOnPhylogeny) {
-				warningWindow = new TreePrunerCommunicationMessageWarningWindow();
+				warningWindow = new CommunicationMessageWarningWindow();
 				SubTreePanel._phylogenies.add(_phylogeny);
 				SubTreePanel.subTreeHierarchy.add(1);
 				SubTreePanel._phylogenies_subtree.add(_phylogeny.subTree(node

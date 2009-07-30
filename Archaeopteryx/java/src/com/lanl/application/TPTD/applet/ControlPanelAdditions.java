@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -22,9 +22,6 @@ import com.Extropia.net.JavaBridge;
 import com.Extropia.net.JavaBridgeTimeOutException;
 import com.Extropia.net.JavaCGIBridgeTimeOutException;
 
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.AutoSave;
-import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class ControlPanelAdditions {
@@ -39,7 +36,7 @@ public class ControlPanelAdditions {
 	public static String lastAction="";
 	public JLabel subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT,JLabel.CENTER);;
 	public static String subTreeWindowHierarchyTEXT ="Tree level: ";
-	static TreePrunerCommunicationMessageWarningWindow warningWindow;
+	static CommunicationMessageWarningWindow warningWindow;
 	public ControlPanel controlPanel;
 	public AutoSave autoSave = new AutoSave();
 	//public ControlPanelAdditions controlPanelExtras;
@@ -69,7 +66,7 @@ public class ControlPanelAdditions {
 	public void addTreePrunerButtons() {
 		final JLabel spacer = new JLabel("");
 		final JLabel spacer2 = new JLabel("");
-		final JLabel spacer3 = new JLabel("");
+		
 		controlPanel.addLabel(spacer2);
 		controlPanel.add_additional_JButton(refresh, controlPanel);
 		
@@ -86,6 +83,13 @@ public class ControlPanelAdditions {
 	//	controlPanel.addLabel(spacer3);
 
 	}
+	
+	public void addTreeDecoratorButtons() {
+		final JLabel spacer2 = new JLabel("");
+		controlPanel.addLabel(spacer2);
+		controlPanel.add_additional_JButton(refresh, controlPanel);
+	}
+	
 	
 	public void addSubTreeWindowHierarchyLabel(){
 		String hierarchyNumber="1.";
@@ -133,7 +137,7 @@ public class ControlPanelAdditions {
 			String returnedString="";
             
             if(ws.toCommunicateWithServer()){
-            	 warningWindow = new TreePrunerCommunicationMessageWarningWindow();
+            	 warningWindow = new CommunicationMessageWarningWindow();
             	returnedString = saveToFileComm(accToRemove);
             	ws.copyAccToRememberAcc();
             //	ws.clear("");
@@ -185,7 +189,7 @@ public class ControlPanelAdditions {
 	                String returnedString="";
 	                
 	                if (ws.toCommunicateWithServer()) {
-	                	warningWindow = new TreePrunerCommunicationMessageWarningWindow();
+	                	warningWindow = new CommunicationMessageWarningWindow();
 						returnedString=deleteFromDbComm(accToRemove);
 						ws.copyAccToRememberAcc();
 						destroyWarningWindow();
@@ -236,7 +240,7 @@ public class ControlPanelAdditions {
                 String returnedString="";
                 if (ws.toCommunicateWithServer()) {
                 	
-                	warningWindow = new TreePrunerCommunicationMessageWarningWindow();
+                	warningWindow = new CommunicationMessageWarningWindow();
 					returnedString = deleteFromDbComm(accToRemove);
 					ws.copyAccToRememberAcc();
 					destroyWarningWindow();
@@ -258,7 +262,7 @@ public class ControlPanelAdditions {
 	    }//end of delete from ws  //SIGMA END
         else if(e.getSource() == discard){
             String returnedString = "";
-            warningWindow = new TreePrunerCommunicationMessageWarningWindow();
+            warningWindow = new CommunicationMessageWarningWindow();
             returnedString = discardComm();
             destroyWarningWindow();
             if(returnedString.equals("success")){
@@ -299,6 +303,18 @@ public class ControlPanelAdditions {
 		
 		
 		
+	}
+	
+	public void addTreeDecoratorButtonFunctions(ActionEvent e){
+		if ( e.getSource() == refresh ) {
+        	for(MainFrame o: SubTreePanel.mainFrames){
+        		if(o!=null)
+        			//paint all slave windows
+        			o.repaintPanel();
+        	}
+        	//paint the master window
+        	SubTreePanel.mainAppletFrame.repaintPanel();
+        }
 	}
 	
 	public String saveToFileComm(String accToRemove){

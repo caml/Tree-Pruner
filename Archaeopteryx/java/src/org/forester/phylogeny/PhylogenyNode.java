@@ -42,6 +42,7 @@ import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.custom.data.Accession;
 import com.lanl.application.TPTD.tree.node.ExtraNodeInfo;
 //********************************************END**********************************************************//
@@ -916,7 +917,9 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
      */
     private void addChildNode( final PhylogenyNode child ) {
     	//******************************************START**********************************************************//
-        Accession.extractAccessionFromStrain(child);
+    	if(AppletParams.isEitherTPorTD()){
+    		Accession.extractAccessionFromStrain(child);
+    	}
         //********************************************END**********************************************************//
         getDescendants().add( child );
     }
@@ -927,7 +930,9 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
         _id = 0;
         initializeData();
       //******************************************START**********************************************************//
-        extraNodeInfo = new ExtraNodeInfo();
+        if(AppletParams.isEitherTPorTD()){
+        	extraNodeInfo = new ExtraNodeInfo();
+        }
       //********************************************END**********************************************************//
     }
 

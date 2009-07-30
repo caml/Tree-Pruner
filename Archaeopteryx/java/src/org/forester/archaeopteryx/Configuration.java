@@ -48,6 +48,7 @@ import org.forester.archaeopteryx.Options.OVERVIEW_PLACEMENT_TYPE;
 import org.forester.archaeopteryx.Options.PHYLOGENY_GRAPHICS_TYPE;
 import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
 //********************************************END**********************************************************//
 
@@ -254,6 +255,19 @@ public class Configuration {
     }
 
     boolean doDisplayClickToOption( final int which ) {
+    //******************************************START**********************************************************//
+    	/**
+    	 * Note to programmer: Whatever happens in this method will also affect do_display_clickToOption(final int which){}
+    	 */
+    	if(which == 6 || which == 7){
+    		if(AppletParams.isTreePruner() ){
+    			clickto_options[which][1] = "display";
+    		}
+    		else{
+    			clickto_options[which][1] = "nodisplay";
+    		}
+    	}
+    //********************************************END**********************************************************//
         return clickto_options[ which ][ 1 ].equals( "display" );
     }
 
@@ -506,7 +520,9 @@ public class Configuration {
         }
       //******************************************START**********************************************************//
         else{
-        	index = keepRemoveConfiguration.getClickToIndex(name,index);
+        	if(AppletParams.isTreePruner() ){
+        		index = keepRemoveConfiguration.getClickToIndex(name,index);
+        	}
         }
       //********************************************END**********************************************************//
         return index;
@@ -981,6 +997,17 @@ public class Configuration {
     
   //******************************************START**********************************************************//
     public boolean do_display_clickToOption( final int which ) {
+    	/**
+    	 * Note to programmer: Whatever happens in this method will also affect doDisplayClickToOption(final int which){}
+    	 */
+    	if(which == 6 || which == 7){
+    		if(AppletParams.isTreePruner() ){
+    			clickto_options[which][1] = "display";
+    		}
+    		else{
+    			clickto_options[which][1] = "nodisplay";
+    		}
+    	}
         return clickto_options[ which ][ 1 ].equals( "display" );
     }
     

@@ -48,9 +48,9 @@ import org.forester.archaeopteryx.phylogeny.data.RenderableDomainArchitecture;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
-import com.lanl.application.treePruner.applet.AppletTerminate;
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AppletTerminate;
 //********************************************END**********************************************************//
-
 
 
 public class MainPanel extends JPanel implements ComponentListener {
@@ -362,7 +362,9 @@ public class MainPanel extends JPanel implements ComponentListener {
 
     void terminate() {
     	//******************************************START**********************************************************//
-    	appletTerminate.terminateAdditionalTasks(this);
+    	if(AppletParams.isEitherTPorTD()){
+    		appletTerminate.terminateAdditionalTasks(this);
+    	}
         //********************************************END**********************************************************//
     	
         for( final TreePanel atvtreepanel : _treepanels ) {

@@ -42,9 +42,9 @@ import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
 import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AppletTerminate;
 import com.lanl.application.TPTD.applet.CrashRevovery;
 import com.lanl.application.TPTD.applet.SubTreePanel;
-import com.lanl.application.treePruner.applet.AppletTerminate;
 //********************************************END**********************************************************//
 
 public class ArchaeopteryxA extends JApplet {
@@ -80,10 +80,14 @@ public class ArchaeopteryxA extends JApplet {
         boolean has_exception = false;
         setName( NAME );
       //******************************************START CHANGED**********************************************************//
-        getParams();
-        setUrlString(AppletParams.urlOfTreeToLoad);
-        //setUrlString( getParameter( Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD ) ); // take url of tree 2 load from applet params and not 
-        																						// from parameter -changed
+        if(getParameter("app_type").equals("0") || getParameter("app_type").equals("1") || getParameter("app_type").equals("2")){
+        	getParams();
+        	setUrlString(AppletParams.urlOfTreeToLoad);
+        }
+        else{
+        	setUrlString( getParameter( Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD ) );
+        }
+        // // take url of tree 2 load from applet params and not// from parameter -changed
       //********************************************END**********************************************************//
         
         Util.printAppletMessage( NAME, "URL of phylogenies to load: \"" + getUrlString() + "\"" );
@@ -103,8 +107,14 @@ public class ArchaeopteryxA extends JApplet {
             repaint();
         }
       //******************************************START CHANGED**********************************************************//
-        final String config_filename = AppletParams.configFilename;
-        //final String config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL ); // take config filename from applet params  
+        final String config_filename;
+        if(AppletParams.isEitherTPorTD() || AppletParams.applicationType == 2){
+        	config_filename = AppletParams.configFilename;
+        }
+        else{
+        	config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL ); 
+        }
+        //// take config filename from applet params  
 																										  // and not from parameter -changed
       //********************************************END**********************************************************//
         
@@ -123,11 +133,15 @@ public class ArchaeopteryxA extends JApplet {
             url = new URL( getUrlString() );
             final Phylogeny[] phys = Util.readPhylogeniesFromUrl( url );
           //******************************************START CHANGED**********************************************************//
-            Util.addPhylogeniesToTabs( phys, AppletParams.tabName, getUrlString(), getMainFrameApplet()
+            if(AppletParams.isEitherTPorTD()){
+            	Util.addPhylogeniesToTabs( phys, AppletParams.tabName, getUrlString(), getMainFrameApplet()
             			.getConfiguration(), getMainFrameApplet().getMainPanel() );
-      //      Util.addPhylogeniesToTabs( phys, new File( url.getFile() ).getName(), getUrlString(), getMainFrameApplet()
-      //           .getConfiguration(), getMainFrameApplet().getMainPanel() );  // changes from name of file to AppletParams.tabName - changed
-          /**when doing TP TD and archae take this as a string and modify the string if TP or TD and as url.getFile() ).getName() when archae*/
+            }
+            else{
+            	  Util.addPhylogeniesToTabs( phys, new File( url.getFile() ).getName(), getUrlString(), getMainFrameApplet()
+            		                 .getConfiguration(), getMainFrameApplet().getMainPanel() );
+            }
+            // changed from name of file to AppletParams.tabName - changed
             //********************************************END**********************************************************//
             getMainFrameApplet().getMainPanel().getControlPanel().showWholeAll();
             getMainFrameApplet().getMainPanel().getControlPanel().showWhole();
@@ -153,9 +167,11 @@ public class ArchaeopteryxA extends JApplet {
         getMainFrameApplet().requestFocus();
         
       //******************************************START**********************************************************//
-        SubTreePanel.mainAppletFrame = _mainframe_applet;
-        AppletTerminate.appletContext = getAppletContext();
-        crashRecovery.crashRecoveryInit();
+        if(AppletParams.isEitherTPorTD()){
+        	SubTreePanel.mainAppletFrame = _mainframe_applet;
+            AppletTerminate.appletContext = getAppletContext();
+            crashRecovery.crashRecoveryInit();
+        }
       //********************************************END**********************************************************//
     }
 
@@ -208,13 +224,13 @@ public class ArchaeopteryxA extends JApplet {
     }
     
     //******************************************START**********************************************************//
-    
     private void getParams(){
     	String urlOfTreeToLoad1 = getParameter(Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD);
     	String configFileName1 = getParameter(Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL);
     	String filename1 = getParameter("filename");
     	String URLprefix1 = getParameter("URLPrefix");
-    	int applicationType1 = Integer.parseInt(getParameter("app_type"));
+    	int applicationType1=-1;
+    	applicationType1 = Integer.parseInt(getParameter("app_type"));
     	String savedAcc1 = getParameter("saved_acc");
     	String savedAccFlag1 = getParameter("saved_acc_flag");
     	String tabName1 = getParameter("tree_panel_tab_name"); 
