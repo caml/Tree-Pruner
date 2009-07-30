@@ -35,7 +35,7 @@ public class ControlPanelAdditions {
 	private JButton refresh;
 	public static String lastAction="";
 	public JLabel subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT,JLabel.CENTER);;
-	public static String subTreeWindowHierarchyTEXT ="Subtree: ";
+	public static String subTreeWindowHierarchyTEXT ="Tree level: ";
 	static TreePrunerCommunicationMessageWarningWindow warningWindow;
 	public ControlPanel controlPanel;
 	public AutoSave autoSave = new AutoSave();
