@@ -95,11 +95,11 @@ import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
 
+import com.lanl.application.TPTD.applet.NewWindowSubtree;
+import com.lanl.application.TPTD.applet.SubTreePanel;
+import com.lanl.application.TPTD.custom.data.Accession;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
-import com.lanl.application.treePruner.custom.data.Accession;
 import com.lanl.application.treePruner.applet.ControlPanelAdditions;
-import com.lanl.application.treePruner.applet.NewWindowSubtree;
-import com.lanl.application.treePruner.applet.SubTreePanel;
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
 import com.lanl.application.treePruner.applet.TreePrunerPaint;
 //********************************************END**********************************************************//

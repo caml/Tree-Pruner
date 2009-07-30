@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.tree.node;
+package com.lanl.application.TPTD.tree.node;
 
 public class ExtraNodeInfo {
 	private String						   _acc;

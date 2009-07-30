@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.awt.Color;
 import java.awt.Container;

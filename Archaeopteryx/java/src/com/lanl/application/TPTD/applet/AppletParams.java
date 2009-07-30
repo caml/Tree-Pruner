@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,7 +10,7 @@ public class AppletParams {
 	public static URL codeBase = null;
 	public static String filename = "";
 	public static String URLprefix = "";
-	public static int applicationType = -1;
+	public static int applicationType = -1;    // 0= TP 1 = TD else Archae
 	public static String savedAcc = "";
 	public static String savedAccFlag = "";
 	public static String tabName = "";

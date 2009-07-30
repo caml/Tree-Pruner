@@ -22,6 +22,9 @@ import com.Extropia.net.JavaBridge;
 import com.Extropia.net.JavaBridgeTimeOutException;
 import com.Extropia.net.JavaCGIBridgeTimeOutException;
 
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AutoSave;
+import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class ControlPanelAdditions {

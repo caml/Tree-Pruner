@@ -41,10 +41,10 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
-import com.lanl.application.treePruner.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.CrashRevovery;
+import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treePruner.applet.AppletTerminate;
-import com.lanl.application.treePruner.applet.CrashRevovery;
-import com.lanl.application.treePruner.applet.SubTreePanel;
 //********************************************END**********************************************************//
 
 public class ArchaeopteryxA extends JApplet {

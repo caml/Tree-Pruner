@@ -42,8 +42,8 @@ import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
-import com.lanl.application.treePruner.custom.data.Accession;
-import com.lanl.application.treePruner.tree.node.ExtraNodeInfo;
+import com.lanl.application.TPTD.custom.data.Accession;
+import com.lanl.application.TPTD.tree.node.ExtraNodeInfo;
 //********************************************END**********************************************************//
 public class PhylogenyNode implements PhylogenyNodeI, Comparable {
 

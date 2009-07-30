@@ -65,10 +65,10 @@ import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import com.lanl.application.treePruner.applet.AppletTerminate;
-import com.lanl.application.treePruner.applet.NewWindowSubtree;
-//********************************************END**********************************************************//
 
+import com.lanl.application.TPTD.applet.NewWindowSubtree;
+import com.lanl.application.treePruner.applet.AppletTerminate;
+//********************************************END**********************************************************//
 
 public abstract class MainFrame extends JFrame implements ActionListener {
 

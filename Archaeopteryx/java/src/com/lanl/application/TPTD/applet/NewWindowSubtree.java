@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.awt.Graphics;
 import java.awt.event.WindowAdapter;
@@ -20,6 +20,9 @@ import org.forester.archaeopteryx.Util; //import org.forester.archaeopteryx.Util
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
+
+import com.lanl.application.treePruner.applet.TreePrunerColorSet;
+import com.lanl.application.treePruner.applet.TreePrunerCommunicationMessageWarningWindow;
 
 public class NewWindowSubtree {
 	private final static int MAX_SUBTREES = 100;

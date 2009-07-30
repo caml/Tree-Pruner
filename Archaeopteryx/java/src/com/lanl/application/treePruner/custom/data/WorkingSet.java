@@ -18,8 +18,8 @@ import org.forester.archaeopteryx.TreePanel;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 
-import com.lanl.application.treePruner.applet.AutoSave;
-import com.lanl.application.treePruner.applet.SubTreePanel;
+import com.lanl.application.TPTD.applet.AutoSave;
+import com.lanl.application.TPTD.applet.SubTreePanel;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +11,7 @@ import org.forester.archaeopteryx.ArchaeopteryxA;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 
-import com.lanl.application.treePruner.tree.TreeInfo;
+import com.lanl.application.TPTD.tree.TreeInfo;
 
 public class SubTreePanel {
 	public static ArrayList<Integer> allNodeIds = new ArrayList<Integer>();

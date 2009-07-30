@@ -48,8 +48,8 @@ import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
-import com.lanl.application.treePruner.applet.AppletFileMenu;
-import com.lanl.application.treePruner.applet.NewWindowSubtree;
+import com.lanl.application.TPTD.applet.AppletFileMenu;
+import com.lanl.application.TPTD.applet.NewWindowSubtree;
 //********************************************END**********************************************************//
 public final class MainFrameApplet extends MainFrame {
 

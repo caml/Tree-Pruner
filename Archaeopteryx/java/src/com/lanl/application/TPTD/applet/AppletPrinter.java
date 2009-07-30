@@ -23,7 +23,7 @@
 // Contact: cmzmasek@yahoo.com
 // WWW: www.phylosoft.org/forester
 
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;

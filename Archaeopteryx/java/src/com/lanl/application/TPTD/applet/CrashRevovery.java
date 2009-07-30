@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
+import com.lanl.application.treePruner.applet.ControlPanelAdditions;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class CrashRevovery {

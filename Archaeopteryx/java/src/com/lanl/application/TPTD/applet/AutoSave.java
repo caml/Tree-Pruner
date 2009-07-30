@@ -1,4 +1,4 @@
-package com.lanl.application.treePruner.applet;
+package com.lanl.application.TPTD.applet;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -8,6 +8,8 @@ import javax.swing.JLabel;
 import org.forester.archaeopteryx.ControlPanel;
 import org.forester.archaeopteryx.MainFrame;
 
+import com.lanl.application.treePruner.applet.ControlPanelAdditions;
+import com.lanl.application.treePruner.applet.TreePrunerCommunicationMessageWarningWindow;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class AutoSave {

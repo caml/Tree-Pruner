@@ -13,6 +13,9 @@ import org.forester.archaeopteryx.TreePanel;
 
 import org.forester.phylogeny.PhylogenyNode;
 
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AutoSave;
+import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class AppletTerminate {
