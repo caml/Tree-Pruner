@@ -10,13 +10,12 @@ public class AppletParams {
 	public static URL codeBase = null;
 	public static String filename = "";
 	public static String URLprefix = "";
-	public static int applicationType = -1;    // 0= TP, 1 = TD, 2 BHB/LANL Archae, else Archae (-1)
-	public static String savedAcc = "";
+	public static int applicationType = -1;    // 0= TP(LANL/BHB), 1 = TD(LANL/BHB), 2 LANL/BHB Archae else Archae (asis sourceforge) ="" or "-1" 
 	public static String savedAccFlag = "";
 	public static String tabName = "";
 	
 	public static void setAppletParams(String urlOfTreeToLoad1,String configFileName1,URL codeBase1, String filename1,
-												String URLprefix1,int applicationType1, String savedAcc1, String savedAccFlag1, String tabName1){
+												String URLprefix1,int applicationType1, String savedAccFlag1, String tabName1){
 		codeBase = codeBase1;
 		if(urlOfTreeToLoad1.startsWith("http")||urlOfTreeToLoad1.startsWith("file")){
 			urlOfTreeToLoad = urlOfTreeToLoad1;
@@ -33,7 +32,6 @@ public class AppletParams {
 		filename = filename1;
 		URLprefix = URLprefix1; 
 		applicationType = applicationType1;
-		savedAcc = savedAcc1;
 		savedAccFlag = savedAccFlag1;
 		tabName = tabName1;
 		

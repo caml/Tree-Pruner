@@ -4,8 +4,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Hashtable;
-import java.util.Vector;
+
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -14,26 +13,21 @@ import javax.swing.JPanel;
 
 import org.forester.archaeopteryx.ControlPanel;
 import org.forester.archaeopteryx.MainFrame;
-import org.forester.atv.ATVapplet;
 
+import org.json.JSONArray;
 
-import com.Extropia.net.JavaCGIBridge;
-import com.Extropia.net.JavaBridge;
-import com.Extropia.net.JavaBridgeTimeOutException;
-import com.Extropia.net.JavaCGIBridgeTimeOutException;
-
+import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class ControlPanelAdditions {
 	
-	private WorkingSet ws = new WorkingSet();;
+	private WorkingSet ws = new WorkingSet();
 	
 	private JButton save_to_file;
 	private JButton delete_from_db;
 	private JButton discard;
 	private JButton undo;
 	private JButton refresh;
-	public static String lastAction="";
 	public JLabel subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT,JLabel.CENTER);;
 	public static String subTreeWindowHierarchyTEXT ="Tree level: ";
 	static CommunicationMessageWarningWindow warningWindow;
@@ -41,9 +35,6 @@ public class ControlPanelAdditions {
 	public AutoSave autoSave = new AutoSave();
 	//public ControlPanelAdditions controlPanelExtras;
 	
-	public ControlPanelAdditions() {
-		
-	}
 	public ControlPanelAdditions(ControlPanel cp) {
 		this.controlPanel = cp;
 		save_to_file = new JButton("Save");
@@ -129,23 +120,13 @@ public class ControlPanelAdditions {
         	//paint the master window
         	SubTreePanel.mainAppletFrame.repaintPanel();
         }
-		
-		//#######################
-		
 		else if ( e.getSource() == save_to_file ) {
-			String accToRemove = ws.getACCasString();   //acc ==accToRemove //get_rem_acc == toCommunicateWithServer && getACCasString
-			String returnedString="";
-            
-            if(ws.toCommunicateWithServer()){
-            	 warningWindow = new CommunicationMessageWarningWindow();
-            	returnedString = saveToFileComm(accToRemove);
+			JSONArray accToRemove = ws.getACCasJSONarray();   
+			if(ws.toCommunicateWithServer()){
+            	warningWindow = new CommunicationMessageWarningWindow();
+            	TreePrunerCommunication.saveToFileComm(accToRemove);
             	ws.copyAccToRememberAcc();
-            //	ws.clear("");
-            	
             	ws.clearSavedStuff();
-            	ws.copyStuffToSavedStuff();
-            	
-            	//System.out.println("++++++++++++_________________"+savedACC.toString() + savedREMOVE_ALL.toString());
             	destroyWarningWindow();
             }
             else if(!ws.toCommunicateWithServer()){
@@ -158,14 +139,7 @@ public class ControlPanelAdditions {
             //now clear out the arrays for sequences selected for next session
                
             ws.clearListsForNextSession();
-            if(returnedString.equals("Can't open file")){
-            	System.out.println("SAVE PRESSED \n");
-            	System.out.println(this.toString() + "\n Server reurned: Can't open file");
-            }
-            else if (returnedString.equals("File successfully opened and written")){
-            	System.out.println("SAVE PRESSED \n");
-            	System.out.println(this.toString() + "\n Server reurned: File successfully opened and written");
-            }
+            ws.copyStuffToSavedStuff();
         }
         else if(e.getSource() == delete_from_db){
         	if(!SubTreePanel.mainFrames.isEmpty()|| SubTreePanel.mainFrames.size()>=1 || 
@@ -183,27 +157,13 @@ public class ControlPanelAdditions {
             	
         	
             	if(n==JOptionPane.YES_OPTION){
-	           // 	ATVapplet atva = new ATVapplet();
-	           //     _atvappletframe=atva.get_applet_frame();  
-            		String accToRemove = ws.getACCasString();
-	                String returnedString="";
-	                
-	                if (ws.toCommunicateWithServer()) {
+	        		JSONArray accToRemove = ws.getACCasJSONarray();
+	                if (ws.toCommunicateWithServerForDelete()) {
 	                	warningWindow = new CommunicationMessageWarningWindow();
-						returnedString=deleteFromDbComm(accToRemove);
+	                	TreePrunerCommunication.deleteFromDbComm(accToRemove);
 						ws.copyAccToRememberAcc();
 						destroyWarningWindow();
-						if(returnedString.equals("Accessions successfully deleted")){
-		                	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
-		                	
-		                }
-		                else if (returnedString.equals("Nothing deleted")){
-		                	JOptionPane.showMessageDialog( null, "Your Seqences were not deleted.\n Please make sure " +
-		                			"that the sequences are not already deleted. \n " +
-		                			"Please contact flu@lanl.gov if your problem persists.","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE );
-		                }
-						
-	                }
+				    }
 	            	//SIGM START
 	                
             
@@ -216,93 +176,40 @@ public class ControlPanelAdditions {
 	                if(SubTreePanel.mainAppletFrame!=null){
 	                	SubTreePanel.mainAppletFrame.closeOnDelete();
 	                }
-		            
-		            
-		 //           stored_levels.clear();
-	            
-            /*
-		            System.out.println("9999999999999999999998888888888888888 "+ATVtreePanel.atvFrames);
-		            System.out.println("9999999999999999999998888888888888888 "+ATVtreePanel._phylogenies);
-		            System.out.println("9999999999999999999998888888888888888 "+ATVtreePanel._phylogenies_subtree);
-		            System.out.println("9999999999999999999998888888888888888 "+ATVtreePanel.sub_frame_count);
-		            System.out.println("9999999999999999999998888888888888888 "+ATVtreePanel._subtree_index);*/
-		            //if(_atvappletframe!=null){
-		            //	_atvappletframe.close();
-		            //}
             	}
             	else if(n==JOptionPane.NO_OPTION){ 
             		//dont do anything as user has clicked dont commit 
-            		
             	}
 	        }
             else {   //Only the parent Window is open
-            	String accToRemove = ws.getACCasString();
-                String returnedString="";
-                if (ws.toCommunicateWithServer()) {
-                	
+            	JSONArray accToRemove = ws.getACCasJSONarray();
+                if (ws.toCommunicateWithServerForDelete()) {
                 	warningWindow = new CommunicationMessageWarningWindow();
-					returnedString = deleteFromDbComm(accToRemove);
+                	TreePrunerCommunication.deleteFromDbComm(accToRemove);
 					ws.copyAccToRememberAcc();
 					destroyWarningWindow();
-					if(returnedString.equals("Accessions successfully deleted")){
-	                	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
-	                	
-	                }
-	                else if (returnedString.equals("Nothing deleted")){
-	                	JOptionPane.showMessageDialog( null, "Your Seqences were not deleted.\n Please make sure " +
-	                			"that the sequences are not already deleted. \n " +
-	                			"Please contact flu@lanl.gov if your problem persists.","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE );
-	                }
-					
-                }
+			    }
             	if(SubTreePanel.mainAppletFrame!=null){
             		SubTreePanel.mainAppletFrame.closeOnDelete();
                 }
             }
 	    }//end of delete from ws  //SIGMA END
         else if(e.getSource() == discard){
-            String returnedString = "";
             warningWindow = new CommunicationMessageWarningWindow();
-            returnedString = discardComm();
+            TreePrunerCommunication.discardComm();
             destroyWarningWindow();
-            if(returnedString.equals("success")){
-            	System.out.println("Discard PRESSED \n");
-            	System.out.println(this.toString() + "\n Server reurned: file successfully deleted");
-            }
-            else if (returnedString.equals("fail")){
-            	System.out.println("Discard PRESSED \n");
-            	System.out.println(this.toString() + "\n Server reurned: Failed to delete the file because no file was present or permissions");
-            }	
-			
             ws.clearAllLists();
+            ws.clearSavedStuff();
             AutoSave.resetAutoSave();
             autoSave.refreshAutoSaveTimeInAllFrames();
-            
-           controlPanel.displayed_phylogeny_mightHaveChanged(true);
+            controlPanel.displayed_phylogeny_mightHaveChanged(true);
             ws.clear("rm_all");
-            /*if(s.equals("Accessions successfully deleted")){
-            	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
-            }
-            else if (s.equals("Nothing deleted")){
-            	JOptionPane.showMessageDialog( null, "Your Seqences were not deleted.\n Please make sure " +
-            			"that the sequences are not already deleted. \n " +
-            			"Please contact flu@lanl.gov if your problem persists.","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE );
-            }*/
         }
         else if(e.getSource() == undo){
         	 ws.clearAllLists();
-//             System.out.println("SAVED REMOVE ALL "+savedREMOVE_ALL.toString());
-//            System.out.println("SAVED ACC "+savedACC.toString());
              ws.resetRemoveALL();
              ws.resetACC();
         }
-		
-		
-		//########################
-		
-		
-		
-		
 	}
 	
 	public void addTreeDecoratorButtonFunctions(ActionEvent e){
@@ -317,286 +224,7 @@ public class ControlPanelAdditions {
         }
 	}
 	
-	public String saveToFileComm(String accToRemove){
-		/**
-		 * Note to programmer:
-		 * dont use controlPanel variable as call from AppletTerminate uses the empty constructor
-	 	 *	Beware of nullPointerException
-		 */
-		lastAction="save";
-		String returnedString = "";
-
-		//################
-		Vector returnedDataSet = null;
-        URL u = null;
-        Hashtable formVars = new Hashtable();
-        String filename = AppletParams.filename;
-        if(isCommunicationGET()){
-        	JavaBridge jb = new JavaBridge();
-        	String getURL = getSetupFileForGET();
-        	try {
-                if (getURL.startsWith("http")) {
-                     u = new URL(getURL); 
-                } else {
-                     u = new URL( getURL);
-                }
-                jb.addFormValue(formVars,"comm", "on");
-                jb.addFormValue(formVars,
-                        "mark_in_DB",accToRemove);
-                jb.addFormValue(formVars,
-                            "filename",filename);
-                jb.addFormValue(formVars, "action", "save");  //BHB06--09
-                returnedDataSet = jb.getParsedData(u,formVars);
-        	}
-        	catch (NullPointerException e){            // Caught because the getURL is null when the Archae is run as TP/TD-Application
-				destroyWarningWindow();
-				System.out.println("Null Pointer Exception: " + e);
-			}
-        	catch (MalformedURLException e) {
-        		destroyWarningWindow();
-                System.out.println("Malformed URL Exception:" + e);
-            } catch (JavaBridgeTimeOutException e) {   //BHB06--09
-            	destroyWarningWindow();
-                System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
-            }
-		}
-		else{
-			JavaCGIBridge jcb = new JavaCGIBridge();
-			String postURL =getSetupFileForPOST();
-			try {
-	            if (postURL.startsWith("http")) {
-	                 u = new URL(postURL); 
-	            } else {
-	                 u = new URL( postURL);
-	            }
-	            
-	            jcb.addFormValue(formVars,"comm", "on");
-	            jcb.addFormValue(formVars,
-	                "mark_in_DB",accToRemove);
-	            jcb.addFormValue(formVars,
-	                    "filename",filename);
-	            returnedDataSet = jcb.getParsedData(u,formVars);
-			}
-			catch (NullPointerException e){            // Caught because the postURL is null when the Archae is run as TP/TD-Application
-				destroyWarningWindow();
-				System.out.println("Null Pointer Exception: " + e);
-			}
-			catch (MalformedURLException e) {
-				destroyWarningWindow();
-				System.out.println("Malformed URL Exception:" + e);
-			} catch (JavaCGIBridgeTimeOutException e) {
-				destroyWarningWindow();
-				System.out.println("JavaCGIBridge Timed Out:" + e);
-			}
-		}
-        if(!returnedDataSet.isEmpty()){
-        	returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
-        }
-	    System.out.println("returned string AT SaveToFile"+returnedString);
-
-		
-		//#################
-		
-		
-		return returnedString;
-	}
-	
-	public String deleteFromDbComm (String accToRemove){
-		/**
-		 * Note to programmer:
-		 * dont use controlPanel variable as call from AppletTerminate uses the empty constructor
-	 	 *	Beware of nullPointerException
-		 */
-		lastAction="delete";
-		String returnedString = "";
-		
-		//################
-		Vector returnedDataSet = null;
-        URL u = null;
-        Hashtable formVars = new Hashtable();
-        String filename = AppletParams.filename;
-        if(isCommunicationGET()){
-        	JavaBridge jb = new JavaBridge();
-        	String getURL = getSetupFileForGET();
-        	try {
-                if (getURL.startsWith("http")) {
-                     u = new URL(getURL); 
-                } else {
-                     u = new URL( getURL);
-                }
-                jb.addFormValue(formVars,"comm", "on");
-                jb.addFormValue(formVars,
-                    "delete_from_DB",accToRemove);
-                jb.addFormValue(formVars,
-                        "filename",filename);
-                jb.addFormValue(formVars, "action", "commit");  //BHB06--09
-                returnedDataSet = jb.getParsedData(u,formVars);
-        	}
-        	catch (NullPointerException e){            // Caught because the getURL is null when the Archae is run as TP/TD-Application
-				destroyWarningWindow();
-				System.out.println("Null Pointer Exception: " + e);
-			}
-        	catch (MalformedURLException e) {
-        		destroyWarningWindow();
-                System.out.println("Malformed URL Exception:" + e);
-            } catch (JavaBridgeTimeOutException e) {   //BHB06--09
-            	destroyWarningWindow();
-                System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
-            }
-		}
-		else{
-			JavaCGIBridge jcb = new JavaCGIBridge();
-			String postURL =getSetupFileForPOST();
-			try {
-	            if (postURL.startsWith("http")) {
-	                 u = new URL(postURL); 
-	            } else {
-	                 u = new URL( postURL);
-	            }
-	            
-	            jcb.addFormValue(formVars,"comm", "on");
-	            jcb.addFormValue(formVars,
-	                "delete_from_DB",accToRemove);
-	            jcb.addFormValue(formVars,
-	                    "filename",filename);
-	            returnedDataSet = jcb.getParsedData(u,formVars);
-			}
-			catch (NullPointerException e){            // Caught because the postURL is null when the Archae is run as TP/TD-Application
-				destroyWarningWindow();
-				System.out.println("Null Pointer Exception: " + e);
-			}
-			catch (MalformedURLException e) {
-				destroyWarningWindow();
-				System.out.println("Malformed URL Exception:" + e);
-			} catch (JavaCGIBridgeTimeOutException e) {
-				destroyWarningWindow();
-				System.out.println("JavaCGIBridge Timed Out:" + e);
-			}
-		}
-        if(!returnedDataSet.isEmpty()){
-        	returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
-        }
-	    System.out.println("returned string AT SaveToFile"+returnedString);
-
-		
-		//#################
-
-		
-		return returnedString;
-	}
-	
-	public String discardComm(){
-		/**
-		 * Note to programmer:
-		 * dont use controlPanel variable as call from AppletTerminate uses the empty constructor
-	 	 *	Beware of nullPointerException
-		 */
-		lastAction="discard";
-		String returnedString ="";
-		
-		//################
-		Vector returnedDataSet = null;
-        URL u = null;
-        Hashtable formVars = new Hashtable();
-        String filename = AppletParams.filename;
-        if(isCommunicationGET()){
-        	JavaBridge jb = new JavaBridge();
-        	String getURL = getSetupFileForGET();
-        	try {
-                if (getURL.startsWith("http")) {
-                     u = new URL(getURL); 
-                } else {
-                     u = new URL( getURL);
-                }
-                jb.addFormValue(formVars,"comm", "on");
-                jb.addFormValue(formVars,
-                    "del_file","Delete filename");
-                jb.addFormValue(formVars,
-                        "filename",filename);
-                jb.addFormValue(formVars, "action", "discard");  //BHB06--09
-                returnedDataSet = jb.getParsedData(u,formVars);
-        	}
-        	catch (NullPointerException e){            // Caught because the getURL is null when the Archae is run as TP/TD-Application
-				destroyWarningWindow();
-				System.out.println("Null Pointer Exception: " + e);
-			}
-        	catch (MalformedURLException e) {
-        		destroyWarningWindow();
-                System.out.println("Malformed URL Exception:" + e);
-            } catch (JavaBridgeTimeOutException e) {   //BHB06--09
-            	destroyWarningWindow();
-                System.out.println("JavaBridge Timed Out:" + e);  //BHB06--09
-            }
-		}
-		else{
-			JavaCGIBridge jcb = new JavaCGIBridge();
-			String postURL =getSetupFileForPOST();
-			try {
-	            if (postURL.startsWith("http")) {
-	                 u = new URL(postURL); 
-	            } else {
-	                 u = new URL( postURL);
-	            }
-	            
-	            jcb.addFormValue(formVars,"comm", "on");
-	            jcb.addFormValue(formVars,
-	                "del_file","Delete filename");
-	            jcb.addFormValue(formVars,
-	                    "filename",filename);
-	            returnedDataSet = jcb.getParsedData(u,formVars);
-			}
-			catch (NullPointerException e){            // Caught because the postURL is null when the Archae is run as TP/TD-Application
-				destroyWarningWindow();
-				System.out.println("Null Pointer Exception: " + e);
-			}
-			catch (MalformedURLException e) {
-				destroyWarningWindow();
-				System.out.println("Malformed URL Exception:" + e);
-			} catch (JavaCGIBridgeTimeOutException e) {
-				destroyWarningWindow();
-				System.out.println("JavaCGIBridge Timed Out:" + e);
-			}
-		}
-        if(!returnedDataSet.isEmpty()){
-        	returnedString = (String)((Vector)returnedDataSet.elementAt(0)).elementAt(0);
-        }
-	    System.out.println("returned string AT SaveToFile"+returnedString);
-
-		
-		//#################
-
-		
-		return returnedString;
-	}
-	
-	private String getSetupFileForPOST() {
-        String postURL = null;
-        try {
-            URL u = new URL(AppletParams.codeBase,"ATVserver.cgi");
-            postURL= u.toString();
-        } catch (MalformedURLException e) {
-            System.out.println("Malformed URL Exception:" + e);
-        } 
-        return postURL;
-    } // end of getSetupFilePOST
-	
-	private String getSetupFileForGET() {
-        String getURL = null;
-        try {
-        	URL u = new URL(AppletParams.URLprefix + "?"); //BHB06--09
-            System.out.println("URL in getSetupFile in ATVControl" + u); //BHB06--09 //changed text
-            getURL= u.toString();
-        } catch (MalformedURLException e) {
-            System.out.println("Malformed URL Exception:" + e);
-        } 
-        return getURL;
-    } // end of getSetupFileGET
-	
-	private boolean isCommunicationGET(){
-		return(AppletParams.URLprefix.length()>0);
-	}
-	
-	private static void destroyWarningWindow(){
+	public static void destroyWarningWindow(){
         if(warningWindow!=null){
         	warningWindow.close();
                 

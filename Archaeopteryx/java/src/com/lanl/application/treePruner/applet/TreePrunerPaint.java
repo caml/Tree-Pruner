@@ -43,41 +43,19 @@ public class TreePrunerPaint {
 																			// kmohan
 																			// 07/24
 //		System.out.println("remove active:   " + rmActiveSeqIds.toString());
-		// System.out.println("remove inactive: " +
-		// rmInactiveSeqIds.toString());
+		
 //		System.out.println("remove_all:      " + rmAllSeqIds.toString());
 //		System.out.println("keep:            " + keepSeqIds.toString());
-		// System.out.println("revert:          " + revertSeqIds.toString() );
-		// // commented- kmohan 07/24 //REMOVE COMMENT mk
 //		System.out.println("color nodes      " + colorNodesSeqIds.toString());
-		// System.out.println("remClicked       " + remClickedSeqIds.toString()
-		// );
-		// System.out.println("parentToRoot     " +
-		// parentToRootSeqIds.toString() );
+//		System.out.println("savedRemoveALL       " + ws.getSavedRemoveAll().toString());
+//		System.out.println("savedACC       " + ws.getSavedACC().toString());
+//		System.out.println("rememberACC       " + ws.getRemember_ACC().toString());
+		
 //		System.out.println("rmAllSeqACC     " + rmAllSeqACC.toString());
 //		System.out.println("keepACC     " + keepACC.toString());
 //		System.out.println("rem_ACC     " + rem_ACC.toString());
-		/*
-		 * if( ignoreRevert == false){ if( ignoreRevert == false){ if(
-		 * revertSeqIds.isEmpty() && rmAllSeqIds.contains( node.getNodeId()))
-		 * g.setColor( treePanel.getTheTreeColorSet().get_inactive_color());
-		 * else if( revertSeqIds.isEmpty() && !rmAllSeqIds.contains(
-		 * node.getNodeId())) g.setColor(
-		 * treePanel.getTheTreeColorSet().get_species_name_color()); else if(
-		 * revertSeqIds.contains( node.getNodeId())) g.setColor(
-		 * treePanel.getTheTreeColorSet().get_species_name_color()); else if(
-		 * !revertSeqIds.contains( node.getNodeId()) && !rmAllSeqIds.contains(
-		 * node.getNodeId()))
-		 * g.setColor(treePanel.getTheTreeColorSet().get_species_name_color());
-		 * else g.setColor(
-		 * treePanel.getTheTreeColorSet().get_inactive_color()); } } //a removed
-		 * node (inactive) is clicked again - revert to regular color again
-		 * else{ // System.out.println("\n op_type " + op_type); //
-		 * System.out.println
-		 * ("\nATVtreePanel.paintNOdeData(): Ready for removal with node id " +
-		 * node.getNodeId() + " (active = " + node.isActive() +
-		 * ") if contained in " + rmInactiveSeqIds.toString());
-		 */
+		
+	
 
 		if (rmAllSeqIds.contains(node.getNodeId())) {
 			g.setColor(TreePrunerColorSet.getRemoveColor());

@@ -7,7 +7,9 @@ import javax.swing.JLabel;
 
 import org.forester.archaeopteryx.ControlPanel;
 import org.forester.archaeopteryx.MainFrame;
+import org.json.JSONArray;
 
+import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class AutoSave {
@@ -69,43 +71,23 @@ public class AutoSave {
 	
 	public static void doAutoSave(ControlPanelAdditions controlPanelAdditions, WorkingSet ws,CommunicationMessageWarningWindow warningWindow){
 		if(timeToAutoSave()){
-			String accToRemove = ws.getACCasString();   //acc ==accToRemove //get_rem_acc == toCommunicateWithServer && getACCasString
-			String returnedString="";
-            
-            if(ws.toCommunicateWithServer()){
-            	 warningWindow = new CommunicationMessageWarningWindow();
-            	returnedString = controlPanelAdditions.saveToFileComm(accToRemove);
+			JSONArray accToRemove = ws.getACCasJSONarray();   //acc ==accToRemove //get_rem_acc == toCommunicateWithServer && getACCasString
+		    if(ws.toCommunicateWithServer()){
+            	warningWindow = new CommunicationMessageWarningWindow();
+            	TreePrunerCommunication.saveToFileComm(accToRemove);
             	ws.copyAccToRememberAcc();
-            //	ws.clear("");
-            	
-           // 	ws.clearSavedStuff();  // not saving // only remembering (remACC - autosave)
-           // 	ws.copyStuffToSavedStuff();  // not saving // only remembering (remACC - autosave)
-            	
-            	//System.out.println("++++++++++++_________________"+savedACC.toString() + savedREMOVE_ALL.toString());
             	destroyWarningWindow(warningWindow);
             	autoSaved = true;
             }
             else if(!ws.toCommunicateWithServer()){
-            	
             }
             else{
             	//Don't do anything if all arrays (keep, remove and revert) are empty
             }
             
-            //now clear out the arrays for sequences selected for next session
-               
          //   ws.clearListsForNextSession();   //This will clear out all the lists (node lists) which we dont want // Also we dont want the color nodes 
             //to be copied to the remove all nodes which will gray them.
-            if(returnedString.equals("Can't open file")){
-            	System.out.println("AUTO SAVE \n");
-            	System.out.println(controlPanelAdditions.toString() + "\n Server reurned: Can't open file");
-            }
-            else if (returnedString.equals("File successfully opened and written")){
-            	System.out.println("AUTO SAVE \n");
-            	System.out.println(controlPanelAdditions.toString() + "\n Server reurned: File successfully opened and written");
-            }
-            
-		}
+       }
 		else{
 			autoSaved = false;
 		}

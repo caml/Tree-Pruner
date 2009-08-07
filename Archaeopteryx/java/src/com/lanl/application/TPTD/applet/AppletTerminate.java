@@ -12,11 +12,13 @@ import org.forester.archaeopteryx.TreePanel;
 
 
 import org.forester.phylogeny.PhylogenyNode;
+import org.json.JSONArray;
 
+import com.lanl.application.treePruner.applet.TreePrunerCommunication;
+import com.lanl.application.treePruner.applet.TreePrunerCommunicationNames;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
 public class AppletTerminate {
-	ControlPanelAdditions controlPanelAdditions = new ControlPanelAdditions();
 	WorkingSet ws = new WorkingSet();
 	MainFrame mainFrame;
 	public static AppletContext appletContext;
@@ -33,27 +35,14 @@ public class AppletTerminate {
 								+ "the subtree windows.\n"
 								+ "This will result in termination of your applet session. \n"
 								+ "Your current session will be saved so that you may return to it if required.");
-		String accToRemove = ws.getACCasString();
-
-		String returnedString = "";
+		JSONArray accToRemove = ws.getACCasJSONarray();
 		if (ws.toCommunicateWithServer()) {
-			returnedString = controlPanelAdditions.saveToFileComm(accToRemove);
+			TreePrunerCommunication.saveToFileComm(accToRemove);
 		} else if (!ws.toCommunicateWithServer()) {
 
 		} else {
 			// Don't do anything if all arrays (keep, remove and revert) are
 			// empty
-		}
-		if (returnedString.equals("Can't open file")) {
-			System.out.println("SAVE \n");
-			System.out.println(this.toString()
-					+ "\n Server reurned: Can't open file");
-		} else if (returnedString
-				.equals("File successfully opened and written")) {
-			System.out.println("SAVE \n");
-			System.out
-					.println(this.toString()
-							+ "\n Server reurned: File successfully opened and written");
 		}
 		for (MainFrame o : SubTreePanel.mainFrames) {
 			if (o != null) {
@@ -61,7 +50,7 @@ public class AppletTerminate {
 			}
 		}
 		SubTreePanel.clearListsOnClose();
-		ControlPanelAdditions.lastAction = "";
+		TreePrunerCommunication.lastAction = "";
 		ws.clearAllLists();
 		AutoSave.resetAutoSave();
 	}
@@ -79,9 +68,9 @@ public class AppletTerminate {
 //	        atvc.auto_save_time= "Not Saved Yet";
 
 	        PhylogenyNode.setNodeCount(0);
-	        String accToRemove = ws.getACCasString();
-	        if(ws.toCommunicateWithServer() ){  //CASE: If person clicked on the delete last or did not make any save or delete and has some accessions marked for removal and is quitting.
-	        	ControlPanelAdditions.lastAction = "";
+	        JSONArray accToRemove = ws.getACCasJSONarray();
+	        if(ws.toCommunicateWithServerForDelete() ){  //CASE: If person clicked on the delete last or did not make any save or delete and has some accessions marked for removal and is quitting.
+	        	TreePrunerCommunication.lastAction = "";
 	    		Object[] options = {"Commit Changes",
 	    				             "Resave Changes",
 	    				             "Discard Changes"};
@@ -94,44 +83,20 @@ public class AppletTerminate {
 	    				null,
 	    				options,
 	    				options[1]);	
-	    		String returnedString;
 	    		if(n==JOptionPane.YES_OPTION){
-	    			returnedString = controlPanelAdditions.deleteFromDbComm(accToRemove);
-	    			if(returnedString.equals("Accessions successfully deleted")){
-	                	JOptionPane.showMessageDialog( mainPanel, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
-	                }
-	                else if (returnedString.equals("Nothing deleted")){
-	                	JOptionPane.showMessageDialog( mainPanel, "Your Seqences were not deleted.\n Please make sure " +
-	                			"that the sequences are not already deleted. \n " +
-	                			"Please contact flu@lanl.gov if your problem persists.","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE );
-	                }
+	    			TreePrunerCommunication.deleteFromDbComm(accToRemove);
 	    		}
 	    		else if(n==JOptionPane.NO_OPTION){
-	    			returnedString = controlPanelAdditions.saveToFileComm(accToRemove);
-	    			ControlPanelAdditions.lastAction = "";
-	               	if(returnedString.equals("Can't open file")){
-	                   	System.out.println("SAVE on TERMINATE PRESSED \n");
-	                   	System.out.println(this.toString() + "\n ATVserver.cgi reurned: Can't open file");
-	               	}	
-	               	else if (returnedString.equals("File successfully opened and written")){
-	                   	System.out.println("SAVE on TERMINATE PRESSED \n");
-	                   	System.out.println(this.toString() + "\n ATVserver.cgi reurned: File successfully opened and written");
-	               	}
-	    		}
+	    			TreePrunerCommunication.saveToFileComm(accToRemove);
+	    			TreePrunerCommunication.lastAction = "";
+	            }
 	    		else if (n==JOptionPane.CANCEL_OPTION){
-	    			returnedString = controlPanelAdditions.discardComm();
-	    			if(returnedString.equals("success")){
-	                	System.out.println("Discard on TERMINATE PRESSED \n");
-	                	System.out.println(this.toString() + "\n ATVserver.cgi reurned: file successfully deleted");
-	                }
-	                else if (returnedString.equals("fail")){
-	                	System.out.println("Discard on TERMINATE PRESSED \n");
-	                	System.out.println(this.toString() + "\n ATVserver.cgi reurned: Failed to delete the file because no file was present or permissions");
-	                }
+	    			TreePrunerCommunication.discardComm();
 	    		}
 	    	}
-	    	else if(ControlPanelAdditions.lastAction.equals("save")){ //CASE: If person clicked on save and then did not make the final delete from DB and is quitting.
-	    		ControlPanelAdditions.lastAction = "";
+	      //CASE: If person clicked on save and then did not make the final delete from DB and is quitting.
+	    	else if(TreePrunerCommunication.lastAction.equals(TreePrunerCommunicationNames.SAVE.getName())){ 
+	    		TreePrunerCommunication.lastAction = "";
 	    		Object[] options = {"Commit Changes",
 	    							"Resave Changes",
 	    							"Discard Changes"};
@@ -144,28 +109,11 @@ public class AppletTerminate {
 	    				null,
 	    				options,
 	    				options[1]);
-	    		String returnedString;
 	    		if(n==JOptionPane.YES_OPTION){
-	    			returnedString = controlPanelAdditions.deleteFromDbComm(accToRemove);
-	    			if(returnedString.equals("Accessions successfully deleted")){
-	                	JOptionPane.showMessageDialog( mainPanel, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
-	                }
-	                else if (returnedString.equals("Nothing deleted")){
-	                	JOptionPane.showMessageDialog( mainPanel, "Your Seqences were not deleted.\n Please make sure " +
-	                			"that the sequences are not already deleted. \n " +
-	                			"Please contact flu@lanl.gov if your problem persists.","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE );
-	                }
+	    			TreePrunerCommunication.deleteFromDbComm(accToRemove);
 	    		}
 	    		else if(n==JOptionPane.CANCEL_OPTION){
-	    			returnedString = controlPanelAdditions.discardComm();
-	    			if(returnedString.equals("success")){
-	                	System.out.println("Discard on TERMINATE PRESSED \n");
-	                	System.out.println(this.toString() + "\n ATVserver.cgi reurned: file successfully deleted");
-	                }
-	                else if (returnedString.equals("fail")){
-	                	System.out.println("Discard on TERMINATE PRESSED \n");
-	                	System.out.println(this.toString() + "\n ATVserver.cgi reurned: Failed to delete the file because no file was present or permissions");
-	                }
+	    			TreePrunerCommunication.discardComm();
 	    		}
 	    		else if(n==JOptionPane.NO_OPTION){
 	    			//keep them as saved //do nothing
@@ -176,7 +124,7 @@ public class AppletTerminate {
 	    	ws.clearAllLists();
 	    	AutoSave.resetAutoSave();
 //	        atvp.set_base(0);
-	    	ControlPanelAdditions.lastAction = "";
+	    	TreePrunerCommunication.lastAction = "";
 	        SubTreePanel.clearListsOnClose();
     	}
     	else{
@@ -232,7 +180,7 @@ public class AppletTerminate {
 	
 	public static void closePageOnTerminate(MainFrame mf){
 		if (SubTreePanel.mainAppletFrame == mf){
-			if(AppletParams.URLprefix.equals("")){  //LANL
+			if(AppletParams.codeBase.toString().contains("lanl")){  //LANL
 				try {
 					URL searchPage = new URL(AppletParams.codeBase,"close.html");
 					appletContext.showDocument(searchPage,"_parent");

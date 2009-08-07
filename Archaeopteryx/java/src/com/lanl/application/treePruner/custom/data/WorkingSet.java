@@ -17,6 +17,7 @@ import java.util.Iterator;
 import org.forester.archaeopteryx.TreePanel;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
+import org.json.JSONArray;
 
 import com.lanl.application.TPTD.applet.AutoSave;
 import com.lanl.application.TPTD.applet.SubTreePanel;
@@ -25,22 +26,10 @@ import java.util.*;
 
 public class WorkingSet {
 
-	//mira 052108 - delete DBAccess stuff again when replaced with server-client interaction mechanism
-	
-//	final static public int 			set_id 										= 6787;
-//	private boolean 					rmFromWS;
-    //per session - these ArrayLists get emptied out after committing to the WS
-	//mira 052008 - no type sepcified for ArrayLists because they are int not of type Object
-	//mira 071408: "ACTIVE" - to paint node in black; "INACTIVE" - to paint node in gray; - this is for toggling back and forth
     final static ArrayList     			KEEP_ACTIVE 		 			 		 	= new ArrayList(); //mira 052008 - memorize all nodes selected to keep in working set for current session
-//    final static ArrayList    		    REMOVE_INACTIVE 			  				= new ArrayList(); //not used anymore
     final static ArrayList    		    REMOVE_ACTIVE 			  					= new ArrayList(); //used to store accessions of nodes that are clicked per session for checks b/w keep and remove
     final static ArrayList    		    REMOVE_ALL 							  		= new ArrayList(); //mira 052008 - no type sepcified because this can be seq name or seq id or accession etc.
-//    final static ArrayList    		    REVERT_ACTIVE 			  					= new ArrayList(); //not used anymore
- //   final static ArrayList 				remClicked									= new ArrayList(); //not used anymore
- //   final static ArrayList 				remClicked1									= new ArrayList(); //kmohan 07/29 - to remember the nodes clicked.only remembers the nodes that were cliked and not the children. 
     final static ArrayList 				COLOR_NODES									= new ArrayList(); //kmohan 07/25 - Intermediate list to check which are to be colored 
-//    final static ArrayList				PARENT_TO_ROOT								= new ArrayList(); //not used anymore
     final static ArrayList<String>              ACC                                 = new ArrayList<String>(); //kmohan 10/16  used to store the external nodes node accessions.
     final static ArrayList<String>              remember_ACC                      = new ArrayList<String>(); //kmohan 10/20  used to remember the last  external nodes node accessions.used for comparison b/w ACC and rem_ACC
     final static ArrayList<String>              keepACC                             = new ArrayList<String>(); //Accession to keeps
@@ -53,37 +42,6 @@ public class WorkingSet {
 	public WorkingSet(){
 		
 	}
-	
-	// //mira 052108 - delete again
-	/*public void connectDB(){
-		System.out.println("ATVcontrol.connectDB() with url jdbc:postgresql://asiatic.lanl.gov:5432/isdora and schema postgres");
-		DBAccess.setURL( "jdbc:postgresql://asiatic.lanl.gov:5432/isdora");
-		DBAccess.setSchema( "postgres");
-		try{
-			dba = DBAccess.getInstance();
-		}
-		catch( SQLException sqle){
-			System.out.println( "\nATVcontrol.connectDB(): " + sqle.getMessage());
-			System.exit(0);
-		}
-	}
-	
-	public void disconnectDB(){
-		try{
-			dba.commit();
-			dba.closeConnection();
-		}
-		catch( SQLException sqle){
-			System.out.println( "\nPopulateTable() - Error comitting to or disconnecting from DB:\n" + sqle.getMessage());
-		}
-	}
-	
-    */
-   
-	/**
-     * 
-     * 
-     */
 	//################################## KEEP/REMOVE ALGO BEGIN ###########################################//
     
     
@@ -378,17 +336,13 @@ public class WorkingSet {
     	else return( true );
     }
     
-    public boolean notToCommunicateWithServerForDelete(){
-    	return(getACC().isEmpty());
+    public boolean toCommunicateWithServerForDelete(){
+    	return(!getACC().isEmpty());
     }
-    public String getACCasString(){
-    	String s2="";
-    	Object a1[] = ACC.toArray();
-    	for(int i =0; i<a1.length;i++){
-    	   s2 += a1[i].toString() +" ";
-    	}
-    	System.out.println("S2"+" "+s2);
-    	return s2;
+    public JSONArray getACCasJSONarray(){
+    	JSONArray jsonArray = new JSONArray(ACC);
+    	
+    	return jsonArray;
     }
     
   //################################## SERVER COMM HELPERS FINISH ###########################################//
@@ -431,12 +385,6 @@ public class WorkingSet {
 		if( type.equals( "removeActive")){
     		REMOVE_ACTIVE.clear();
     	}
-/*     	if( type.equals( "removeInactive")){
-    		REMOVE_INACTIVE.clear();
-    	}*/
-/*    	else if( type.equals( "revert")){
-    		REVERT_ACTIVE.clear();
-    	}*/
     	else if( type.equals( "keepACC")){
     		keepACC.clear();
     	}
@@ -446,12 +394,6 @@ public class WorkingSet {
     	else if( type.equals( "colorNodes")){
     		COLOR_NODES.clear();
     	}
-/*    	else if( type.equals( "remClicked")){
-    		remClicked.clear();
-    	}*/
-/*    	else if( type.equals( "parentToRoot")){
-    		PARENT_TO_ROOT.clear();
-    	}*/
     	else if( type.equals( "ACC")){
     		ACC.clear();
     	}
@@ -472,10 +414,7 @@ public class WorkingSet {
 	public void clearListsForNextSession(){
 		clear( "keep");
         clear( "removeActive");
- //       clear( "removeInactive");
         clear( "colorNodes");
-//        clear( "remClicked");
-//        clear("parentToRoot");
         clear("keepACC");
 	}
 	
@@ -485,10 +424,7 @@ public class WorkingSet {
     	clear("rm_all");
     	clear( "keep");
         clear( "removeActive");
-//        clear( "removeInactive");
         clear( "colorNodes");
-//        clear( "remClicked");
-//        clear("parentToRoot");
         clear("keepACC");
 	}
 	
@@ -498,14 +434,7 @@ public class WorkingSet {
 	}
     
 	//################################## CLEAR ARRAYLISTS FINISH ###########################################//
-/*    private void setRmFromWS( boolean b){
-		rmFromWS = b;
-	}*/
-	
-/*	public boolean getRmFromWS(){
-		return rmFromWS;
-	}*/
-	
+
 	//################################## GETTERS FOR ARRAYLISTS BEGIN ###########################################//
 	public ArrayList getKeepSequenceIds(){
 		return KEEP_ACTIVE;
@@ -514,27 +443,14 @@ public class WorkingSet {
 	public static ArrayList getRemoveActiveSequenceIds(){
 		return REMOVE_ACTIVE;
 	}
-	
-/*	public ArrayList getRemoveInactiveSequenceIds(){
-		return REMOVE_INACTIVE;
-	}
-*/	
+
 	public ArrayList getRemoveAllSequenceIds(){
 		return REMOVE_ALL;
 	}
 	
-/*	public ArrayList getRevertSequenceIds(){
-		return REVERT_ACTIVE;
-	}*/
 	public ArrayList getColorNodes(){
 		return COLOR_NODES;
 	}
-/*	public ArrayList getRemClickSequenceIds(){
-		return remClicked;
-	}*/
-/*	public ArrayList getParentToRoot(){
-		return PARENT_TO_ROOT;
-	}*/
 	public ArrayList getACC(){
 		return ACC;
 	}
@@ -543,6 +459,18 @@ public class WorkingSet {
 	}
 	public static ArrayList getkeepACC(){
 		return keepACC;
+	}
+	
+	public static ArrayList getSavedRemoveAll(){
+		return savedREMOVE_ALL;
+	}
+	
+	public static ArrayList getSavedACC(){
+		return savedACC;
+	}
+	
+	public static ArrayList getRememberACC(){
+		return remember_ACC;
 	}
 	
 	//################################## GETTERS FOR ARRAYLISTS FINISH ###########################################//

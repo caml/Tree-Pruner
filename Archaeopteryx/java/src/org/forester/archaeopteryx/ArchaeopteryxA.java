@@ -170,7 +170,7 @@ public class ArchaeopteryxA extends JApplet {
         if(AppletParams.isEitherTPorTD()){
         	SubTreePanel.mainAppletFrame = _mainframe_applet;
             AppletTerminate.appletContext = getAppletContext();
-            crashRecovery.crashRecoveryInit();
+            crashRecovery.TreePrunerCrashRecoveryInit();
         }
       //********************************************END**********************************************************//
     }
@@ -236,12 +236,12 @@ public class ArchaeopteryxA extends JApplet {
     	String tabName1 = getParameter("tree_panel_tab_name"); 
     	
     	AppletParams.setAppletParams(urlOfTreeToLoad1, configFileName1, getCodeBase(), filename1,
-    								URLprefix1, applicationType1, savedAcc1, savedAccFlag1,tabName1);
+    								URLprefix1, applicationType1, savedAccFlag1,tabName1);
     	
     	
     	System.out.println(AppletParams.applicationType + " " +AppletParams.configFilename+ " " +
     			AppletParams.filename + " " +AppletParams.codeBase + " " +
-    			AppletParams.urlOfTreeToLoad + " " +AppletParams.savedAcc + " " + AppletParams.savedAccFlag +" "
+    			AppletParams.urlOfTreeToLoad + " " + AppletParams.savedAccFlag +" "
      			+ "URL Prefix: "+AppletParams.URLprefix);
     }
     
