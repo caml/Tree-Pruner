@@ -1,0 +1,9 @@
+{"Pruner" :  {
+	  "Action" : "Commit", ## commit or save or discard
+	  "Filename": "<filename>", ## passed as applet params	
+	  "Sequence Accession to Remove" : 
+	  [
+		"ISDN12345", "ISDN5678" , ...
+			     
+			     ]
+}
