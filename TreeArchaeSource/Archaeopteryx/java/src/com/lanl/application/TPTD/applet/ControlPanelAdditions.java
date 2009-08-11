@@ -6,6 +6,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 
+import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -46,23 +48,21 @@ public class ControlPanelAdditions {
 		discard = new JButton("Discard all");
 		discard
 				.setToolTipText("Discard all pruning actions and restore tree to initial state.");
-		refresh = new JButton("Refresh");
-		refresh.setToolTipText("Refreshes the tree in all open applet windows");
+		refresh = new JButton("<html><i>Refresh</html></i>");
+	    refresh.setToolTipText("Refreshes the tree in all open applet windows");
 		undo = new JButton("Discard recent");
 		undo
 				.setToolTipText("Discard all pruning actions since most recent save.");
 
 	}
-
+	
 	public void addTreePrunerButtons() {
 		final JLabel spacer = new JLabel("");
 		final JLabel spacer2 = new JLabel("");
 		
-		controlPanel.addLabel(spacer2);
-		controlPanel.add_additional_JButton(refresh, controlPanel);
-		
 		controlPanel.addLabel(spacer);
 		controlPanel.addLabel(spacer2);
+		controlPanel.add_additional_JButton(refresh, controlPanel);
 		controlPanel.add_additional_JButton(save_to_file, controlPanel);
 		final JPanel discard_panel = new JPanel(new GridLayout(1, 2, 0, 0));
 		discard_panel.setBackground(controlPanel.getBackground());

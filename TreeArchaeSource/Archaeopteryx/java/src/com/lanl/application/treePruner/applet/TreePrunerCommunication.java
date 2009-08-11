@@ -91,10 +91,10 @@ public class TreePrunerCommunication {
 		returnedString = connectToServer(accToRemove,action);
 		ControlPanelAdditions.destroyWarningWindow();
 	    if(returnedString.equals(TreePrunerCommunicationNames.COMMIT_SUCCESS.getName())){
-	    	JOptionPane.showMessageDialog( null, "Your Seqences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
+	    	JOptionPane.showMessageDialog( null, "Your sequences were successfully deleted","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE);
 	    }
 	    else{
-	    	JOptionPane.showMessageDialog( null, "Your Seqences were not deleted.\n Please make sure " +
+	    	JOptionPane.showMessageDialog( null, "Your sequences were not deleted.\n Please make sure " +
         			"that the sequences are not already deleted. \n " +
         			"Please contact flu@lanl.gov if your problem persists.","Delete Confirmation",JOptionPane.INFORMATION_MESSAGE );
 	    }

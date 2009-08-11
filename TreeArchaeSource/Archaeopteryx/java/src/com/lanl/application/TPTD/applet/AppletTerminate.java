@@ -69,10 +69,11 @@ public class AppletTerminate {
 
 	        PhylogenyNode.setNodeCount(0);
 	        JSONArray accToRemove = ws.getACCasJSONarray();
-	        if(ws.toCommunicateWithServerForDelete() ){  //CASE: If person clicked on the delete last or did not make any save or delete and has some accessions marked for removal and is quitting.
+	      //CASE: If person clicked on the delete last or did not make any save or delete and has some accessions marked for removal and is quitting.
+	        if(ws.toCommunicateWithServerForDelete() ){  
 	        	TreePrunerCommunication.lastAction = "";
 	    		Object[] options = {"Commit Changes",
-	    				             "Resave Changes",
+	    				             "Save Changes",
 	    				             "Discard Changes"};
 	    		int n = JOptionPane.showOptionDialog(mainPanel,
 	    				"You have some unsaved changes? What would  "
