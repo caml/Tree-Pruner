@@ -48,6 +48,7 @@ import org.forester.util.ForesterUtil;
 import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.custom.data.Accession;
 import com.lanl.application.TPTD.tree.node.ExtraNodeInfo;
+import com.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
 //********************************************END**********************************************************//
 public class PhylogenyNode implements PhylogenyNodeI, Comparable {
 
@@ -922,6 +923,9 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
     	//******************************************START**********************************************************//
     	if(AppletParams.isEitherTPorTD()){
     		Accession.extractAccessionFromStrain(child);
+    	}
+    	if(AppletParams.isTreeDecorator()){
+    		DecoratorJSONHandler.setExtraNodeInfoForTD(child);
     	}
         //********************************************END**********************************************************//
         getDescendants().add( child );

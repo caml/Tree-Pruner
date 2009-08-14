@@ -48,6 +48,7 @@ import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.applet.AppletTerminate;
 import com.lanl.application.TPTD.applet.CrashRevovery;
 import com.lanl.application.TPTD.applet.SubTreePanel;
+import com.lanl.application.treeDecorator.applet.communication.TreeDecoratorCommunication;
 //********************************************END**********************************************************//
 
 public class ArchaeopteryxA extends JApplet {
@@ -117,6 +118,9 @@ public class ArchaeopteryxA extends JApplet {
         else{
         	config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL ); 
         }
+        if(AppletParams.isTreeDecorator()){
+        	TreeDecoratorCommunication.getSequenceDetailsComm();
+        }
         //// take config filename from applet params  
 																										  // and not from parameter -changed
       //********************************************END**********************************************************//
@@ -170,10 +174,18 @@ public class ArchaeopteryxA extends JApplet {
         getMainFrameApplet().requestFocus();
         
       //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTD()){
+        if(AppletParams.isTreePruner()){
         	SubTreePanel.mainAppletFrame = _mainframe_applet;
-            AppletTerminate.appletContext = getAppletContext();
-            crashRecovery.TreePrunerCrashRecoveryInit();
+        	AppletTerminate.appletContext = getAppletContext();
+        	crashRecovery.TreePrunerCrashRecoveryInit();
+        }
+        else if(AppletParams.isTreeDecorator()){
+        	SubTreePanel.mainAppletFrame = _mainframe_applet;
+        	AppletTerminate.appletContext = getAppletContext();
+        	if(TreeDecoratorCommunication.isCommError){
+        		AppletTerminate.closeParentAppletOnCommError();
+        	}
+        	//crashRecovery.TreeDecoratorCrashRecoveryInit();
         }
       //********************************************END**********************************************************//
     }

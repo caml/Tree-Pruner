@@ -102,6 +102,8 @@ import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.applet.NewWindowSubtree;
 import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.TPTD.custom.data.Accession;
+import com.lanl.application.treeDecorator.applet.TreeDecoratorPaint;
+import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 import com.lanl.application.treePruner.applet.TreePrunerColorSet;
 import com.lanl.application.treePruner.applet.TreePrunerPaint;
@@ -205,6 +207,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
   //******************************************START**********************************************************//
     public SubTreePanel subTreePanel;
     public TreePrunerPaint treePrunerPaint;
+    public TreeDecoratorPaint treeDecoratorPaint;
     public WorkingSet workingSet;
     public NewWindowSubtree newWindowSubtree = new NewWindowSubtree(this);
     //********************************************END**********************************************************//
@@ -246,6 +249,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             subTreePanel.setFullTreeNodeInfo();
             workingSet = new WorkingSet();
             treePrunerPaint = new TreePrunerPaint(this,workingSet);
+            treeDecoratorPaint = new TreeDecoratorPaint(this);
         }
         //********************************************END**********************************************************//
         setBackground( getTreeColorSet().getBackgroundColor() );
@@ -397,9 +401,6 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                 treePrunerPaint.paintKeepRemove(g,node);
                 _control_panel.controlPanelAdditions.callAutoSaveToRefresh();
             }
-        	else if (AppletParams.isTreeDecorator()){
-        		_control_panel.controlPanelAdditions.callAutoSaveToRefresh();
-        	}
         	else{
         		g.setColor( getTreeColorSet().getBranchColor() );
         	}
@@ -1033,6 +1034,9 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             	if(AppletParams.isTreePruner() ){
             		g.setColor(TreePrunerColorSet.getBackgroundColor());
                 }
+            	else if(AppletParams.isTreeDecorator() ){
+            		g.setColor(DecoratorColorSet.getBackgroundColor());
+                }
             	else{
             		g.setColor( getTreeColorSet().getBackgroundColor() );
             	}
@@ -1596,6 +1600,9 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         		treePrunerPaint.initArrayLists();
                 treePrunerPaint.paintKeepRemove(g,node);
             }
+        	else if(AppletParams.isTreeDecorator() ){
+        		treeDecoratorPaint.decorateBranch(g, node);      
+        	}
         	else{
         		g.setColor( getTreeColorSet().getBranchColor() ); 
         	}
@@ -2679,42 +2686,50 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         if(AppletParams.isEitherTPorTD()){
         	newWindowSubtree.paintNodeTracker(g, x, y, node, to_pdf, to_graphics_file);
         }
-      //********************************************END**********************************************************//
         
-        if ( is_in_found_nodes ) {
-            paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
+        if(AppletParams.isTreeDecorator()){
+        	_control_panel.controlPanelAdditions.callAutoSaveToRefresh();
+        	treeDecoratorPaint.decorateNodeBox(g, ForesterUtil.roundToInt(x), ForesterUtil.roundToInt(y), node);
         }
-        else {
-            if ( ( to_pdf || to_graphics_file ) && getOptions().isPrintBlackAndWhite() ) {
-                g.setColor( Color.BLACK );
-            }
-            else if ( getControlPanel().isEvents() && Util.isHasAssignedEvent( node ) ) {
-                final Event event = node.getNodeData().getEvent();
-                if ( event.isDuplication() ) {
-                    g.setColor( getTreeColorSet().getDuplicationBoxColor() );
-                }
-                else if ( event.isSpeciation() ) {
-                    g.setColor( getTreeColorSet().getSpecBoxColor() );
-                }
-                else if ( event.isSpeciationOrDuplication() ) {
-                    g.setColor( getTreeColorSet().getDuplicationOrSpeciationColor() );
-                }
-            }
-            else {
-                assignGraphicsForNodeBoxWithColorForParentBranch( node, g );
-            }
-            if ( ( getOptions().isShowNodeBoxes() && !to_pdf && !to_graphics_file )
-                    || ( getControlPanel().isEvents() && node.isHasAssignedEvent() ) ) {
-                if ( to_pdf || to_graphics_file ) {
-                    if ( node.isDuplication() || !getOptions().isPrintBlackAndWhite() ) {
-                        g.fillOval( ForesterUtil.roundToInt( x - HALF_BOX_SIZE ), ForesterUtil.roundToInt( y
-                                - HALF_BOX_SIZE ), BOX_SIZE, BOX_SIZE );
-                    }
-                }
-                else {
-                    TreePanel.fillRect( x - HALF_BOX_SIZE, y - HALF_BOX_SIZE, BOX_SIZE, BOX_SIZE, g );
-                }
-            }
+        else{
+      //********************************************END**********************************************************//  
+	        if ( is_in_found_nodes ) {
+	            paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
+	        }
+	        else {
+	            if ( ( to_pdf || to_graphics_file ) && getOptions().isPrintBlackAndWhite() ) {
+	                g.setColor( Color.BLACK );
+	            }
+	            else if ( getControlPanel().isEvents() && Util.isHasAssignedEvent( node ) ) {
+	                final Event event = node.getNodeData().getEvent();
+	                if ( event.isDuplication() ) {
+	                    g.setColor( getTreeColorSet().getDuplicationBoxColor() );
+	                }
+	                else if ( event.isSpeciation() ) {
+	                    g.setColor( getTreeColorSet().getSpecBoxColor() );
+	                }
+	                else if ( event.isSpeciationOrDuplication() ) {
+	                    g.setColor( getTreeColorSet().getDuplicationOrSpeciationColor() );
+	                }
+	            }
+	            else {
+	                assignGraphicsForNodeBoxWithColorForParentBranch( node, g );
+	            }
+	            if ( ( getOptions().isShowNodeBoxes() && !to_pdf && !to_graphics_file )
+	                    || ( getControlPanel().isEvents() && node.isHasAssignedEvent() ) ) {
+	                if ( to_pdf || to_graphics_file ) {
+	                    if ( node.isDuplication() || !getOptions().isPrintBlackAndWhite() ) {
+	                        g.fillOval( ForesterUtil.roundToInt( x - HALF_BOX_SIZE ), ForesterUtil.roundToInt( y
+	                                - HALF_BOX_SIZE ), BOX_SIZE, BOX_SIZE );
+	                    }
+	                }
+	                else {
+	                    TreePanel.fillRect( x - HALF_BOX_SIZE, y - HALF_BOX_SIZE, BOX_SIZE, BOX_SIZE, g );
+	                }
+	            }
+	      //******************************************START**********************************************************//
+	        }
+	      //********************************************END**********************************************************//
         }
     }
 
@@ -2807,8 +2822,18 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             down_shift_factor = 1;
         }
         if ( _sb.length() > 0 ) {
+        	//******************************************START**********************************************************//
+        	if(AppletParams.isTreeDecorator()){
+        		treeDecoratorPaint.decorateStrain(g, ForesterUtil.roundToInt
+        				(node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE),
+        				ForesterUtil.roundToInt(node.getYcoord()+ ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor))
+        						, _sb.toString(), node);
+        	}
+        	else
+        	//********************************************END**********************************************************//
             TreePanel.drawString( _sb.toString(), node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE, node.getYcoord()
                     + ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor ), g );
+            
         }
         if ( getControlPanel().isShowAnnotation() && node.getNodeData().isHasSequence()
                 && ( node.getNodeData().getSequence().getAnnotations() != null )

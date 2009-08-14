@@ -18,6 +18,7 @@ import org.forester.archaeopteryx.MainFrame;
 
 import org.json.JSONArray;
 
+import com.lanl.application.treeDecorator.applet.ui.frames.SemiDecorateFrame;
 import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
@@ -30,6 +31,7 @@ public class ControlPanelAdditions {
 	private JButton discard;
 	private JButton undo;
 	private JButton refresh;
+	private JButton semi_decorate;
 	public JLabel subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT,JLabel.CENTER);;
 	public static String subTreeWindowHierarchyTEXT ="Tree level: ";
 	static CommunicationMessageWarningWindow warningWindow;
@@ -53,6 +55,9 @@ public class ControlPanelAdditions {
 		undo = new JButton("Discard recent");
 		undo
 				.setToolTipText("Discard all pruning actions since most recent save.");
+		semi_decorate = new JButton("Semi automatic decoration");
+		semi_decorate.setToolTipText("Opens a new window to allow you to perform semi automatic decoration of the tree");
+	    
 
 	}
 	
@@ -78,7 +83,9 @@ public class ControlPanelAdditions {
 	public void addTreeDecoratorButtons() {
 		final JLabel spacer2 = new JLabel("");
 		controlPanel.addLabel(spacer2);
+		controlPanel.addLabel(spacer2);
 		controlPanel.add_additional_JButton(refresh, controlPanel);
+		controlPanel.add_additional_JButton(semi_decorate, controlPanel);
 	}
 	
 	
@@ -222,6 +229,9 @@ public class ControlPanelAdditions {
         	//paint the master window
         	SubTreePanel.mainAppletFrame.repaintPanel();
         }
+		else if ( e.getSource() == semi_decorate ) {
+			new SemiDecorateFrame();
+		}
 	}
 	
 	public static void destroyWarningWindow(){

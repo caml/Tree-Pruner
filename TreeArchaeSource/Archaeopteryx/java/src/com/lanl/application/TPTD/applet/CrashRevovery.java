@@ -61,7 +61,7 @@ public class CrashRevovery {
 		        rd.close();
 		        crashRecConn.disconnect();
 		        
-		        if(TPgetJSON!=null){
+		        if(!TPgetJSON.equals("")){
 		        	JSONTokener jt = new JSONTokener(TPgetJSON);
 		        	crashRecoveryJO = new JSONObject(jt);
 		        	JSONObject innerJO = crashRecoveryJO.getJSONObject(TreePrunerCommunicationNames.PRUNER.getName());

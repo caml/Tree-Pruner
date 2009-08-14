@@ -195,4 +195,8 @@ public class AppletTerminate {
 			}
 		}
 	}
+	
+	public static void closeParentAppletOnCommError(){
+		SubTreePanel.mainAppletFrame.close_();
+	}
 }
