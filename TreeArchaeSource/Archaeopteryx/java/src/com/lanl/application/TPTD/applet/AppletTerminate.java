@@ -140,11 +140,7 @@ public class AppletTerminate {
 	    		TreePanel.set_subtree_index(TreePanel.get_subtree_index()-1);
 	    		//ATVappletFrame atvf=ATVtreePanel.atvFrames.get(--ATVtreePanel.sub_frame_count);
 	    		//ATVtreePanel.atvFrames.remove(ATVtreePanel.atvFrames.indexOf(atvf));
-	    		for(MainFrame o: SubTreePanel.mainFrames){
-	        		if(o!=null)
-	        			o.repaintPanel();
-	        	}
-	    		SubTreePanel.mainAppletFrame.repaintPanel();
+	    		SubTreePanel.refreshAllWindows();
 	            //atvf.close_subtree_window();
     		}
     	}

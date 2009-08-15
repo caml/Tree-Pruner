@@ -99,4 +99,16 @@ public class SubTreePanel {
     public static Phylogeny getTree_always_full() {
         return _full_phylogeny;
     }
+    
+
+	public static void refreshAllWindows(){
+		//refresh all windows
+		for(MainFrame o: mainFrames){
+    		if(o!=null)
+    			//paint all slave windows
+    			o.repaintPanel();
+    	}
+    	//paint the master window
+    	mainAppletFrame.repaintPanel();
+	}
 }

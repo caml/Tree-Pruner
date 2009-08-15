@@ -8,12 +8,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.forester.archaeopteryx.MainFrame;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
 
+import com.lanl.application.treeDecorator.applet.communication.TreeDecoratorCommunication;
+import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.applet.TreePrunerCommunicationNames;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
@@ -23,7 +26,7 @@ public class CrashRevovery {
 	WorkingSet ws = new WorkingSet();
 	URL savedAccURL;
 	String TPgetURL = AppletParams.URLprefix + "/id/"+AppletParams.filename;
-	public void TreePrunerCrashRecoveryInit() {
+	public void treePrunerCrashRecoveryInit() {
 		String TPgetJSON = "";
 		JSONObject crashRecoveryJO;
 		JSONArray recoveredAccessions = null;
@@ -87,9 +90,37 @@ public class CrashRevovery {
 			ws.copyAccToRememberAcc();
 			ws.clear("removeActive");
 			// Repaint the tree. START
-			SubTreePanel.mainAppletFrame.repaintPanel();
+			SubTreePanel.refreshAllWindows();
 			// atvappletframe.getATVpanel().getATVtreePanel().repaint();
 			// Repaint the tree. END
 		} // end of if(saved_session_before.equals("true")){
 	} // end of crashRecoveryInit
+	
+	public void treeDecoratorCrashRecoveryInit(){
+		if (AppletParams.savedAccFlag.equals("true")) {
+			// wait till all the nodes have been successfully painted on the
+			// applet. After 2 secs hoping that all tree branches would have
+			// successfully painted by then
+			// we will call the crash recovery and repaint the tree(see below).
+			// START
+			long wait, time;
+			wait = System.currentTimeMillis();
+			while (true) {
+				time = System.currentTimeMillis() - wait;
+				if (time >= 2000) // 2 seconds wait
+					break;
+			}
+			// wait till all the nodes have been successfully painted on the
+			// applet. After 2 secs hoping that all tree branches would have
+			// successfully painted by then
+			// we will call the crash recovery and repaint the tree (see below).
+			// END
+			
+			TreeDecoratorCommunication.getSavedDecorationsComm();
+			
+			//refresh all windows
+			SubTreePanel.refreshAllWindows();
+			//	print(DecoratorTable.decoratorTable);
+		}
+	}
 }

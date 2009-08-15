@@ -18,7 +18,9 @@ import org.forester.archaeopteryx.MainFrame;
 
 import org.json.JSONArray;
 
+import com.lanl.application.treeDecorator.applet.communication.TreeDecoratorCommunication;
 import com.lanl.application.treeDecorator.applet.ui.frames.SemiDecorateFrame;
+import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
@@ -43,13 +45,13 @@ public class ControlPanelAdditions {
 		this.controlPanel = cp;
 		save_to_file = new JButton("Save");
 		save_to_file
-				.setToolTipText("Save the net result of all pruning actions until now.");
+				.setToolTipText("Save the net result of actions until now.");
 		delete_from_db = new JButton("Commit changes; finish session");
 		delete_from_db
 				.setToolTipText("Implement all pruning actions in your working set; close applet.");
 		discard = new JButton("Discard all");
 		discard
-				.setToolTipText("Discard all pruning actions and restore tree to initial state.");
+				.setToolTipText("Discard everything and restore tree to initial state.");
 		refresh = new JButton("<html><i>Refresh</html></i>");
 	    refresh.setToolTipText("Refreshes the tree in all open applet windows");
 		undo = new JButton("Discard recent");
@@ -86,6 +88,8 @@ public class ControlPanelAdditions {
 		controlPanel.addLabel(spacer2);
 		controlPanel.add_additional_JButton(refresh, controlPanel);
 		controlPanel.add_additional_JButton(semi_decorate, controlPanel);
+		controlPanel.add_additional_JButton(save_to_file, controlPanel);
+		controlPanel.add_additional_JButton(discard, controlPanel);
 	}
 	
 	
@@ -119,13 +123,7 @@ public class ControlPanelAdditions {
 
 	public void addTreePrunerButtonFunctions(ActionEvent e){
 		if ( e.getSource() == refresh ) {
-        	for(MainFrame o: SubTreePanel.mainFrames){
-        		if(o!=null)
-        			//paint all slave windows
-        			o.repaintPanel();
-        	}
-        	//paint the master window
-        	SubTreePanel.mainAppletFrame.repaintPanel();
+			SubTreePanel.refreshAllWindows();
         }
 		else if ( e.getSource() == save_to_file ) {
 			JSONArray accToRemove = ws.getACCasJSONarray();   
@@ -221,16 +219,18 @@ public class ControlPanelAdditions {
 	
 	public void addTreeDecoratorButtonFunctions(ActionEvent e){
 		if ( e.getSource() == refresh ) {
-        	for(MainFrame o: SubTreePanel.mainFrames){
-        		if(o!=null)
-        			//paint all slave windows
-        			o.repaintPanel();
-        	}
-        	//paint the master window
-        	SubTreePanel.mainAppletFrame.repaintPanel();
+			SubTreePanel.refreshAllWindows();
         }
 		else if ( e.getSource() == semi_decorate ) {
 			new SemiDecorateFrame();
+		}
+		else if ( e.getSource() == save_to_file ) {
+			TreeDecoratorCommunication.postSaveDecorationsComm();
+		}
+		else if ( e.getSource() == discard ) {
+			TreeDecoratorCommunication.postDiscardDecorationsComm();
+			DecoratorTable.resetDecorations();
+			SubTreePanel.refreshAllWindows();
 		}
 	}
 	

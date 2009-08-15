@@ -5,12 +5,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.forester.archaeopteryx.MainFrame;
 import org.forester.phylogeny.PhylogenyNode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treeDecorator.dataStructures.DecorateObject;
 import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 import com.lanl.application.treeDecorator.enumeration.CommunicationEnum;
@@ -56,7 +59,7 @@ public class DecoratorJSONHandler {
 					}
 				}
 			}
-			else if(savedStylesJO.has(DecoratorUIConstants.STRAIN.getName())){
+			if(savedStylesJO.has(DecoratorUIConstants.STRAIN.getName())){
 				JSONObject strainSavedStylesJO =  savedStylesJO.getJSONObject(DecoratorUIConstants.STRAIN.getName());
 				Iterator strainIterator = strainSavedStylesJO.keys();
 				while(strainIterator.hasNext()){
@@ -83,21 +86,14 @@ public class DecoratorJSONHandler {
 					}
 				}
 			}
-		//	print(DecoratorTable.decoratorTable);
+		//	System.out.println(DecoratorTable.getFormattedDecoratorTable());
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public static void print(Map<DecoratorUIConstants, Map<String, DecorateObject>> decoratorTable){  //temp method
-		for (DecoratorUIConstants dui: decoratorTable.keySet()){
-			System.out.println();
-			System.out.println(dui.getName());
-			for (String m: decoratorTable.get(dui).keySet()){
-				System.out.println(m);
-				System.out.println(decoratorTable.get(dui).get(m).toString());
-			}
-		}
+	public static String getSequenceDetailsJSON(){
+		return sequenceDetailsJSON;
 	}
 	
 	public static void storeCharacteristicValues(String incomingSeqDetailsString){   //get seq details
@@ -154,13 +150,13 @@ public class DecoratorJSONHandler {
 		String [] hostrValueArray = (String []) hostValuesList.toArray (new String [hostValuesList.size ()]);
 		
 		DecoratorTable.decoratorTableInit(countryValueArray,yearValueArray,ahaValueArray,anaValueArray,hostrValueArray);
-	//	print(DecoratorTable.decoratorTable);
 	}
 	
 	public static String getSavedStyles(){ //save/autosave
 		Map<String,ArrayList<String>> decorationMap;
 		ArrayList<String> charValueList;
 		JSONObject mainJO = new JSONObject();
+		JSONObject innerJO = new JSONObject();
 		JSONObject innerNodeJO = new JSONObject();
 		JSONObject innerStrainJO = new JSONObject();
 		try{
@@ -205,28 +201,39 @@ public class DecoratorJSONHandler {
 					}
 				}
 			}
-			if(innerNodeJO.length()>0){
-				mainJO.put(CommunicationEnum.DECORATION.getName(), 
-						new JSONObject().put(DecoratorUIConstants.NODE.getName(), innerNodeJO));
-			}
-			if(innerStrainJO.length()>0){
-				if(mainJO.has(CommunicationEnum.DECORATION.getName())){
-					mainJO.accumulate(CommunicationEnum.DECORATION.getName(), 
-							new JSONObject().put(DecoratorUIConstants.STRAIN.getName(), innerStrainJO));
+			if(innerNodeJO.length()>0 ||innerStrainJO.length()>0){
+				innerJO.put(CommunicationEnum.ACTION.getName(), CommunicationEnum.SAVE.getName());
+				innerJO.put(CommunicationEnum.FILENAME.getName(), AppletParams.filename);
+				if(innerNodeJO.length()>0){
+					innerJO.put(DecoratorUIConstants.NODE.getName(), innerNodeJO);
 				}
-				else{
-					mainJO.put(CommunicationEnum.DECORATION.getName(), 
-							new JSONObject().put(DecoratorUIConstants.STRAIN.getName(), innerStrainJO));	
+				if(innerStrainJO.length()>0){
+					innerJO.put(DecoratorUIConstants.STRAIN.getName(), innerStrainJO);	
 				}
-			}
-			//System.out.println(mainJO.toString(2));
-			if(mainJO.length()>0){
+				mainJO.put(CommunicationEnum.DECORATION.getName(), innerJO);
+				//System.out.println(mainJO.toString(2));
 				return mainJO.toString();
 			}
-			
 		}
 		catch (JSONException e) {
+			TreeDecoratorCommunication.destroyWarningWindow();
 			e.printStackTrace();
+		}
+		return "";
+	}
+	
+	public static String getDiscardJSONString(){
+		JSONObject mainJO = new JSONObject();
+		JSONObject innerJO = new JSONObject();
+		try {
+			innerJO.put(CommunicationEnum.ACTION.getName(), CommunicationEnum.DISCARD.getName());
+			innerJO.put(CommunicationEnum.FILENAME.getName(), AppletParams.filename);
+			mainJO.put(CommunicationEnum.DECORATION.getName(), innerJO);
+			//System.out.println(mainJO.toString(2));
+			return mainJO.toString();
+		} catch (JSONException e) {
+			e.printStackTrace();
+			TreeDecoratorCommunication.destroyWarningWindow();
 		}
 		return "";
 	}

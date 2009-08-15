@@ -4,6 +4,7 @@ package com.lanl.application.treeDecorator.dataStructures;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
 import com.lanl.application.treeDecorator.enumeration.DecorationStyles;
 import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 
@@ -24,6 +25,7 @@ public class DecoratorTable {
 	
 	public static void decoratorTableInit(String[] countryNames, String[] year, String[] aha,
 			String[] ana, String[] host) {
+		clearAllTreeDecoratorDataStructures();
 		Map<String, DecorateObject> tempMap;
 		
 		tempMap = new HashMap<String, DecorateObject>();
@@ -60,4 +62,29 @@ public class DecoratorTable {
 		}
 		decoratorTable.put(DecoratorUIConstants.HOST_SPECIES, tempMap);
 	}
+	
+	public static void clearAllTreeDecoratorDataStructures(){
+		decoratorTable.clear();
+		styleCharacteristicMapping.clear();
+	}
+	
+	public static void resetDecorations(){
+		if(DecoratorJSONHandler.getSequenceDetailsJSON()!=null){
+			DecoratorJSONHandler.storeCharacteristicValues(DecoratorJSONHandler.getSequenceDetailsJSON());
+		}
+	}
+	
+	public static String getFormattedDecoratorTable(){
+		String s ="\n\n\nDecorator Table:";
+		for (DecoratorUIConstants dui: decoratorTable.keySet()){
+			s+= "\n\nCharacteristic Name: "+dui.getName();
+			for (String m: decoratorTable.get(dui).keySet()){
+				s+= "\nCharacteristic Value: "+m;
+				s+= "\nDecoration Style Values:";
+				s+= decoratorTable.get(dui).get(m).toString();
+			}
+		}
+		return s;
+	}
+	
 }

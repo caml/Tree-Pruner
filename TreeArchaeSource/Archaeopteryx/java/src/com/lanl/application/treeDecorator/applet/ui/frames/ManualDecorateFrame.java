@@ -195,13 +195,7 @@ public class ManualDecorateFrame implements ActionListener{
 						DecorationEnumHelper.getDecorationStylesObject(selectedStyle));
 		}
 		// repaint all
-		for(MainFrame o: SubTreePanel.mainFrames){
-    		if(o!=null)
-    			//paint all slave windows
-    			o.repaintPanel();
-    	}
-    	//paint the master window
-    	SubTreePanel.mainAppletFrame.repaintPanel();
+		SubTreePanel.refreshAllWindows();
 	}
 	class MakeDecorationStyleOptionsPanel extends JPanel implements ItemListener{
 		MakeDecorationStyleOptionsPanel(){

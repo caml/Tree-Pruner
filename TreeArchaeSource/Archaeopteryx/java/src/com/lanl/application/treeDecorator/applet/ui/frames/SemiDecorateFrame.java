@@ -392,13 +392,7 @@ public class SemiDecorateFrame implements ActionListener{
 			styleValuePos++;
 		}
 		// repaint all
-		for(MainFrame o: SubTreePanel.mainFrames){
-    		if(o!=null)
-    			//paint all slave windows
-    			o.repaintPanel();
-    	}
-    	//paint the master window
-    	SubTreePanel.mainAppletFrame.repaintPanel();
+		SubTreePanel.refreshAllWindows();
 	}
 	public void dispose(){
 		if(_frame!=null){
@@ -499,15 +493,50 @@ public class SemiDecorateFrame implements ActionListener{
 	private void handleSelectUnselectDecorationStyleRadioButton(boolean enable){
 		if(enable){
 			if(selectedToDecorate == DecoratorUIConstants.STRAIN){
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.STRAIN_COLOR)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.STRAIN_COLOR) == selectedCharacteristic){
 				strainColorRadioButton.setEnabled(enable);
-				caseRadioButton.setEnabled(enable);
-				fontRadioButton.setEnabled(enable);
-				styleRadioButton.setEnabled(enable);
-				sizeRadioButton.setEnabled(enable);
+					}
+				}
+				else strainColorRadioButton.setEnabled(enable);
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.CASE)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.CASE) == selectedCharacteristic){
+						caseRadioButton.setEnabled(enable);
+					}
+				}
+				else caseRadioButton.setEnabled(enable);
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.FONT)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.FONT) == selectedCharacteristic){
+						fontRadioButton.setEnabled(enable);
+					}
+				}
+				else fontRadioButton.setEnabled(enable);
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.STYLE)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.STYLE) == selectedCharacteristic){
+						styleRadioButton.setEnabled(enable);
+					}
+				}
+				else styleRadioButton.setEnabled(enable);
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.SIZE)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.SIZE) == selectedCharacteristic){
+						sizeRadioButton.setEnabled(enable);
+					}
+				}
+				else sizeRadioButton.setEnabled(enable);
 			}
 			else if(selectedToDecorate == DecoratorUIConstants.NODE){
-				nodeColorRadioButton.setEnabled(enable);
-				shapesRadioButton.setEnabled(enable);
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.NODE_COLOR)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.NODE_COLOR) == selectedCharacteristic){
+						nodeColorRadioButton.setEnabled(enable);
+					}
+				}
+				else nodeColorRadioButton.setEnabled(enable);
+				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.SHAPES)){
+					if(DecoratorTable.styleCharacteristicMapping.get(DecoratorUIConstants.SHAPES) == selectedCharacteristic){
+						shapesRadioButton.setEnabled(enable);
+					}
+				}
+				else shapesRadioButton.setEnabled(enable);
 			}
 		}
 		else{ //disable

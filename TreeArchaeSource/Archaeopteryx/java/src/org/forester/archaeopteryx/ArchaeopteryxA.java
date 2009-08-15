@@ -177,7 +177,7 @@ public class ArchaeopteryxA extends JApplet {
         if(AppletParams.isTreePruner()){
         	SubTreePanel.mainAppletFrame = _mainframe_applet;
         	AppletTerminate.appletContext = getAppletContext();
-        	crashRecovery.TreePrunerCrashRecoveryInit();
+        	crashRecovery.treePrunerCrashRecoveryInit();
         }
         else if(AppletParams.isTreeDecorator()){
         	SubTreePanel.mainAppletFrame = _mainframe_applet;
@@ -185,7 +185,7 @@ public class ArchaeopteryxA extends JApplet {
         	if(TreeDecoratorCommunication.isCommError){
         		AppletTerminate.closeParentAppletOnCommError();
         	}
-        	//crashRecovery.TreeDecoratorCrashRecoveryInit();
+        	crashRecovery.treeDecoratorCrashRecoveryInit();
         }
       //********************************************END**********************************************************//
     }
