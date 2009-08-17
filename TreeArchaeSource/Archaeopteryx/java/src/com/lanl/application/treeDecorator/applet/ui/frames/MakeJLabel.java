@@ -9,6 +9,8 @@ import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 import javax.swing.text.Style;
 
+import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
+
 public class MakeJLabel {
 	
 	protected static JLabel getJLabel( String text, boolean withBorder) {
@@ -38,6 +40,19 @@ public class MakeJLabel {
 	    	label.setBorder(border);
 	    }
 	    
+	    return label;
+	}
+	
+	protected static JLabel getInfoJLabel( String text,boolean isColorRed) {
+	    JLabel label = new JLabel( text, JLabel.CENTER);
+	    Font currentFont = label.getFont();
+	    float newSize = 12.f;
+	    Font newFont = currentFont.deriveFont(newSize);
+	    label.setFont(newFont);
+	    if(isColorRed){
+	    	label.setForeground(DecoratorColorSet.getRed());
+	    }
+	    else label.setForeground(DecoratorColorSet.getForestGreen());
 	    return label;
 	}
 

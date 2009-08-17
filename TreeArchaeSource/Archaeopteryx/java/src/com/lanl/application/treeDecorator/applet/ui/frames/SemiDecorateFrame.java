@@ -1,7 +1,5 @@
 package com.lanl.application.treeDecorator.applet.ui.frames;
 
-
-
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -19,8 +17,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.UIManager;
 
-import org.forester.archaeopteryx.MainFrame;
-
 import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
 import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
@@ -36,7 +32,10 @@ public class SemiDecorateFrame implements ActionListener{
 	private JRadioButton strainRadioButton, nodeRadioButton; 
 	private JRadioButton nodeColorRadioButton, shapesRadioButton;
 	private JRadioButton strainColorRadioButton, caseRadioButton, fontRadioButton, styleRadioButton, sizeRadioButton; 
-	protected JButton applyButton, closeButton,backButton;
+	protected JButton applyButton, closeButton,backButton,defaultButton;
+	protected JLabel selectedPathLabel;
+	protected JLabel toSelectLabel;
+	private JPanel infoPanel;
 	protected JCheckBox manualCheckBox;
 	GridBagConstraints gbContraints;
 	JFrame _frame;
@@ -61,7 +60,7 @@ public class SemiDecorateFrame implements ActionListener{
 	}
 	
 	public void makeSemiDecoratorFrame(){
-		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 650, 500, 300, 300);
+		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 750, 600, 300, 300);
 		Container content = _frame.getContentPane();
 		content.setLayout( new GridBagLayout());
 		content.setBackground(DecoratorColorSet.getBackgroundColor());
@@ -78,20 +77,30 @@ public class SemiDecorateFrame implements ActionListener{
 		title.setAlignmentX(50);
 		content.add( title, gbContraints);
 		
+		selectedPathLabel = MakeJLabel.getInfoJLabel("",false);
+		toSelectLabel = MakeJLabel.getInfoJLabel(DecoratorUIConstants.TO_SELECT_CHARACTERISTIC_LABEL_TEXT.getName(),true);
+		infoPanel = MakeJPanel.getInfoGridLayoutPanel(2, 1, true);
+		infoPanel.add(selectedPathLabel);
+		infoPanel.add(toSelectLabel);
+		gbContraints.gridx = 0;
+		gbContraints.gridy = 1;
+		
+		content.add( infoPanel, gbContraints);
+		
 		gbContraints = new GridBagConstraints();
 		gbContraints.anchor = GridBagConstraints.NORTHWEST;
 		gbContraints.insets = new Insets(5,5,5,5);
 		gbContraints.gridwidth = 1;
 		gbContraints.gridx = 0;
-		gbContraints.gridy = 2;
+		gbContraints.gridy = 3;
 		content.add( makeCharectisticPanel(), gbContraints);
 		
 		gbContraints.gridx = 1;
-		gbContraints.gridy = 2;
+		gbContraints.gridy = 3;
 		content.add( makeToDecoratePanel(), gbContraints);
 		
 		gbContraints.gridx = 2;
-		gbContraints.gridy = 2;
+		gbContraints.gridy = 3;
 		content.add( makeDecorationStylesPanel(), gbContraints);
 		
 		manualCheckBox = new JCheckBox(DecoratorUIConstants.MANUAL.getName());
@@ -101,7 +110,7 @@ public class SemiDecorateFrame implements ActionListener{
 		
 		gbContraints.anchor = GridBagConstraints.EAST;
 		gbContraints.gridx = 3;
-		gbContraints.gridy = 2;
+		gbContraints.gridy = 3;
 		
 		content.add( manualCheckBox, gbContraints);
 		
@@ -110,21 +119,25 @@ public class SemiDecorateFrame implements ActionListener{
 		applyButton = MakeButton.getButton(DecoratorUIConstants.APPLY.getName());
 		closeButton = MakeButton.getButton(DecoratorUIConstants.CLOSE.getName());
 		backButton = MakeButton.getButton(DecoratorUIConstants.BACK.getName());
+		defaultButton = MakeButton.getButton(DecoratorUIConstants.DEFAULT.getName());
+		defaultButton.addActionListener(this);
 		backButton.addActionListener(this);
 		applyButton.addActionListener( this);
 		closeButton.addActionListener( this);
+		defaultButton.setEnabled(false);
 		backButton.setEnabled(false);
 		applyButton.setEnabled(false);
 		
 		applyClosePanel.add( backButton);
+		applyClosePanel.add( defaultButton);
 		applyClosePanel.add( applyButton);
 		applyClosePanel.add( closeButton);
 		gbContraints.anchor = GridBagConstraints.SOUTHWEST;
 		gbContraints.insets = new Insets(50,0,0,0);
 		gbContraints.ipady = 2;
-		gbContraints.gridx = 2;
-		gbContraints.gridy = 3;
-		gbContraints.gridwidth = 2;
+		gbContraints.gridx = 1;
+		gbContraints.gridy = 4;
+		gbContraints.gridwidth = 4;
 		content.add( applyClosePanel, gbContraints);
 	}
 	
@@ -185,7 +198,7 @@ public class SemiDecorateFrame implements ActionListener{
 	}
 
 	private JPanel makeToDecoratePanel(){
-		strainRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.STRAIN.getName());
+		strainRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.STRAIN.getName()+"                   ");
 		nodeRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.NODE.getName());
 		
 		strainRadioButton.setEnabled(false);
@@ -359,10 +372,25 @@ public class SemiDecorateFrame implements ActionListener{
 			handleSelectUnselectCharacteristicRadioButtons(true);
 		}
 		
+		else if(ae.getSource() == defaultButton){
+			//handle painting the panel and other operations here
+			
+			handleRevertToDefaultDecorations();
+			
+			selectedDecorationSyle =  DecoratorUIConstants.NULL;
+			handleSelectUnselectDecorationStyleRadioButton(false);
+			selectedToDecorate =  DecoratorUIConstants.NULL;
+			handleSelectUnselectToDecorateRadioButtons(false);
+			selectedCharacteristic =  DecoratorUIConstants.NULL;
+			handleSelectUnselectCharacteristicRadioButtons(true);
+		}
+		
+		
 		else if(ae.getSource() == manualCheckBox){
 			
 			if(manualCheckBox.isSelected()){
 				manualDecorateFrame = new ManualDecorateFrame(this);
+				defaultButton.setEnabled(false);
 				applyButton.setEnabled(false);
 				closeButton.setEnabled(false);
 				backButton.setEnabled(false);
@@ -372,6 +400,7 @@ public class SemiDecorateFrame implements ActionListener{
 				if(manualDecorateFrame!=null){
 					manualDecorateFrame.dispose();
 				}
+				defaultButton.setEnabled(true);
 				applyButton.setEnabled(true);
 				closeButton.setEnabled(true);
 				backButton.setEnabled(true);
@@ -379,6 +408,16 @@ public class SemiDecorateFrame implements ActionListener{
 		}
 	}
 	
+	private void handleRevertToDefaultDecorations(){
+		DecoratorTable.styleCharacteristicMapping.remove(selectedDecorationSyle);
+		for(String charValue : DecoratorTable.decoratorTable.get(selectedCharacteristic).keySet()){
+			DecoratorTable.decoratorTable.get(selectedCharacteristic).
+				get(charValue).setAnyDecorationStyle(
+						selectedDecorationSyle, DecorationEnumHelper.getDefaultDecorationStyles(selectedDecorationSyle));
+		}
+		// repaint all
+		SubTreePanel.refreshAllWindows();
+	}
 	private void handleSemiDecoration(){
 		DecoratorTable.styleCharacteristicMapping.put(selectedDecorationSyle, selectedCharacteristic);
 		DecorationStyles[] decorationStylesValues = DecorationEnumHelper.getAllStyleValues(selectedDecorationSyle);
@@ -404,16 +443,16 @@ public class SemiDecorateFrame implements ActionListener{
 		if(selectedDecorationSyle != DecoratorUIConstants.NULL){
 			
 			selectedDecorationSyle = DecoratorUIConstants.NULL;
-			handleSelectUnselectDecorationStyleRadioButton(false);
-			selectedToDecorate = DecoratorUIConstants.NULL;
-			handleSelectUnselectToDecorateRadioButtons(true);
+			handleSelectUnselectDecorationStyleRadioButton(true);
+	//		selectedToDecorate = DecoratorUIConstants.NULL;
+	//		handleSelectUnselectToDecorateRadioButtons(true);
 		}
 		else if(selectedToDecorate!=DecoratorUIConstants.NULL){
 			handleSelectUnselectDecorationStyleRadioButton(false);
 			selectedToDecorate = DecoratorUIConstants.NULL;
-			handleSelectUnselectToDecorateRadioButtons(false);
-			selectedCharacteristic = DecoratorUIConstants.NULL;
-			handleSelectUnselectCharacteristicRadioButtons(true);
+			handleSelectUnselectToDecorateRadioButtons(true);
+	//		selectedCharacteristic = DecoratorUIConstants.NULL;
+	//		handleSelectUnselectCharacteristicRadioButtons(true);
 		}
 		else if(selectedCharacteristic != DecoratorUIConstants.NULL){
 			handleSelectUnselectToDecorateRadioButtons(false);
@@ -424,6 +463,7 @@ public class SemiDecorateFrame implements ActionListener{
 	}
 	
 	private void handleSelectUnselectCharacteristicRadioButtons(boolean enable){
+		handleInfoLabels();
 		if(enable){
 			countryRadioButton.setEnabled(enable);
 			yearRadioButon.setEnabled(enable);
@@ -472,6 +512,7 @@ public class SemiDecorateFrame implements ActionListener{
 	}
 	
 	private void handleSelectUnselectToDecorateRadioButtons(boolean enable){
+		handleInfoLabels();
 		if(enable){
 			nodeRadioButton.setEnabled(enable);
 			strainRadioButton.setEnabled(enable);
@@ -491,6 +532,7 @@ public class SemiDecorateFrame implements ActionListener{
 	}
 	
 	private void handleSelectUnselectDecorationStyleRadioButton(boolean enable){
+		handleInfoLabels();
 		if(enable){
 			if(selectedToDecorate == DecoratorUIConstants.STRAIN){
 				if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.STRAIN_COLOR)){
@@ -548,6 +590,7 @@ public class SemiDecorateFrame implements ActionListener{
 					sizeRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 					
 				}
 				else if(selectedDecorationSyle == DecoratorUIConstants.CASE){
@@ -557,6 +600,7 @@ public class SemiDecorateFrame implements ActionListener{
 					sizeRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 				}
 				else if(selectedDecorationSyle == DecoratorUIConstants.FONT){
 					strainColorRadioButton.setEnabled(enable);
@@ -565,6 +609,7 @@ public class SemiDecorateFrame implements ActionListener{
 					sizeRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 				}
 				else if(selectedDecorationSyle == DecoratorUIConstants.STYLE){
 					strainColorRadioButton.setEnabled(enable);
@@ -573,6 +618,7 @@ public class SemiDecorateFrame implements ActionListener{
 					sizeRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 				}
 				else if(selectedDecorationSyle == DecoratorUIConstants.SIZE){
 					strainColorRadioButton.setEnabled(enable);
@@ -581,6 +627,7 @@ public class SemiDecorateFrame implements ActionListener{
 					styleRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 				}
 				else if(selectedDecorationSyle == DecoratorUIConstants.NULL){
 					strainColorRadioButton.setEnabled(enable);
@@ -591,6 +638,7 @@ public class SemiDecorateFrame implements ActionListener{
 					
 					manualCheckBox.setEnabled(enable);
 					applyButton.setEnabled(enable);
+					defaultButton.setEnabled(enable);
 				}
 			}
 			else if(selectedToDecorate == DecoratorUIConstants.NODE){
@@ -598,11 +646,13 @@ public class SemiDecorateFrame implements ActionListener{
 					shapesRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 				 }
 				 else if(selectedDecorationSyle == DecoratorUIConstants.SHAPES){
 					nodeColorRadioButton.setEnabled(enable);
 					manualCheckBox.setEnabled(true);
 					applyButton.setEnabled(true);
+					defaultButton.setEnabled(true);
 				 }
 				 else if(selectedDecorationSyle == DecoratorUIConstants.NULL){
 					nodeColorRadioButton.setEnabled(enable);
@@ -610,10 +660,49 @@ public class SemiDecorateFrame implements ActionListener{
 					
 					manualCheckBox.setEnabled(enable);
 					applyButton.setEnabled(enable);
+					defaultButton.setEnabled(enable);
 				 }
 			}
 		}
 	}
+	
+	private void handleInfoLabels(){
+		if(selectedCharacteristic == DecoratorUIConstants.NULL){
+			selectedPathLabel.setText("");
+			toSelectLabel.setText(DecoratorUIConstants.TO_SELECT_CHARACTERISTIC_LABEL_TEXT.getName());
+		}
+		else if(selectedToDecorate == DecoratorUIConstants.NULL){
+			selectedPathLabel.setText(getHtmlTagString(DecoratorUIConstants.SELECTED_CHARACTERISTIC_LABEL_TEXT.getName()
+					+ getBoldTagString(selectedCharacteristic.getName())));
+			toSelectLabel.setText(DecoratorUIConstants.TO_SELECT_TO_DECORATE_LABEL_TEXT.getName());
+		}
+		else if(selectedDecorationSyle == DecoratorUIConstants.NULL){
+			selectedPathLabel.setText(getHtmlTagString(DecoratorUIConstants.SELECTED_CHARACTERISTIC_LABEL_TEXT.getName() 
+					+ getBoldTagString(selectedCharacteristic.getName())
+					+ DecoratorUIConstants.SELECTED_TO_DECORATE_LABEL_TEXT.getName()
+					+ getBoldTagString(selectedToDecorate.getName())));
+			toSelectLabel.setText(DecoratorUIConstants.TO_SELECT_DECORATION_STYLE_LABEL_TEXT.getName()
+					+selectedToDecorate.getName());
+		}
+		else {
+			selectedPathLabel.setText(getHtmlTagString(DecoratorUIConstants.SELECTED_CHARACTERISTIC_LABEL_TEXT.getName() 
+					+ getBoldTagString(selectedCharacteristic.getName())
+					+ DecoratorUIConstants.SELECTED_TO_DECORATE_LABEL_TEXT.getName()
+					+ getBoldTagString(selectedToDecorate.getName())
+					+ DecoratorUIConstants.SELECTED_DECORATION_STYLE_LABEL_TEXT.getName()
+					+ getBoldTagString(selectedDecorationSyle.getName())));
+			toSelectLabel.setText(DecoratorUIConstants.TO_SELECT_MANUAL_APPLY_STYLE_LABEL_TEXT.getName());
+		}
+	}
+	
+	private String getBoldTagString(String s){
+		return ("<B>"+s+"</B>");
+	}
+	
+	private String getHtmlTagString(String s){
+		return ("<html>"+s+"</html>");
+	}
+	
 	public static void main (String[] args){
 		SemiDecorateFrame sd = new SemiDecorateFrame();
 	}

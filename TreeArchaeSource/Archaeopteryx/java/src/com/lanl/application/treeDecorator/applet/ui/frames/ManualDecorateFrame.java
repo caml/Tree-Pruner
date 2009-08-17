@@ -57,7 +57,7 @@ public class ManualDecorateFrame implements ActionListener{
 	ArrayList<JRadioButton> styleRadioButtons = new ArrayList<JRadioButton>();
 	ArrayList<JCheckBox> charValueCheckBoxes = new ArrayList<JCheckBox>();
 	private JPanel characterValueLegendPanel,decorationStyleOptionsPanel;
-	private JButton applyButton, closeButton,resetButton;
+	private JButton applyButton, closeButton,resetButton,defaultButton;
 	private JCheckBox charValueCheckBox;
 	JRadioButton styleRadioButton;
 	ButtonGroup styleButtonGroup = new ButtonGroup(); 
@@ -83,7 +83,7 @@ public class ManualDecorateFrame implements ActionListener{
 	}
 	
 	public void makeManalDecoratorFrame(){
-		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 650, 500, 300, 300);
+		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 700, 500, 300, 300);
 		
 		Container content = _frame.getContentPane();
 		content.setLayout( new GridBagLayout());
@@ -95,7 +95,7 @@ public class ManualDecorateFrame implements ActionListener{
 		gbContraints.insets = new Insets(10,10,10,10);
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 0;
-		gbContraints.gridwidth = 5;
+		gbContraints.gridwidth = 6;
 		gbContraints.weightx = 0;
 		JLabel title = MakeJLabel.getJLabel(DecoratorUIConstants.MANUAL_DECORATION_TITLE.getName(), false, "north");
 		title.setAlignmentX(50);
@@ -104,8 +104,8 @@ public class ManualDecorateFrame implements ActionListener{
 		gbContraints = new GridBagConstraints();
 		gbContraints.anchor = GridBagConstraints.NORTHWEST;
 		gbContraints.insets = new Insets(5,5,5,5);
-		gbContraints.gridwidth = 2;
-		gbContraints.gridx = 1;
+		gbContraints.gridwidth = 3;
+		gbContraints.gridx = 0;
 		gbContraints.gridy = 2;
 		characterValueLegendPanel = new MakeCharValueLegendPanel();
 		
@@ -113,8 +113,8 @@ public class ManualDecorateFrame implements ActionListener{
 		scrollPaneForcharacterValueLegendPanel.setPreferredSize(new Dimension(150,350));
 		content.add(scrollPaneForcharacterValueLegendPanel, gbContraints);
 		
-		gbContraints.insets = new Insets(5,20,5,5);
-		gbContraints.gridwidth = 2;
+		gbContraints.insets = new Insets(5,300,5,5);
+		gbContraints.gridwidth = 3;
 		gbContraints.gridx = 3;
 		gbContraints.gridy = 2;
 		decorationStyleOptionsPanel = new MakeDecorationStyleOptionsPanel();
@@ -127,6 +127,8 @@ public class ManualDecorateFrame implements ActionListener{
 		applyButton = MakeButton.getButton(DecoratorUIConstants.APPLY.getName());
 		closeButton = MakeButton.getButton(DecoratorUIConstants.CLOSE.getName());
 		resetButton = MakeButton.getButton(DecoratorUIConstants.RESET.getName());
+		defaultButton = MakeButton.getButton(DecoratorUIConstants.DEFAULT.getName());
+		defaultButton.addActionListener(this);
 		resetButton.addActionListener(this);
 		applyButton.addActionListener( this);
 		closeButton.addActionListener( this);
@@ -134,14 +136,15 @@ public class ManualDecorateFrame implements ActionListener{
 		applyButton.setEnabled(false);
 		
 		applyClosePanel.add( resetButton);
+		applyClosePanel.add( defaultButton);
 		applyClosePanel.add( applyButton);
 		applyClosePanel.add( closeButton);
 		gbContraints.anchor = GridBagConstraints.SOUTHWEST;
 		gbContraints.insets = new Insets(0,0,0,0);
-		gbContraints.ipady = 2;
-		gbContraints.gridx = 3;
-		gbContraints.gridy = 3;
-		gbContraints.gridwidth = 2;
+		gbContraints.ipady = 0;
+		gbContraints.gridx = 2;
+		gbContraints.gridy = 4;
+		gbContraints.gridwidth = 4;
 		content.add( applyClosePanel, gbContraints);
 	
 		
@@ -178,10 +181,27 @@ public class ManualDecorateFrame implements ActionListener{
 			
 			
 		}
+		
+		else if(e.getSource() == defaultButton){
+			handleRevertToDefaultDecorations();
+			characterValueLegendPanel.repaint();
+			for(JRadioButton srb: styleRadioButtons){
+				srb.setEnabled(false);
+			}
+			for(JCheckBox jb : charValueCheckBoxes){
+				jb.setSelected(false);
+			}
+			resetButton.setEnabled(false);
+			applyButton.setEnabled(false);
+			
+			
+		}
 		else if(e.getSource() == closeButton){
 			semiDecorateFrame.backButton.setEnabled(true);
 			semiDecorateFrame.closeButton.setEnabled(true);
 			semiDecorateFrame.manualCheckBox.setSelected(false);
+			semiDecorateFrame.applyButton.setEnabled(true);
+			semiDecorateFrame.defaultButton.setEnabled(true);
 			this.dispose();
 		}
 	}
@@ -193,6 +213,17 @@ public class ManualDecorateFrame implements ActionListener{
 			DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).
 				get(charValue).setAnyDecorationStyle(semiDecorateFrame.selectedDecorationSyle,
 						DecorationEnumHelper.getDecorationStylesObject(selectedStyle));
+		}
+		// repaint all
+		SubTreePanel.refreshAllWindows();
+	}
+	private void handleRevertToDefaultDecorations(){
+		DecoratorTable.styleCharacteristicMapping.remove(semiDecorateFrame.selectedDecorationSyle);
+		for(String charValue : DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).keySet()){
+			DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).
+				get(charValue).setAnyDecorationStyle(
+						semiDecorateFrame.selectedDecorationSyle, DecorationEnumHelper.
+						getDefaultDecorationStyles(semiDecorateFrame.selectedDecorationSyle));
 		}
 		// repaint all
 		SubTreePanel.refreshAllWindows();
