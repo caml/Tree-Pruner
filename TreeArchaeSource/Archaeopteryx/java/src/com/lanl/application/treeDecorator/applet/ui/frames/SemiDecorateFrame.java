@@ -418,6 +418,7 @@ public class SemiDecorateFrame implements ActionListener{
 		if(selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
 			DecorationEnumHelper.populateBranchColorNodes();
 		}
+		DecoratorTable.updateLegend();
 		// repaint all
 		SubTreePanel.refreshAllWindows();
 	}
@@ -436,6 +437,7 @@ public class SemiDecorateFrame implements ActionListener{
 		if(selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
 			DecorationEnumHelper.populateBranchColorNodes();
 		}
+		DecoratorTable.updateLegend();
 		// repaint all
 		SubTreePanel.refreshAllWindows();
 	}

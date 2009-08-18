@@ -110,32 +110,42 @@ public class DecoratorJSONHandler {
 			JSONObject  charValuesJO = incomingSeqDetailsJO.getJSONObject(CommunicationEnum.SEQUENCE_DETAILS.getName());
 			Iterator iterator = charValuesJO.keys();
 			while(iterator.hasNext()){
+				String c=null,y=null,ha=null,na=null,host=null;
 				String key = iterator.next().toString();
-				String c = charValuesJO.getJSONObject(key).
-					getString(CommunicationEnum.COUNTRY.getName());
-				String y = charValuesJO.getJSONObject(key).
-					getString(CommunicationEnum.YEAR.getName());
-				String ha = charValuesJO.getJSONObject(key).
-					getString(CommunicationEnum.HA.getName());
-				String na = charValuesJO.getJSONObject(key).
-					getString(CommunicationEnum.NA.getName());
-				String host = charValuesJO.getJSONObject(key).
-					getString(CommunicationEnum.HOST.getName());
-				
-				if(!countryValuesList.contains(c)&&!c.equals("null")){
-					countryValuesList.add(c);
+				c = charValuesJO.getJSONObject(key).
+						getString(CommunicationEnum.COUNTRY.getName());
+				y = charValuesJO.getJSONObject(key).
+						getString(CommunicationEnum.YEAR.getName());
+				ha = charValuesJO.getJSONObject(key).
+						getString(CommunicationEnum.HA.getName());
+				na = charValuesJO.getJSONObject(key).
+						getString(CommunicationEnum.NA.getName());
+				host = charValuesJO.getJSONObject(key).
+						getString(CommunicationEnum.HOST.getName());
+				if(c!=null){
+					if( !countryValuesList.contains(c)&&!c.equals("null")){
+						countryValuesList.add(c);
+					}
 				}
-				if(!yearValuesList.contains(y)&&!y.equals("null")){
-					yearValuesList.add(y);
+				if(y!=null){
+					if(!yearValuesList.contains(y)&&!y.equals("null")){
+						yearValuesList.add(y);
+					}
 				}
-				if(!ahaValuesList.contains(ha)&&!ha.equals("null")){
-					ahaValuesList.add(ha);
+				if(ha!=null){
+					if(!ahaValuesList.contains(ha)&&!ha.equals("null")){
+						ahaValuesList.add(ha);
+					}
 				}
-				if(!anaValuesList.contains(na)&&!na.equals("null")){
-					anaValuesList.add(na);
+				if(na!=null){
+					if(!anaValuesList.contains(na)&&!na.equals("null")){
+						anaValuesList.add(na);
+					}
 				}
-				if(!hostValuesList.contains(host)&&!host.equals("null")){
-					hostValuesList.add(host);
+				if(host!=null){
+					if(!hostValuesList.contains(host)&&!host.equals("null")){
+						hostValuesList.add(host);
+					}
 				}
 			}
 		} catch (JSONException e) {
@@ -146,7 +156,7 @@ public class DecoratorJSONHandler {
 		String[] countryValueArray = (String []) countryValuesList.toArray (new String [countryValuesList.size ()]);
 		String [] yearValueArray = (String []) yearValuesList.toArray (new String [yearValuesList.size ()]);
 		String [] ahaValueArray = (String []) ahaValuesList.toArray (new String [ahaValuesList.size ()]);
-		String [] anaValueArray = (String []) anaValuesList.toArray (new String [countryValuesList.size ()]);
+		String [] anaValueArray = (String []) anaValuesList.toArray (new String [anaValuesList.size ()]);
 		String [] hostrValueArray = (String []) hostValuesList.toArray (new String [hostValuesList.size ()]);
 		
 		DecoratorTable.decoratorTableInit(countryValueArray,yearValueArray,ahaValueArray,anaValueArray,hostrValueArray);

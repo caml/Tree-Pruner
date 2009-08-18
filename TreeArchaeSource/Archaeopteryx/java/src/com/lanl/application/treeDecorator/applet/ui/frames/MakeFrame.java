@@ -11,12 +11,12 @@ public class MakeFrame {
 	    f.setSize(width, height);
 		f.setLocation( xPos, yPos);
 	    
-	    f.addWindowListener( new WindowAdapter() {
+	    /*f.addWindowListener( new WindowAdapter() {
 			
 			public void windowClosing( WindowEvent e) { 
 				f.dispose(); 
 			} 
-		});
+		});*/
 		
 		return f;
 	}

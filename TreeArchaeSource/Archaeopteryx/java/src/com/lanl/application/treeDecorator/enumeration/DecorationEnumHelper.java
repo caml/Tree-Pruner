@@ -574,16 +574,13 @@ public class DecorationEnumHelper {
     		Set<PhylogenyNode> leafNodes = SubTreePanel._full_phylogeny.getExternalNodes();
     		DecoratorTable.clearBranchColoring();
     		for(PhylogenyNode pn: leafNodes){
-    			System.out.println(pn.getNodeId());
-    			
     			DecorationStyles styleValue = getDefaultDecorationStyles(DecoratorUIConstants.STRAIN_COLOR);
     			String charValue = getCharValueForCharNameFromNode(charName, pn);
     			if(charValue!=null){
-    				if(charValue!="null"){
+    				if(!charValue.equals("null")){
     					styleValue = DecoratorTable.decoratorTable.get(charName).get(charValue).getStrainColor();
     				}
     			}
-    			System.out.println(charValue + " "+styleValue + " "+pn.getNodeId());
     			if(!isStyleValueDefault(DecoratorUIConstants.STRAIN_COLOR,styleValue)){
 	    			DecoratorTable.nodeIDStyleValuesForBranchColoring.put(pn.getNodeId(), styleValue);
 	    			PhylogenyNode parent = pn;                 

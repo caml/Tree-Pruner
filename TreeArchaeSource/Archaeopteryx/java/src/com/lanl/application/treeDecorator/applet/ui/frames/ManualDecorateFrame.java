@@ -1,7 +1,5 @@
 package com.lanl.application.treeDecorator.applet.ui.frames;
 
-
-
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -208,6 +206,7 @@ public class ManualDecorateFrame implements ActionListener{
 		if(semiDecorateFrame.selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
 			DecorationEnumHelper.populateBranchColorNodes();
 		}
+		DecoratorTable.updateLegend();
 		// repaint all
 		SubTreePanel.refreshAllWindows();
 	}
@@ -222,6 +221,7 @@ public class ManualDecorateFrame implements ActionListener{
 		if(semiDecorateFrame.selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
 			DecorationEnumHelper.populateBranchColorNodes();
 		}
+		DecoratorTable.updateLegend();
 		// repaint all
 		SubTreePanel.refreshAllWindows();
 	}

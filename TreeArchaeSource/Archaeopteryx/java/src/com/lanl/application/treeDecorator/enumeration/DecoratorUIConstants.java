@@ -4,6 +4,7 @@ public enum DecoratorUIConstants {
 	TREE_DECORATOR_FRAME_HEADER("Decorator Functions"),
 	SEMI_AUTOMATIC_DECORATION_TITLE("Semi-Automatic Decoration"),
 	MANUAL_DECORATION_TITLE("Manual Decoration"),
+	LEGEND_TITLE("Legend"),
 	INFORMATION("Information"),
 	SELECTED_CHARACTERISTIC_LABEL_TEXT ("You have selected characteristic as "),
 	SELECTED_TO_DECORATE_LABEL_TEXT (", to decorate as "),
@@ -38,6 +39,11 @@ public enum DecoratorUIConstants {
 	A_NA_SYBTYPE("A/NA subtype"),
 	HOST_SPECIES("Host species"),
 	CHARACTERISTIC("Characteristic"),
+	SHOW_COUNTRY("Show Country"),
+	SHOW_YEAR("Show Year"),
+	SHOW_A_HA_SUBTYPE("Show A/HA subtype"),
+	SHOW_A_NA_SUBTYPE("Show A/NA subtype"),
+	SHOW_HOST_SPECIES("Show Host species"),
 	NULL("None");
 	
 	private final String name;

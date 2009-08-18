@@ -119,6 +119,7 @@ public class CrashRevovery {
 			TreeDecoratorCommunication.getSavedDecorationsComm();
 			DecoratorTable.copyStuffToSavedStuff();
 			DecorationEnumHelper.populateBranchColorNodes();
+			DecoratorTable.updateLegend();
 			//refresh all windows
 			SubTreePanel.refreshAllWindows();
 			//	print(DecoratorTable.decoratorTable);

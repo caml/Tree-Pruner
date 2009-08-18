@@ -5,12 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
+import com.lanl.application.treeDecorator.applet.ui.frames.LegendFrame;
 import com.lanl.application.treeDecorator.enumeration.DecorationEnumHelper;
 import com.lanl.application.treeDecorator.enumeration.DecorationStyles;
 import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 
 public class DecoratorTable {
-
+	
 	// (CharName => (CharValue->DecorateObject(node,strain))
 	public static Map<DecoratorUIConstants, Map<String, DecorateObject>> decoratorTable = new HashMap<DecoratorUIConstants, Map<String, DecorateObject>>();
 	//StyleName => charName
@@ -25,6 +26,7 @@ public class DecoratorTable {
 	public static Map<Integer,DecorationStyles> nodeIDStyleValuesForBranchColoring 
 										= new HashMap<Integer,DecorationStyles>();
 	
+	public static LegendFrame legendFrame;
 	public static void decoratorTableInit(String[] countryNames, String[] year, String[] aha,
 			String[] ana, String[] host) {
 		clearAllTreeDecoratorDataStructures();
@@ -63,6 +65,7 @@ public class DecoratorTable {
 
 		}
 		decoratorTable.put(DecoratorUIConstants.HOST_SPECIES, tempMap);
+		legendFrame = new LegendFrame();
 	}
 	
 	public static void clearAllTreeDecoratorDataStructures(){
@@ -71,6 +74,9 @@ public class DecoratorTable {
 		savedDecoratorTable.clear();
 		savedStyleCharacteristicMapping.clear();
 		clearBranchColoring();
+		if(legendFrame!=null){
+			legendFrame.dispose();
+		}
 	}
 	
 	public static void resetDecorations(){
@@ -103,28 +109,31 @@ public class DecoratorTable {
 	}
 	
 	public static void copySavedStuffToStuff(){
-		decoratorTable.clear();
-		styleCharacteristicMapping.clear();
-		clearBranchColoring();
-		Map<String, DecorateObject> tempMap;
-		for(DecoratorUIConstants charName: savedDecoratorTable.keySet()){
-			tempMap = new HashMap<String, DecorateObject>();
-			for(String charValue: savedDecoratorTable.get(charName).keySet()){
-				tempMap.put(charValue, new DecorateObject(
-						savedDecoratorTable.get(charName).get(charValue).getNodeShape(),
-						savedDecoratorTable.get(charName).get(charValue).getNodeColor(),
-						savedDecoratorTable.get(charName).get(charValue).getStrainColor(),
-						savedDecoratorTable.get(charName).get(charValue).getStrainFont(),
-						savedDecoratorTable.get(charName).get(charValue).getStrainCase(),
-						savedDecoratorTable.get(charName).get(charValue).getStrainStyle(),
-						savedDecoratorTable.get(charName).get(charValue).getStrainSize()));
-				decoratorTable.put(charName, tempMap);
+		if(!savedDecoratorTable.isEmpty()){
+			decoratorTable.clear();
+			styleCharacteristicMapping.clear();
+			clearBranchColoring();
+			Map<String, DecorateObject> tempMap;
+			for(DecoratorUIConstants charName: savedDecoratorTable.keySet()){
+				tempMap = new HashMap<String, DecorateObject>();
+				for(String charValue: savedDecoratorTable.get(charName).keySet()){
+					tempMap.put(charValue, new DecorateObject(
+							savedDecoratorTable.get(charName).get(charValue).getNodeShape(),
+							savedDecoratorTable.get(charName).get(charValue).getNodeColor(),
+							savedDecoratorTable.get(charName).get(charValue).getStrainColor(),
+							savedDecoratorTable.get(charName).get(charValue).getStrainFont(),
+							savedDecoratorTable.get(charName).get(charValue).getStrainCase(),
+							savedDecoratorTable.get(charName).get(charValue).getStrainStyle(),
+							savedDecoratorTable.get(charName).get(charValue).getStrainSize()));
+					decoratorTable.put(charName, tempMap);
+				}
 			}
+			for(DecoratorUIConstants styleName:savedStyleCharacteristicMapping.keySet()){
+				styleCharacteristicMapping.put(styleName, savedStyleCharacteristicMapping.get(styleName));
+			}
+			DecorationEnumHelper.populateBranchColorNodes();
+			updateLegend();
 		}
-		for(DecoratorUIConstants styleName:savedStyleCharacteristicMapping.keySet()){
-			styleCharacteristicMapping.put(styleName, savedStyleCharacteristicMapping.get(styleName));
-		}
-		DecorationEnumHelper.populateBranchColorNodes();
 	
 		
 		
@@ -156,6 +165,14 @@ public class DecoratorTable {
 		nodeIDStyleValuesForBranchColoring.clear();
 	}
 	
+	public static void updateLegend(){
+		legendFrame.countryJPanel.repaint();
+		legendFrame.yearJPanel.repaint();
+		legendFrame.ahaJPanel.repaint();
+		legendFrame.anaJPanel.repaint();
+		legendFrame.hostJPanel.repaint();
+	}
+	
 	public static String getFormattedDecoratorTable(){
 		String s ="\n\n\nDecorator Table:";
 		for (DecoratorUIConstants dui: decoratorTable.keySet()){
@@ -168,7 +185,4 @@ public class DecoratorTable {
 		}
 		return s;
 	}
-	
-	
-	
 }

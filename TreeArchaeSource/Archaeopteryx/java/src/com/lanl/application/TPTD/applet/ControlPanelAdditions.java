@@ -34,6 +34,7 @@ public class ControlPanelAdditions {
 	private JButton undo;
 	private JButton refresh;
 	private JButton semi_decorate;
+	private JButton legend;
 	public JLabel subTreeWindowHierarchy = new JLabel(subTreeWindowHierarchyTEXT,JLabel.CENTER);;
 	public static String subTreeWindowHierarchyTEXT ="Tree level: ";
 	static CommunicationMessageWarningWindow warningWindow;
@@ -59,6 +60,8 @@ public class ControlPanelAdditions {
 				.setToolTipText("Discard all tree actions since most recent save.");
 		semi_decorate = new JButton("Semi automatic decoration");
 		semi_decorate.setToolTipText("Opens a new window to allow you to perform semi automatic decoration of the tree");
+		legend = new JButton("LEGEND");
+		legend.setToolTipText("Opens a new window to view your decoration legend");
 	    
 
 	}
@@ -94,6 +97,7 @@ public class ControlPanelAdditions {
 		controlPanel.addPanel(discard_panel);
 		controlPanel.add_additional_JButton(discard, discard_panel);
 		controlPanel.add_additional_JButton(undo, discard_panel);
+		controlPanel.add_additional_JButton(legend, controlPanel);
 	}
 	
 	
@@ -251,6 +255,9 @@ public class ControlPanelAdditions {
 		else if(e.getSource() == undo ){
 			DecoratorTable.copySavedStuffToStuff();
 			SubTreePanel.refreshAllWindows();
+		}
+		else if(e.getSource() == legend){
+			DecoratorTable.legendFrame._frame.setVisible(true);
 		}
 	}
 	
