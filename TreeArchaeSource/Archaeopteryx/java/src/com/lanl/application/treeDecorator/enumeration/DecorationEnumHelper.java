@@ -8,11 +8,14 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.font.TextAttribute;
 import java.text.AttributedString;
+import java.util.Set;
 
 import org.forester.phylogeny.PhylogenyNode;
 
+import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorShapes;
+import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 
 public class DecorationEnumHelper {
 	public static DecorationStyles[] allColors = {
@@ -564,7 +567,45 @@ public class DecorationEnumHelper {
 		else throw new IllegalArgumentException("The style name is unknown to the Tree Decorator");
     }
 	
-	
-
+    public static void populateBranchColorNodes(){
+    	
+    	if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.STRAIN_COLOR)){
+    		DecoratorUIConstants charName = DecoratorTable.styleCharacteristicMapping.get((DecoratorUIConstants.STRAIN_COLOR));
+    		Set<PhylogenyNode> leafNodes = SubTreePanel._full_phylogeny.getExternalNodes();
+    		DecoratorTable.clearBranchColoring();
+    		for(PhylogenyNode pn: leafNodes){
+    			System.out.println(pn.getNodeId());
+    			
+    			DecorationStyles styleValue = getDefaultDecorationStyles(DecoratorUIConstants.STRAIN_COLOR);
+    			String charValue = getCharValueForCharNameFromNode(charName, pn);
+    			if(charValue!=null){
+    				if(charValue!="null"){
+    					styleValue = DecoratorTable.decoratorTable.get(charName).get(charValue).getStrainColor();
+    				}
+    			}
+    			System.out.println(charValue + " "+styleValue + " "+pn.getNodeId());
+    			if(!isStyleValueDefault(DecoratorUIConstants.STRAIN_COLOR,styleValue)){
+	    			DecoratorTable.nodeIDStyleValuesForBranchColoring.put(pn.getNodeId(), styleValue);
+	    			PhylogenyNode parent = pn;                 
+	    			PhylogenyNode nextParent = null;
+	    			while( ( nextParent = parent.getParent()) != null){
+	    				if(DecoratorTable.nodeIDStyleValuesForBranchColoring.containsKey(nextParent.getChildNode1().getNodeId())&&
+	    					DecoratorTable.nodeIDStyleValuesForBranchColoring.containsKey(nextParent.getChildNode2().getNodeId())){
+	    					DecoratorTable.nodeIDStyleValuesForBranchColoring.put(nextParent.getNodeId(), styleValue);
+	    				}
+	    				else{
+	    					break;
+	    				}
+	    				parent=nextParent;
+	    			}
+	    		}
+    			
+    			
+    		}
+    	}
+    	else{
+    		DecoratorTable.clearBranchColoring();
+    	}
+    }	
 }
 

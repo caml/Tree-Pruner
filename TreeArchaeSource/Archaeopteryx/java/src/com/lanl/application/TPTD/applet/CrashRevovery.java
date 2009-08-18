@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.forester.archaeopteryx.MainFrame;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,6 +16,7 @@ import org.json.JSONTokener;
 
 import com.lanl.application.treeDecorator.applet.communication.TreeDecoratorCommunication;
 import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
+import com.lanl.application.treeDecorator.enumeration.DecorationEnumHelper;
 import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.applet.TreePrunerCommunicationNames;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
@@ -118,7 +118,7 @@ public class CrashRevovery {
 			AutoSave.resetAutoSave();
 			TreeDecoratorCommunication.getSavedDecorationsComm();
 			DecoratorTable.copyStuffToSavedStuff();
-			
+			DecorationEnumHelper.populateBranchColorNodes();
 			//refresh all windows
 			SubTreePanel.refreshAllWindows();
 			//	print(DecoratorTable.decoratorTable);

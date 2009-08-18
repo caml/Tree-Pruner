@@ -2,29 +2,22 @@ package com.lanl.application.treeDecorator.applet.ui.frames;
 
 
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -34,10 +27,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 
-import org.forester.archaeopteryx.MainFrame;
 
 import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
@@ -214,6 +205,9 @@ public class ManualDecorateFrame implements ActionListener{
 				get(charValue).setAnyDecorationStyle(semiDecorateFrame.selectedDecorationSyle,
 						DecorationEnumHelper.getDecorationStylesObject(selectedStyle));
 		}
+		if(semiDecorateFrame.selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
+			DecorationEnumHelper.populateBranchColorNodes();
+		}
 		// repaint all
 		SubTreePanel.refreshAllWindows();
 	}
@@ -224,6 +218,9 @@ public class ManualDecorateFrame implements ActionListener{
 				get(charValue).setAnyDecorationStyle(
 						semiDecorateFrame.selectedDecorationSyle, DecorationEnumHelper.
 						getDefaultDecorationStyles(semiDecorateFrame.selectedDecorationSyle));
+		}
+		if(semiDecorateFrame.selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
+			DecorationEnumHelper.populateBranchColorNodes();
 		}
 		// repaint all
 		SubTreePanel.refreshAllWindows();

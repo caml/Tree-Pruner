@@ -168,7 +168,25 @@ public class TreeDecoratorPaint {
 	}
 	
 	public void decorateBranch(Graphics g, PhylogenyNode node) {
-		g.setColor(DecoratorColorSet.getBlack());   //temp replace with decorateBranch algo in TreeDecratorPaint
+		DecorationStyles color;
+		if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.STRAIN_COLOR)){
+			if(!DecoratorTable.nodeIDStyleValuesForBranchColoring.isEmpty()){
+				if(DecoratorTable.nodeIDStyleValuesForBranchColoring.containsKey(node.getNodeId())){
+					color = DecoratorTable.nodeIDStyleValuesForBranchColoring.get(node.getNodeId());
+				}
+				else{
+					color = DecorationEnumHelper.getDefaultDecorationStyles(DecoratorUIConstants.STRAIN_COLOR);
+				}
+			}
+			else{
+				color = DecorationEnumHelper.getDefaultDecorationStyles(DecoratorUIConstants.STRAIN_COLOR);
+			}
+		}
+		else{
+			color = DecorationEnumHelper.getDefaultDecorationStyles(DecoratorUIConstants.STRAIN_COLOR);
+		}
+		
+		g.setColor(DecorationEnumHelper.getColor(color));   
 	}
 	
 }

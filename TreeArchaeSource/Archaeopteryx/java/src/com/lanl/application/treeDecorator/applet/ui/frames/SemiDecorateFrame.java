@@ -415,6 +415,9 @@ public class SemiDecorateFrame implements ActionListener{
 				get(charValue).setAnyDecorationStyle(
 						selectedDecorationSyle, DecorationEnumHelper.getDefaultDecorationStyles(selectedDecorationSyle));
 		}
+		if(selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
+			DecorationEnumHelper.populateBranchColorNodes();
+		}
 		// repaint all
 		SubTreePanel.refreshAllWindows();
 	}
@@ -429,6 +432,9 @@ public class SemiDecorateFrame implements ActionListener{
 			DecoratorTable.decoratorTable.get(selectedCharacteristic).
 				get(charValue).setAnyDecorationStyle(selectedDecorationSyle, decorationStylesValues[styleValuePos]);
 			styleValuePos++;
+		}
+		if(selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
+			DecorationEnumHelper.populateBranchColorNodes();
 		}
 		// repaint all
 		SubTreePanel.refreshAllWindows();

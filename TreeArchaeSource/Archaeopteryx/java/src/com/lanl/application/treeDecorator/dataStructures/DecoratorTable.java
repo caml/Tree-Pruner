@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
+import com.lanl.application.treeDecorator.enumeration.DecorationEnumHelper;
 import com.lanl.application.treeDecorator.enumeration.DecorationStyles;
 import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 
@@ -20,13 +21,9 @@ public class DecoratorTable {
 	
 	public static Map<DecoratorUIConstants,DecoratorUIConstants> savedStyleCharacteristicMapping
 		= new HashMap<DecoratorUIConstants,DecoratorUIConstants>();
-//	private static ArrayList<String> countryValues = new ArrayList<String>();
-//	private static ArrayList<String> yearValues = new ArrayList<String>();
-//	private static ArrayList<String> ahaValues = new ArrayList<String>();
-//	private static ArrayList<String> anaValues = new ArrayList<String>();
-//	private static ArrayList<String> hostValues = new ArrayList<String>();
 	
-	
+	public static Map<Integer,DecorationStyles> nodeIDStyleValuesForBranchColoring 
+										= new HashMap<Integer,DecorationStyles>();
 	
 	public static void decoratorTableInit(String[] countryNames, String[] year, String[] aha,
 			String[] ana, String[] host) {
@@ -73,15 +70,13 @@ public class DecoratorTable {
 		styleCharacteristicMapping.clear();
 		savedDecoratorTable.clear();
 		savedStyleCharacteristicMapping.clear();
+		clearBranchColoring();
 	}
 	
 	public static void resetDecorations(){
 		if(DecoratorJSONHandler.getSequenceDetailsJSON()!=null){
 			DecoratorJSONHandler.storeCharacteristicValues(DecoratorJSONHandler.getSequenceDetailsJSON());
 		}
-		styleCharacteristicMapping.clear();
-		savedDecoratorTable.clear();
-		savedStyleCharacteristicMapping.clear();
 	}
 	
 	public static void copyStuffToSavedStuff(){
@@ -110,6 +105,7 @@ public class DecoratorTable {
 	public static void copySavedStuffToStuff(){
 		decoratorTable.clear();
 		styleCharacteristicMapping.clear();
+		clearBranchColoring();
 		Map<String, DecorateObject> tempMap;
 		for(DecoratorUIConstants charName: savedDecoratorTable.keySet()){
 			tempMap = new HashMap<String, DecorateObject>();
@@ -128,6 +124,9 @@ public class DecoratorTable {
 		for(DecoratorUIConstants styleName:savedStyleCharacteristicMapping.keySet()){
 			styleCharacteristicMapping.put(styleName, savedStyleCharacteristicMapping.get(styleName));
 		}
+		DecorationEnumHelper.populateBranchColorNodes();
+	
+		
 		
 	}
 	
@@ -153,7 +152,9 @@ public class DecoratorTable {
 		return toSave;
 	}
 	
-	
+	public static void clearBranchColoring(){
+		nodeIDStyleValuesForBranchColoring.clear();
+	}
 	
 	public static String getFormattedDecoratorTable(){
 		String s ="\n\n\nDecorator Table:";
