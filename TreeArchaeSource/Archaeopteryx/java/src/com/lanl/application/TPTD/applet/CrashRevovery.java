@@ -115,8 +115,9 @@ public class CrashRevovery {
 			// successfully painted by then
 			// we will call the crash recovery and repaint the tree (see below).
 			// END
-			
+			AutoSave.resetAutoSave();
 			TreeDecoratorCommunication.getSavedDecorationsComm();
+			DecoratorTable.copyStuffToSavedStuff();
 			
 			//refresh all windows
 			SubTreePanel.refreshAllWindows();

@@ -17,6 +17,7 @@ import org.json.JSONTokener;
 import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.applet.CommunicationMessageWarningWindow;
 import com.lanl.application.TPTD.applet.ControlPanelAdditions;
+import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 import com.lanl.application.treeDecorator.enumeration.CommunicationEnum;
 import com.lanl.application.treePruner.applet.TreePrunerCommunicationNames;
 
@@ -134,7 +135,7 @@ public class TreeDecoratorCommunication {
 			DecoratorJSONHandler.storeSavedStyles(savedDecoraionsJSONString);
 		}
 	}
-	public static void postSaveDecorationsComm(){
+	public static void postSaveDecorationsComm(boolean isAutoSave){
 		warningWindow = new CommunicationMessageWarningWindow();
 		String serverResponse = "";
 		String JSONString = DecoratorJSONHandler.getSavedStyles();
@@ -144,6 +145,9 @@ public class TreeDecoratorCommunication {
 		if(serverResponse.equals(CommunicationEnum.SAVE_SUCCESS.getName())){
 			System.out.println("SAVE PRESSED / AUTOSAVE \n");
         	System.out.println(" Server reurned: File successfully opened and written");
+        	if(!isAutoSave){
+        		DecoratorTable.copyStuffToSavedStuff();
+        	}
 		}
 		else{
 			System.out.println("SAVE PRESSED / AUTOSAVE \n");

@@ -9,6 +9,8 @@ import org.forester.archaeopteryx.ControlPanel;
 import org.forester.archaeopteryx.MainFrame;
 import org.json.JSONArray;
 
+import com.lanl.application.treeDecorator.applet.communication.TreeDecoratorCommunication;
+import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 import com.lanl.application.treePruner.applet.TreePrunerCommunication;
 import com.lanl.application.treePruner.custom.data.WorkingSet;
 
@@ -59,7 +61,7 @@ public class AutoSave {
 		}
 		long delay = System.currentTimeMillis() - base;
 		if(delay >= 600000){    //10 minutes =600000 ms
-		//if(delay >= 20000){
+	//	if(delay >= 2000){
 			base=System.currentTimeMillis();
 			delay=0;
 			return true;
@@ -69,7 +71,7 @@ public class AutoSave {
 		}
 	}
 	
-	public static void doAutoSave(ControlPanelAdditions controlPanelAdditions, WorkingSet ws,CommunicationMessageWarningWindow warningWindow){
+	public static void doAutoSaveForTreePruner(ControlPanelAdditions controlPanelAdditions, WorkingSet ws,CommunicationMessageWarningWindow warningWindow){
 		if(timeToAutoSave()){
 			JSONArray accToRemove = ws.getACCasJSONarray();   //acc ==accToRemove //get_rem_acc == toCommunicateWithServer && getACCasString
 		    if(ws.toCommunicateWithServer()){
@@ -92,6 +94,20 @@ public class AutoSave {
 			autoSaved = false;
 		}
 	}
+	
+	public static void doAutoSaveForTreeDecorator(){
+		if(timeToAutoSave()){
+			if(DecoratorTable.toSave()){
+				TreeDecoratorCommunication.postSaveDecorationsComm(true);
+				autoSaved = true;
+			}
+		}
+		else{
+			autoSaved = false;
+		}
+		
+	}
+
 	private static void destroyWarningWindow(CommunicationMessageWarningWindow warningWindow){
         if(warningWindow!=null){
         	warningWindow.close();
@@ -100,6 +116,7 @@ public class AutoSave {
     }
 	
 	public static void resetAutoSave(){   //CALL from EXIT 
+		autoSaved = false;
 		base = 0;
 		autoSaveDateTime = "Not Saved Yet";
 	}

@@ -399,7 +399,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         	if(AppletParams.isTreePruner() ){
         		treePrunerPaint.initArrayLists();
                 treePrunerPaint.paintKeepRemove(g,node);
-                _control_panel.controlPanelAdditions.callAutoSaveToRefresh();
+                _control_panel.controlPanelAdditions.callTreePrunerAutoSaveToRefresh();
             }
         	else{
         		g.setColor( getTreeColorSet().getBranchColor() );
@@ -2688,7 +2688,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         
         if(AppletParams.isTreeDecorator()){
-        	_control_panel.controlPanelAdditions.callAutoSaveToRefresh();
+        	_control_panel.controlPanelAdditions.callTreeDecoratorAutoSaveToRefresh();
         	treeDecoratorPaint.decorateNodeBox(g, ForesterUtil.roundToInt(x), ForesterUtil.roundToInt(y), node);
         }
         else{

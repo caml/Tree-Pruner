@@ -56,7 +56,7 @@ public class ControlPanelAdditions {
 	    refresh.setToolTipText("Refreshes the tree in all open applet windows");
 		undo = new JButton("Discard recent");
 		undo
-				.setToolTipText("Discard all pruning actions since most recent save.");
+				.setToolTipText("Discard all tree actions since most recent save.");
 		semi_decorate = new JButton("Semi automatic decoration");
 		semi_decorate.setToolTipText("Opens a new window to allow you to perform semi automatic decoration of the tree");
 	    
@@ -89,7 +89,11 @@ public class ControlPanelAdditions {
 		controlPanel.add_additional_JButton(refresh, controlPanel);
 		controlPanel.add_additional_JButton(semi_decorate, controlPanel);
 		controlPanel.add_additional_JButton(save_to_file, controlPanel);
-		controlPanel.add_additional_JButton(discard, controlPanel);
+		final JPanel discard_panel = new JPanel(new GridLayout(1, 2, 0, 0));
+		discard_panel.setBackground(controlPanel.getBackground());
+		controlPanel.addPanel(discard_panel);
+		controlPanel.add_additional_JButton(discard, discard_panel);
+		controlPanel.add_additional_JButton(undo, discard_panel);
 	}
 	
 	
@@ -112,14 +116,23 @@ public class ControlPanelAdditions {
 		subTreeWindowHierarchy.setHorizontalTextPosition(JLabel.CENTER);
 		controlPanel.addLabel(subTreeWindowHierarchy);
 	}
-	public void callAutosaveToAdd(){
-		AutoSave.doAutoSave(this, ws, warningWindow);
+	public void callTreePrunerAutosaveToAdd(){
+		AutoSave.doAutoSaveForTreePruner(this, ws, warningWindow);
 		autoSave.addAutoSaveLabel(controlPanel);
 	}
-	 public void callAutoSaveToRefresh(){
-		AutoSave.doAutoSave(this, ws, warningWindow);
+	public void callTreePrunerAutoSaveToRefresh(){
+		AutoSave.doAutoSaveForTreePruner(this, ws, warningWindow);
 		autoSave.refreshAutoSaveLabel(); 
-	 }
+	}
+	 
+	public void callTreeDecoratorAutosaveToAdd(){
+		AutoSave.doAutoSaveForTreeDecorator();
+		autoSave.addAutoSaveLabel(controlPanel);
+	}
+	public void callTreeDecoratorAutoSaveToRefresh(){
+		AutoSave.doAutoSaveForTreeDecorator();
+		autoSave.refreshAutoSaveLabel(); 
+	}
 
 	public void addTreePrunerButtonFunctions(ActionEvent e){
 		if ( e.getSource() == refresh ) {
@@ -225,11 +238,18 @@ public class ControlPanelAdditions {
 			new SemiDecorateFrame();
 		}
 		else if ( e.getSource() == save_to_file ) {
-			TreeDecoratorCommunication.postSaveDecorationsComm();
+			if(DecoratorTable.toSave()){
+				TreeDecoratorCommunication.postSaveDecorationsComm(false);
+			}
 		}
 		else if ( e.getSource() == discard ) {
 			TreeDecoratorCommunication.postDiscardDecorationsComm();
+			AutoSave.resetAutoSave();
 			DecoratorTable.resetDecorations();
+			SubTreePanel.refreshAllWindows();
+		}
+		else if(e.getSource() == undo ){
+			DecoratorTable.copySavedStuffToStuff();
 			SubTreePanel.refreshAllWindows();
 		}
 	}

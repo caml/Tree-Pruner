@@ -15,6 +15,11 @@ public class DecoratorTable {
 	//StyleName => charName
 	public static Map<DecoratorUIConstants,DecoratorUIConstants> styleCharacteristicMapping
 		= new HashMap<DecoratorUIConstants,DecoratorUIConstants>();
+	
+	public static Map<DecoratorUIConstants, Map<String, DecorateObject>> savedDecoratorTable = new HashMap<DecoratorUIConstants, Map<String, DecorateObject>>();
+	
+	public static Map<DecoratorUIConstants,DecoratorUIConstants> savedStyleCharacteristicMapping
+		= new HashMap<DecoratorUIConstants,DecoratorUIConstants>();
 //	private static ArrayList<String> countryValues = new ArrayList<String>();
 //	private static ArrayList<String> yearValues = new ArrayList<String>();
 //	private static ArrayList<String> ahaValues = new ArrayList<String>();
@@ -66,13 +71,89 @@ public class DecoratorTable {
 	public static void clearAllTreeDecoratorDataStructures(){
 		decoratorTable.clear();
 		styleCharacteristicMapping.clear();
+		savedDecoratorTable.clear();
+		savedStyleCharacteristicMapping.clear();
 	}
 	
 	public static void resetDecorations(){
 		if(DecoratorJSONHandler.getSequenceDetailsJSON()!=null){
 			DecoratorJSONHandler.storeCharacteristicValues(DecoratorJSONHandler.getSequenceDetailsJSON());
 		}
+		styleCharacteristicMapping.clear();
+		savedDecoratorTable.clear();
+		savedStyleCharacteristicMapping.clear();
 	}
+	
+	public static void copyStuffToSavedStuff(){
+		savedDecoratorTable.clear();
+		savedStyleCharacteristicMapping.clear();
+		Map<String, DecorateObject> tempMap;
+		for(DecoratorUIConstants charName: decoratorTable.keySet()){
+			tempMap = new HashMap<String, DecorateObject>();
+			for(String charValue: decoratorTable.get(charName).keySet()){
+				tempMap.put(charValue, new DecorateObject(
+						decoratorTable.get(charName).get(charValue).getNodeShape(),
+						decoratorTable.get(charName).get(charValue).getNodeColor(),
+						decoratorTable.get(charName).get(charValue).getStrainColor(),
+						decoratorTable.get(charName).get(charValue).getStrainFont(),
+						decoratorTable.get(charName).get(charValue).getStrainCase(),
+						decoratorTable.get(charName).get(charValue).getStrainStyle(),
+						decoratorTable.get(charName).get(charValue).getStrainSize()));
+				savedDecoratorTable.put(charName, tempMap);
+			}
+		}
+		for(DecoratorUIConstants styleName:styleCharacteristicMapping.keySet()){
+			savedStyleCharacteristicMapping.put(styleName, styleCharacteristicMapping.get(styleName));
+		}
+	}
+	
+	public static void copySavedStuffToStuff(){
+		decoratorTable.clear();
+		styleCharacteristicMapping.clear();
+		Map<String, DecorateObject> tempMap;
+		for(DecoratorUIConstants charName: savedDecoratorTable.keySet()){
+			tempMap = new HashMap<String, DecorateObject>();
+			for(String charValue: savedDecoratorTable.get(charName).keySet()){
+				tempMap.put(charValue, new DecorateObject(
+						savedDecoratorTable.get(charName).get(charValue).getNodeShape(),
+						savedDecoratorTable.get(charName).get(charValue).getNodeColor(),
+						savedDecoratorTable.get(charName).get(charValue).getStrainColor(),
+						savedDecoratorTable.get(charName).get(charValue).getStrainFont(),
+						savedDecoratorTable.get(charName).get(charValue).getStrainCase(),
+						savedDecoratorTable.get(charName).get(charValue).getStrainStyle(),
+						savedDecoratorTable.get(charName).get(charValue).getStrainSize()));
+				decoratorTable.put(charName, tempMap);
+			}
+		}
+		for(DecoratorUIConstants styleName:savedStyleCharacteristicMapping.keySet()){
+			styleCharacteristicMapping.put(styleName, savedStyleCharacteristicMapping.get(styleName));
+		}
+		
+	}
+	
+	public static boolean toSave(){
+		boolean toSave = false;
+		if(savedDecoratorTable.isEmpty()){
+			return true;
+		}
+		for(DecoratorUIConstants charName: decoratorTable.keySet()){
+			for(String charValue: decoratorTable.get(charName).keySet()){
+				if(decoratorTable.get(charName).get(charValue).isEqual(savedDecoratorTable.get(charName).get(charValue))){
+					toSave = false;
+				}
+				else{
+					toSave = true;
+					break;
+				}
+			}
+			if(toSave == true){
+				break;
+			}
+		}
+		return toSave;
+	}
+	
+	
 	
 	public static String getFormattedDecoratorTable(){
 		String s ="\n\n\nDecorator Table:";
@@ -86,5 +167,7 @@ public class DecoratorTable {
 		}
 		return s;
 	}
+	
+	
 	
 }

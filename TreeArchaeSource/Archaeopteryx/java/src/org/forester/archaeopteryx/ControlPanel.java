@@ -1043,9 +1043,13 @@ public class ControlPanel extends JPanel implements ActionListener {
         // Zoom and quick edit buttons
         addButtons();
       //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTD() ){
+        if(AppletParams.isTreePruner()){
 		     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
-		     controlPanelAdditions.callAutosaveToAdd();
+		     controlPanelAdditions.callTreePrunerAutosaveToAdd();
+        }
+        else if(AppletParams.isTreeDecorator()){
+		     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
+		     controlPanelAdditions.callTreeDecoratorAutosaveToAdd();
         }
       //********************************************END**********************************************************//
         setupSearchTools();

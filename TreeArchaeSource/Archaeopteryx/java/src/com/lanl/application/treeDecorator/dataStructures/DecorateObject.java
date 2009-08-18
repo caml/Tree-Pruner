@@ -23,6 +23,19 @@ public class DecorateObject {
 		_size = DecorationEnumHelper.getDefaultDecorationStyles(DecoratorUIConstants.SIZE);
 	}
 	
+	public DecorateObject(DecorationStyles shapes,DecorationStyles nodeColor,DecorationStyles strainColor
+			,DecorationStyles font,DecorationStyles Case,DecorationStyles style,DecorationStyles size){
+		_shapes = shapes; 
+		_nodeColor = nodeColor;
+		
+		_strainColor = strainColor;  
+		_case =  Case;
+		_font =  font;
+		_style = style;
+		_size = size;
+		
+	}
+	
 	public DecorationStyles getNodeColor(){
 		return _nodeColor;
 	}
@@ -103,5 +116,17 @@ public class DecorateObject {
 		return "\nNode Color = "+_nodeColor+"\nShape = "+_shapes+"\nStrain Color = "+_strainColor+
 				"\nCase = "+_case+"\nFont = "+_font+"\nStyle = "+_style+"\nSize = "+_size+"\n";
 	}
-
+	
+	public boolean isEqual(DecorateObject decorateObject){
+		if(decorateObject.getNodeColor() == this.getNodeColor()&&
+				decorateObject.getNodeShape() == this.getNodeShape()&&
+				decorateObject.getStrainCase() == this.getStrainCase()&&
+				decorateObject.getStrainColor() == this.getStrainColor()&&
+				decorateObject.getStrainFont() == this.getStrainFont()&&
+				decorateObject.getStrainSize() == this.getStrainSize()&&
+				decorateObject.getStrainStyle() == this.getStrainStyle()){
+			return true;
+		}
+		else return false;
+	}
 }
