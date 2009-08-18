@@ -32,6 +32,10 @@ import java.awt.Font;
 
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
+//********************************************END**********************************************************//
+
 /*
  * This is to hold changeable options.
  */
@@ -260,6 +264,12 @@ import org.forester.util.ForesterUtil;
     }
 
     private void init() {
+    	//******************************************START **********************************************************//
+    	if(AppletParams.isTreeDecorator()){
+    		_show_node_boxes = true;
+    	}
+    	else
+    	//********************************************END**********************************************************//
         _show_node_boxes = false;
         _show_branch_length_values = false;
         _internal_number_are_confidence_for_nh_parsing = false;

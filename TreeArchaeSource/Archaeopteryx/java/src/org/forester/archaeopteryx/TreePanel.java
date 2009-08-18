@@ -2689,7 +2689,9 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         
         if(AppletParams.isTreeDecorator()){
         	_control_panel.controlPanelAdditions.callTreeDecoratorAutoSaveToRefresh();
-        	treeDecoratorPaint.decorateNodeBox(g, ForesterUtil.roundToInt(x), ForesterUtil.roundToInt(y), node);
+        	if  ( getOptions().isShowNodeBoxes()){
+        		treeDecoratorPaint.decorateNodeBox(g, ForesterUtil.roundToInt(x), ForesterUtil.roundToInt(y), node);
+        	}
         }
         else{
       //********************************************END**********************************************************//  
