@@ -135,6 +135,7 @@ public class ManualDecorateFrame implements ActionListener{
 		closeButton.addActionListener( this);
 		resetButton.setEnabled(false);
 		applyButton.setEnabled(false);
+		defaultButton.setEnabled(false);
 		
 		applyClosePanel.add( resetButton);
 		applyClosePanel.add( defaultButton);
@@ -167,6 +168,7 @@ public class ManualDecorateFrame implements ActionListener{
 				jb.setSelected(false);
 			}
 			resetButton.setEnabled(false);
+			defaultButton.setEnabled(false);
 		}
 		else if(e.getSource() == applyButton){
 			handleManualDecoration();
@@ -179,6 +181,7 @@ public class ManualDecorateFrame implements ActionListener{
 			}
 			resetButton.setEnabled(false);
 			applyButton.setEnabled(false);
+			defaultButton.setEnabled(false);
 			
 			
 		}
@@ -194,6 +197,7 @@ public class ManualDecorateFrame implements ActionListener{
 			}
 			resetButton.setEnabled(false);
 			applyButton.setEnabled(false);
+			defaultButton.setEnabled(false);
 			
 			
 		}
@@ -224,12 +228,32 @@ public class ManualDecorateFrame implements ActionListener{
 		SubTreePanel.refreshAllWindows();
 	}
 	private void handleRevertToDefaultDecorations(){
-		DecoratorTable.styleCharacteristicMapping.remove(semiDecorateFrame.selectedDecorationSyle);
-		for(String charValue : DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).keySet()){
-			DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).
+		boolean allSelected = false;
+		for(JCheckBox jb:charValueCheckBoxes){
+			if(jb.isSelected()){
+				allSelected = true;
+			}
+			else {
+				allSelected = false;
+				break;
+			}
+		}
+		if(allSelected){
+			DecoratorTable.styleCharacteristicMapping.remove(semiDecorateFrame.selectedDecorationSyle);
+			for(String charValue : DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).keySet()){
+				DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).
+					get(charValue).setAnyDecorationStyle(
+							semiDecorateFrame.selectedDecorationSyle, DecorationEnumHelper.
+							getDefaultDecorationStyles(semiDecorateFrame.selectedDecorationSyle));
+			}
+		}
+		else{
+			for(String charValue : selectedCharValues){
+				DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic).
 				get(charValue).setAnyDecorationStyle(
 						semiDecorateFrame.selectedDecorationSyle, DecorationEnumHelper.
 						getDefaultDecorationStyles(semiDecorateFrame.selectedDecorationSyle));
+			}
 		}
 		if(semiDecorateFrame.selectedDecorationSyle == DecoratorUIConstants.STRAIN_COLOR){
 			DecorationEnumHelper.populateBranchColorNodes();
@@ -450,6 +474,7 @@ public class ManualDecorateFrame implements ActionListener{
 			if(selectedCharValues.isEmpty()){
 				applyButton.setEnabled(false);
 				resetButton.setEnabled(false);
+				defaultButton.setEnabled(false);
 				for(JRadioButton srb: styleRadioButtons){
 					srb.setEnabled(false);
 				}
@@ -459,6 +484,7 @@ public class ManualDecorateFrame implements ActionListener{
 					srb.setEnabled(true);
 				}
 				resetButton.setEnabled(true);
+				defaultButton.setEnabled(true);
 			}
 		}
 		
