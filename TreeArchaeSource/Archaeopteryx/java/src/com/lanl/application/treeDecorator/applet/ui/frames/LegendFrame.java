@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -57,6 +59,11 @@ public class LegendFrame implements ItemListener{
 	public void makeLegendFrame(){
 		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 400, 900, 400, 0);
 		
+		_frame.addWindowListener(new WindowAdapter(){
+			public void windowClosing( final WindowEvent e ) {
+				_frame.setVisible(false);
+			}
+		});
 		Container content = _frame.getContentPane();
 		content.setLayout( new GridBagLayout());
 		content.setBackground(DecoratorColorSet.getBackgroundColor());
@@ -163,6 +170,12 @@ public class LegendFrame implements ItemListener{
 		
 	}
 	
+	public void dispose(){
+		if(_frame!=null){
+			_frame.setVisible(false);
+			_frame.dispose();
+		}
+	}
 	class  MakeCharNameLegendPanel extends JPanel {
 		Map<String, DecorateObject> charMap;
 		MakeCharNameLegendPanel(DecoratorUIConstants charName){
@@ -212,13 +225,6 @@ public class LegendFrame implements ItemListener{
 		}
 	}
 
-	public void dispose(){
-		if(_frame!=null){
-			_frame.setVisible(false);
-			_frame.dispose();
-		}
-	}
-	
 	public void itemStateChanged(ItemEvent e) {
 		JCheckBox selectedCheckBox = (JCheckBox)e.getSource();
 		if(selectedCheckBox.getName().equals(DecoratorUIConstants.SHOW_COUNTRY.getName())){

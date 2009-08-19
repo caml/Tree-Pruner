@@ -12,6 +12,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
@@ -73,7 +75,17 @@ public class ManualDecorateFrame implements ActionListener{
 	
 	public void makeManalDecoratorFrame(){
 		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 700, 500, 300, 300);
-		
+		_frame.addWindowListener(new WindowAdapter(){
+			public void windowClosing( final WindowEvent e ) {
+				semiDecorateFrame.backButton.setEnabled(true);
+				semiDecorateFrame.closeButton.setEnabled(true);
+				semiDecorateFrame.manualCheckBox.setSelected(false);
+				semiDecorateFrame.applyButton.setEnabled(true);
+				semiDecorateFrame.defaultButton.setEnabled(true);
+				semiDecorateFrame.setCloseWindowListners(semiDecorateFrame._frame);
+				dispose();
+			}
+		});
 		Container content = _frame.getContentPane();
 		content.setLayout( new GridBagLayout());
 		content.setBackground(DecoratorColorSet.getBackgroundColor());
@@ -191,6 +203,7 @@ public class ManualDecorateFrame implements ActionListener{
 			semiDecorateFrame.manualCheckBox.setSelected(false);
 			semiDecorateFrame.applyButton.setEnabled(true);
 			semiDecorateFrame.defaultButton.setEnabled(true);
+			semiDecorateFrame.setCloseWindowListners(semiDecorateFrame._frame);
 			this.dispose();
 		}
 	}

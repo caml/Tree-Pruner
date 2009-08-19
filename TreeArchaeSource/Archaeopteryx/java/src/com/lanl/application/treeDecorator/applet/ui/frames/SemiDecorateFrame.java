@@ -6,6 +6,9 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -13,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.UIManager;
@@ -41,9 +45,20 @@ public class SemiDecorateFrame implements ActionListener{
 	JFrame _frame;
 	ManualDecorateFrame manualDecorateFrame;
 	ButtonGroup characteristicButtonGroup,toDecorateButtonGroup,decorateStrainButtonGroup, decorateNodeButtonGroup;
-	public DecoratorUIConstants selectedToDecorate = DecoratorUIConstants.NULL;  //make instance
-	public DecoratorUIConstants selectedCharacteristic = DecoratorUIConstants.NULL; //make instance
-	public DecoratorUIConstants selectedDecorationSyle = DecoratorUIConstants.NULL;  //make instance
+	public DecoratorUIConstants selectedToDecorate = DecoratorUIConstants.NULL;  
+	public DecoratorUIConstants selectedCharacteristic = DecoratorUIConstants.NULL; 
+	public DecoratorUIConstants selectedDecorationSyle = DecoratorUIConstants.NULL;
+	WindowAdapter doNothingWindowAdapter = new WindowAdapter(){
+		public void windowClosing( final WindowEvent e ) {
+			JOptionPane.showMessageDialog( null, "You have a manual frame open.\n" +
+											"You cannot close this frame without closing the manual frame");
+		}
+	};
+	 WindowAdapter closeWindowAdapter = new WindowAdapter(){
+		public void windowClosing( final WindowEvent e ) {
+			dispose();
+		}
+	};
 	
 	public SemiDecorateFrame(){
 	//	gbContraints = new GridBagConstraints();
@@ -61,6 +76,8 @@ public class SemiDecorateFrame implements ActionListener{
 	
 	public void makeSemiDecoratorFrame(){
 		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 750, 600, 300, 300);
+		_frame.addWindowListener(closeWindowAdapter);
+		_frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Container content = _frame.getContentPane();
 		content.setLayout( new GridBagLayout());
 		content.setBackground(DecoratorColorSet.getBackgroundColor());
@@ -390,6 +407,7 @@ public class SemiDecorateFrame implements ActionListener{
 			
 			if(manualCheckBox.isSelected()){
 				manualDecorateFrame = new ManualDecorateFrame(this);
+				this.setDoNothingListners(_frame);
 				defaultButton.setEnabled(false);
 				applyButton.setEnabled(false);
 				closeButton.setEnabled(false);
@@ -400,6 +418,7 @@ public class SemiDecorateFrame implements ActionListener{
 				if(manualDecorateFrame!=null){
 					manualDecorateFrame.dispose();
 				}
+				this.setCloseWindowListners(_frame);
 				defaultButton.setEnabled(true);
 				applyButton.setEnabled(true);
 				closeButton.setEnabled(true);
@@ -714,4 +733,26 @@ public class SemiDecorateFrame implements ActionListener{
 	public static void main (String[] args){
 		SemiDecorateFrame sd = new SemiDecorateFrame();
 	}
+	
+	protected void setCloseWindowListners(JFrame jf){
+		removeWindowListners(jf);
+		jf.addWindowListener(this.closeWindowAdapter);
+		jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	}
+	
+	protected void setDoNothingListners(JFrame jf){
+		removeWindowListners(jf);
+		jf.addWindowListener(this.doNothingWindowAdapter);
+		jf.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		
+	}
+	
+	protected void removeWindowListners(JFrame jf){
+		WindowListener x[] = jf.getWindowListeners();
+		for(int i = 0; i < x.length; i++){
+			jf.removeWindowListener(x[i]);
+		}
+		
+	}
+	
 }
