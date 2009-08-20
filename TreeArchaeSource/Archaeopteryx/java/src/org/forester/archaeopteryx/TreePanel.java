@@ -2689,7 +2689,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         
         if(AppletParams.isTreeDecorator()){
         	_control_panel.controlPanelAdditions.callTreeDecoratorAutoSaveToRefresh();
-        	if  ( getOptions().isShowNodeBoxes()){
+        	if ( is_in_found_nodes ) {
+	            paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
+	        }
+        	else if  ( getOptions().isShowNodeBoxes()){
         		treeDecoratorPaint.decorateNodeBox(g, ForesterUtil.roundToInt(x), ForesterUtil.roundToInt(y), node);
         	}
         }
@@ -2826,10 +2829,18 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         if ( _sb.length() > 0 ) {
         	//******************************************START**********************************************************//
         	if(AppletParams.isTreeDecorator()){
+        		if ( is_in_found_nodes ) {
+                    g.setColor( getTreeColorSet().getFoundColor() );
+                    g.setFont( getTreeFontSet().getLargeFont().deriveFont( Font.BOLD ) );
+                    TreePanel.drawString( _sb.toString(), node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE, node.getYcoord()
+                            + ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor ), g );
+        		}
+        		else{
         		treeDecoratorPaint.decorateStrain(g, ForesterUtil.roundToInt
         				(node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE),
         				ForesterUtil.roundToInt(node.getYcoord()+ ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor))
         						, _sb.toString(), node);
+        		}
         	}
         	else
         	//********************************************END**********************************************************//
