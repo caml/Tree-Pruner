@@ -491,6 +491,21 @@ public class ManualDecorateFrame implements ActionListener{
 		public void paint(Graphics g){
 			super.paint(g);
 			int i = 1;
+			boolean allDefault = false;
+			if(semiDecorateFrame.selectedToDecorate == DecoratorUIConstants.STRAIN){
+				for(String charValue : charMap.keySet()){
+					if(DecorationEnumHelper.isStyleValueDefault(DecoratorUIConstants.SHAPES,
+							charMap.get(charValue).getNodeShape())&&
+							DecorationEnumHelper.isStyleValueDefault(DecoratorUIConstants.NODE_COLOR,
+							charMap.get(charValue).getNodeColor())){
+						allDefault = true;
+					}
+					else{
+						allDefault = false;
+						break;
+					}
+				}
+			}
 			for(String charValue:charValues){
 				int x1 = this.getComponent(i).getX(); 
 				int y1 = this.getComponent(i).getY();
@@ -505,10 +520,12 @@ public class ManualDecorateFrame implements ActionListener{
 						new Point((x1+30),y1+16), charMap.get(charValue).getStrainStyle(),
 						charMap.get(charValue).getStrainColor());
 				
-				DecorationEnumHelper.drawShapesWithColor
-				(charMap.get(charValue).getNodeShape(),
-						g, new Point((x1+100),(y1+11) ),	10, 10,
-						charMap.get(charValue).getNodeColor());
+				if(allDefault == false){
+					DecorationEnumHelper.drawShapesWithColor
+					(charMap.get(charValue).getNodeShape(),
+							g, new Point((x1+100),(y1+11) ),	10, 10,
+							charMap.get(charValue).getNodeColor());
+				}
 			}
 		}
 	}
