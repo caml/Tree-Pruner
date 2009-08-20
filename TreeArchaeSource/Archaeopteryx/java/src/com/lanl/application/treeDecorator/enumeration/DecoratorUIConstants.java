@@ -2,7 +2,7 @@ package com.lanl.application.treeDecorator.enumeration;
 
 public enum DecoratorUIConstants {
 	TREE_DECORATOR_FRAME_HEADER("Decorator Functions"),
-	SEMI_AUTOMATIC_DECORATION_TITLE("Semi-Automatic Decoration"),
+	SEMI_AUTOMATIC_DECORATION_TITLE("Automatic Decoration"),
 	MANUAL_DECORATION_TITLE("Manual Decoration"),
 	LEGEND_TITLE("Legend"),
 	INFORMATION("Information"),
@@ -13,7 +13,7 @@ public enum DecoratorUIConstants {
 	TO_SELECT_TO_DECORATE_LABEL_TEXT ("Please select whether you want to decorate the node or the strain."),
 	TO_SELECT_DECORATION_STYLE_LABEL_TEXT ("Please select a decoration style for "),
 	TO_SELECT_MANUAL_APPLY_STYLE_LABEL_TEXT ("Please check manual if you want to do manual decoration " +
-			"or click on apply to perform semi - automatic decoration"),
+			"or click on apply to perform automatic decoration"),
 	MANUAL("Manual?"),
 	APPLY("Apply"),
 	CLOSE("Close"),

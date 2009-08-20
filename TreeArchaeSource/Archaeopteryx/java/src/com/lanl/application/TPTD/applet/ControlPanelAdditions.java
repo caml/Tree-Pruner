@@ -58,8 +58,8 @@ public class ControlPanelAdditions {
 		undo = new JButton("Discard recent");
 		undo
 				.setToolTipText("Discard all tree actions since most recent save.");
-		semi_decorate = new JButton("Semi automatic decoration");
-		semi_decorate.setToolTipText("Opens a new window to allow you to perform semi automatic decoration of the tree");
+		semi_decorate = new JButton("Decorate tree");
+		semi_decorate.setToolTipText("Opens a new window to allow you to perform automatic decoration of the tree");
 		legend = new JButton("LEGEND");
 		legend.setToolTipText("Opens a new window to view your decoration legend");
 	    
