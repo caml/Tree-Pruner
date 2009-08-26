@@ -175,19 +175,18 @@ public class AppletTerminate {
 		}
 	}
 	
-	public static void closePageOnTerminate(MainFrame mf){
+	public static void extraTerminationActions(MainFrame mf){
 		if (SubTreePanel.mainAppletFrame == mf){
-			if(AppletParams.codeBase.toString().contains("lanl")){  //LANL
+			if(AppletParams.isEitherTPorTDForLANL()){  //LANL
 				try {
 					URL searchPage = new URL(AppletParams.codeBase,"close.html");
 					appletContext.showDocument(searchPage,"_parent");
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
-				
 			}
-			else{
-				//BHB dont do anything
+			else if(AppletParams.isTreePrunerForBHB()){
+				// send back unlock message
 			}
 		}
 	}

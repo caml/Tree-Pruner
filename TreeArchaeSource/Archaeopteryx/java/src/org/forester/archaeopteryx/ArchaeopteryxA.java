@@ -84,7 +84,10 @@ public class ArchaeopteryxA extends JApplet {
         boolean has_exception = false;
         setName( NAME );
       //******************************************START CHANGED**********************************************************//
-        if(getParameter("app_type").equals("0") || getParameter("app_type").equals("1") || getParameter("app_type").equals("2")){
+        if(getParameter("app_type").equals("1") || getParameter("app_type").equals("4")   //BHB TP TD
+				|| getParameter("app_type").equals("2") || getParameter("app_type").equals("5")  //LANL TP TD
+				|| getParameter("app_type").equals("3") || getParameter("app_type").equals("6")   //Others TP TD
+				|| getParameter("app_type").equals("0")){  //LANL/BHB Archae
         	getParams();
         	setUrlString(AppletParams.urlOfTreeToLoad);
         }
@@ -112,13 +115,13 @@ public class ArchaeopteryxA extends JApplet {
         }
       //******************************************START CHANGED**********************************************************//
         final String config_filename;
-        if(AppletParams.isEitherTPorTD() || AppletParams.applicationType == 2){
+        if(AppletParams.isEitherTPorTDForAll() || AppletParams.isArchaeopteryxForBHBorLANL()){
         	config_filename = AppletParams.configFilename;
         }
         else{
         	config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL ); 
         }
-        if(AppletParams.isTreeDecorator()){
+        if(AppletParams.isTreeDecoratorForAll()){
         	TreeDecoratorCommunication.getSequenceDetailsComm();
         }
         //// take config filename from applet params  
@@ -140,7 +143,7 @@ public class ArchaeopteryxA extends JApplet {
             url = new URL( getUrlString() );
             final Phylogeny[] phys = Util.readPhylogeniesFromUrl( url );
           //******************************************START CHANGED**********************************************************//
-            if(AppletParams.isEitherTPorTD()){
+            if(AppletParams.isEitherTPorTDForAll()){
             	Util.addPhylogeniesToTabs( phys, AppletParams.tabName, getUrlString(), getMainFrameApplet()
             			.getConfiguration(), getMainFrameApplet().getMainPanel() );
             }
@@ -174,12 +177,12 @@ public class ArchaeopteryxA extends JApplet {
         getMainFrameApplet().requestFocus();
         
       //******************************************START**********************************************************//
-        if(AppletParams.isTreePruner()){
+        if(AppletParams.isTreePrunerForAll()){
         	SubTreePanel.mainAppletFrame = _mainframe_applet;
         	AppletTerminate.appletContext = getAppletContext();
         	crashRecovery.treePrunerCrashRecoveryInit();
         }
-        else if(AppletParams.isTreeDecorator()){
+        else if(AppletParams.isTreeDecoratorForAll()){
         	SubTreePanel.mainAppletFrame = _mainframe_applet;
         	AppletTerminate.appletContext = getAppletContext();
         	if(TreeDecoratorCommunication.isCommError){

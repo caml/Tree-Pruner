@@ -263,7 +263,7 @@ public class Configuration {
     	 * Note to programmer: Whatever happens in this method will also affect do_display_clickToOption(final int which){}
     	 */
     	if(which == 6 || which == 7){
-    		if(AppletParams.isTreePruner() ){
+    		if(AppletParams.isTreePrunerForAll() ){
     			clickto_options[which][1] = "display";
     		}
     		else{
@@ -523,7 +523,7 @@ public class Configuration {
         }
       //******************************************START**********************************************************//
         else{
-        	if(AppletParams.isTreePruner() ){
+        	if(AppletParams.isTreePrunerForAll() ){
         		index = keepRemoveConfiguration.getClickToIndex(name,index);
         	}
         }
@@ -1004,7 +1004,7 @@ public class Configuration {
     	 * Note to programmer: Whatever happens in this method will also affect doDisplayClickToOption(final int which){}
     	 */
     	if(which == 6 || which == 7){
-    		if(AppletParams.isTreePruner() ){
+    		if(AppletParams.isTreePrunerForAll() ){
     			clickto_options[which][1] = "display";
     		}
     		else{

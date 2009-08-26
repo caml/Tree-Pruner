@@ -365,7 +365,7 @@ public class MainPanel extends JPanel implements ComponentListener {
 
     void terminate() {
     	//******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTD()){
+    	if(AppletParams.isEitherTPorTDForAll()){
     		appletTerminate.terminateAdditionalTasks(this);
     	}
         //********************************************END**********************************************************//

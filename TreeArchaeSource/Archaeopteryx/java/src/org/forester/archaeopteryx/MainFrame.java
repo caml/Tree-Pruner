@@ -465,7 +465,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     	 * public void closeSubTree(){...} 
     	 */
       //******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTD() ){
+    	if(AppletParams.isEitherTPorTDForAll() ){
     		if(appletTerminate.check_terminate(this)){
         
 	        removeTextFrame();
@@ -480,7 +480,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
 	     
 	        NewWindowSubtree.handleBackToSubTreeButton();
 	        NewWindowSubtree.handleCloseXButton();
-	        AppletTerminate.closePageOnTerminate(this);
+	        AppletTerminate.extraTerminationActions(this);
 	        }
 	        else{
 	        	appletTerminate.closeAdditionalTasks();
@@ -1308,7 +1308,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         }
         setVisible( false );
         dispose();
-        AppletTerminate.closePageOnTerminate(this);
+        AppletTerminate.extraTerminationActions(this);
     }
     public MainPanel get_main_panel() {
         return _mainpanel;
@@ -1328,7 +1328,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     	 * void close(){...} 
     	 */
         //******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTD() ){
+    	if(AppletParams.isEitherTPorTDForAll() ){
     		if(appletTerminate.check_terminate(this)){
         
 	        removeTextFrame();
@@ -1343,7 +1343,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
 	     
 	        NewWindowSubtree.handleBackToSubTreeButton();
 	        NewWindowSubtree.handleCloseXButton();
-	        AppletTerminate.closePageOnTerminate(this);
+	        AppletTerminate.extraTerminationActions(this);
 	        }
 	        else{
 	        	appletTerminate.closeAdditionalTasks();

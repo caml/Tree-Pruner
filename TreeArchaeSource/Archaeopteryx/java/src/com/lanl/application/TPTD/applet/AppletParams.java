@@ -10,7 +10,19 @@ public class AppletParams {
 	public static URL codeBase = null;
 	public static String filename = "";
 	public static String URLprefix = "";
-	public static int applicationType = -1;    // 0= TP(LANL/BHB), 1 = TD(LANL/BHB), 2 LANL/BHB Archae else Archae (asis sourceforge) ="" or "-1" 
+	/**
+	 * application type: <br>(Others are those who are using the software from open source distribution)<br><br>
+	 * -1,"": Archaeopteryx for Others<br>
+	 *  0: Archaeopteryx for LANL/BHB <br>
+	 *  1: Tree Pruner for BHB<br>
+	 *  2: Tree Pruner for LANL<br>
+	 *  3: Tree Pruner for Others<br>
+	 *  4: Tree Decorator for BHB<br>
+	 *  5: Tree Decorator for LANL<br>
+	 *  6: Tree Decorator for Others<br>
+	 *  
+	 */
+	public static int applicationType = -1;     
 	public static String savedAccFlag = "";
 	public static String tabName = "";
 	
@@ -48,25 +60,114 @@ public class AppletParams {
 		return fullURL;
 	}
 	
-	public static boolean isEitherTPorTD(){
-		if(applicationType == 0 || applicationType == 1){
+	public static boolean isEitherTPorTDForLANLorBHB(){
+		if(applicationType == 1 || applicationType == 4   //BHB
+				|| applicationType == 2 || applicationType == 5){  //LANL
+				 
 			return true;
 		}
 		return false;
 	}
 	
-	public static boolean isTreePruner(){
-		if(applicationType == 0){
+	public static boolean isEitherTPorTDForAll(){
+		if(applicationType == 1 || applicationType == 4   //BHB
+				|| applicationType == 2 || applicationType == 5 //LANL
+				||applicationType == 3 || applicationType == 6){ //Others
+				 
 			return true;
 		}
 		return false;
 	}
 	
-	public static boolean isTreeDecorator(){
+	public static boolean isEitherTPorTDForLANL(){
+		if(applicationType == 2 || applicationType == 5){  //Others 
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isEitherTPorTDForOthers(){
+		if(applicationType == 3 || applicationType == 6){  //Others 
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	public static boolean isTreePrunerForBHB(){
 		if(applicationType == 1){
 			return true;
 		}
 		return false;
 	}
+	
+	public static boolean isTreeDecoratorForBHB(){
+		if(applicationType == 4){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreePrunerForLANL(){
+		if(applicationType == 2){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreeDecoratorForLANL(){
+		if(applicationType == 5){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreePrunerForOthers(){
+		if(applicationType == 3){
+			return true;
+		}
+		return false;
+	}
+	public static boolean isTreeDecoratorForOthers(){
+		if(applicationType == 6){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreePrunerForAll(){
+		if(applicationType == 1 || applicationType == 2 || applicationType == 3 ){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isTreeDecoratorForAll(){
+		if(applicationType == 4 ||applicationType == 5 || applicationType == 6 ){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isArchaeopteryxForBHBorLANL(){
+		if(applicationType == 0 ){
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isArchaeopteryxForOthers(){
+		if(applicationType == -1 ){
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	
+	
+	
 	
 }

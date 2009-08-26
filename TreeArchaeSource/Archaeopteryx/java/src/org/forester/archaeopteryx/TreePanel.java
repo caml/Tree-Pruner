@@ -242,7 +242,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             _phylogeny.recalculateNumberOfExternalDescendants( true );
         }
         //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTD()){
+        if(AppletParams.isEitherTPorTDForAll()){
         	subTreePanel = new SubTreePanel(this);
             subTreePanel.setPhylogeny(t);
             subTreePanel.setSubTreeNodeInfo();
@@ -396,7 +396,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         else {
         	//******************************************START CHANGED**********************************************************//
-        	if(AppletParams.isTreePruner() ){
+        	if(AppletParams.isTreePrunerForAll() ){
         		treePrunerPaint.initArrayLists();
                 treePrunerPaint.paintKeepRemove(g,node);
                 _control_panel.controlPanelAdditions.callTreePrunerAutoSaveToRefresh();
@@ -1031,10 +1031,10 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             // Color the background
             if ( !to_pdf ) {
             	//******************************************START CHANGED**********************************************************//
-            	if(AppletParams.isTreePruner() ){
+            	if(AppletParams.isTreePrunerForAll() ){
             		g.setColor(TreePrunerColorSet.getBackgroundColor());
                 }
-            	else if(AppletParams.isTreeDecorator() ){
+            	else if(AppletParams.isTreeDecoratorForAll() ){
             		g.setColor(DecoratorColorSet.getBackgroundColor());
                 }
             	else{
@@ -1423,7 +1423,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     
     void subTree( final PhylogenyNode node ) {
     	//******************************************START CHANGED**********************************************************//
-    	if(AppletParams.isEitherTPorTD()){
+    	if(AppletParams.isEitherTPorTDForAll()){
     		newWindowSubtree.subTree(node, _phylogeny, subTreePanel);
         }
     	else{
@@ -1445,7 +1445,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
     
     void superTree() {
     	//******************************************START CHANGED**********************************************************//
-    	if(AppletParams.isEitherTPorTD()){
+    	if(AppletParams.isEitherTPorTDForAll()){
     		newWindowSubtree.superTree();
     	}
     	//  ENTIRE METHOD of superTree() has been overwritten - changed
@@ -1596,11 +1596,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         else {
         	//******************************************START CHANGED**********************************************************//
-        	if(AppletParams.isTreePruner() ){
+        	if(AppletParams.isTreePrunerForAll() ){
         		treePrunerPaint.initArrayLists();
                 treePrunerPaint.paintKeepRemove(g,node);
             }
-        	else if(AppletParams.isTreeDecorator() ){
+        	else if(AppletParams.isTreeDecoratorForAll() ){
         		treeDecoratorPaint.decorateBranch(g, node);      
         	}
         	else{
@@ -2390,7 +2390,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                     }
                     else {
                     	//******************************************START CHANGED**********************************************************//
-                    	if(AppletParams.isTreePruner() ){
+                    	if(AppletParams.isTreePrunerForAll() ){
                     		treePrunerPaint.drawThickLine(g,node, x1a, y2, x2a, y2);
                     	}
                     	else{
@@ -2683,11 +2683,11 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             TreePanel.drawOval( x - 9, y - 9, 18, 18, g );
         }
       //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTD()){
+        if(AppletParams.isEitherTPorTDForAll()){
         	newWindowSubtree.paintNodeTracker(g, x, y, node, to_pdf, to_graphics_file);
         }
         
-        if(AppletParams.isTreeDecorator()){
+        if(AppletParams.isTreeDecoratorForAll()){
         	_control_panel.controlPanelAdditions.callTreeDecoratorAutoSaveToRefresh();
         	if ( is_in_found_nodes ) {
 	            paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
@@ -2782,7 +2782,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                 _sb.append( " " );
             }
             //******************************************START CHANGED**********************************************************//
-            if(AppletParams.isEitherTPorTD()){
+            if(AppletParams.isEitherTPorTDForAll()){
             	_sb.append(Accession.removeAccessionFromStrain(node));
             }
             else{
@@ -2812,7 +2812,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         
       //******************************************START**********************************************************//
-        if(AppletParams.isTreePruner() ){
+        if(AppletParams.isTreePrunerForAll() ){
         	treePrunerPaint.initArrayLists();
             treePrunerPaint.paintKeepRemove(g,node);
         }
@@ -2828,7 +2828,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         }
         if ( _sb.length() > 0 ) {
         	//******************************************START**********************************************************//
-        	if(AppletParams.isTreeDecorator()){
+        	if(AppletParams.isTreeDecoratorForAll()){
         		if ( is_in_found_nodes ) {
                     g.setColor( getTreeColorSet().getFoundColor() );
                     g.setFont( getTreeFontSet().getLargeFont().deriveFont( Font.BOLD ) );

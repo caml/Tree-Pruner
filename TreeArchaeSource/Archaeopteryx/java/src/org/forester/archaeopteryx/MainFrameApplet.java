@@ -79,7 +79,7 @@ public final class MainFrameApplet extends MainFrame {
             catch ( final Exception e ) {
                 ForesterUtil.printErrorMessage( ArchaeopteryxA.NAME, e.toString() );
               //******************************************START**********************************************************//
-                if(AppletParams.isTreePruner() ){
+                if(AppletParams.isTreePrunerForAll() ){
                 	NewWindowSubtree.destroyWarningWindow();
                 }
                //********************************************END**********************************************************//
@@ -121,7 +121,7 @@ public final class MainFrameApplet extends MainFrame {
             _jmenubar.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
         }
       //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTD()){
+        if(AppletParams.isEitherTPorTDForLANLorBHB()){
         	appletFileMenu.buildFileMenu(_jmenubar, _configuration.isUseNativeUI());
         }
       //********************************************END**********************************************************//

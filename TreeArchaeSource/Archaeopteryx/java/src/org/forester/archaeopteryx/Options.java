@@ -265,7 +265,7 @@ import com.lanl.application.TPTD.applet.AppletParams;
 
     private void init() {
     	//******************************************START **********************************************************//
-    	if(AppletParams.isTreeDecorator()){
+    	if(AppletParams.isTreeDecoratorForAll()){
     		_show_node_boxes = true;
     	}
     	else

@@ -280,10 +280,10 @@ public class ControlPanel extends JPanel implements ActionListener {
                 }
                 else {
                //******************************************START**********************************************************//
-                	if(AppletParams.isTreePruner() ){
+                	if(AppletParams.isTreePrunerForAll() ){
                 		controlPanelAdditions.addTreePrunerButtonFunctions(e);
                 	}
-                	else if (AppletParams.isTreeDecorator()){
+                	else if (AppletParams.isTreeDecoratorForAll()){
                 		controlPanelAdditions.addTreeDecoratorButtonFunctions(e);
                 	}
                //********************************************END**********************************************************//
@@ -327,7 +327,7 @@ public class ControlPanel extends JPanel implements ActionListener {
         if ( index > 0 ) {
         	//******************************************START CHANGED**********************************************************//
                //return to super tree -> up one level - changed
-        	if(AppletParams.isEitherTPorTD()){
+        	if(AppletParams.isEitherTPorTDForLANLorBHB()){
                   _return_to_super_tree.setText( UpOneLevelTEXT + " " + index );
         	}
         	else{
@@ -338,7 +338,7 @@ public class ControlPanel extends JPanel implements ActionListener {
         else {
         	//******************************************START CHANGED**********************************************************//
             //  //return to super tree -> up one level - changed
-        	if(AppletParams.isEitherTPorTD()){
+        	if(AppletParams.isEitherTPorTDForLANLorBHB()){
                 _return_to_super_tree.setText( UpOneLevelTEXT);
         	}
         	else{
@@ -392,7 +392,7 @@ public class ControlPanel extends JPanel implements ActionListener {
         _show_whole.setPreferredSize( new Dimension( 10, 10 ) );
       //******************************************START CHANGED**********************************************************//
         //  //return to super tree -> up one level - changed
-        if(AppletParams.isEitherTPorTD()){
+        if(AppletParams.isEitherTPorTDForLANLorBHB()){
         	_return_to_super_tree = new JButton( UpOneLevelTEXT );
         }
         else{
@@ -417,10 +417,10 @@ public class ControlPanel extends JPanel implements ActionListener {
         addJButton( _order, this );
         addJButton( _uncollapse_all, this );
       //******************************************START**********************************************************//
-        if(AppletParams.isTreePruner() ){
+        if(AppletParams.isTreePrunerForAll() ){
         	controlPanelAdditions.addTreePrunerButtons();
         }
-        else if (AppletParams.isTreeDecorator()){
+        else if (AppletParams.isTreeDecoratorForAll()){
         	controlPanelAdditions.addTreeDecoratorButtons();
         }
       //********************************************END**********************************************************//
@@ -590,7 +590,7 @@ public class ControlPanel extends JPanel implements ActionListener {
     void deactivateButtonToReturnToSuperTree() {
     	//******************************************START CHANGED**********************************************************//
         // //return to super tree -> up one level - changed
-    	if(AppletParams.isEitherTPorTD()){
+    	if(AppletParams.isEitherTPorTDForLANLorBHB()){
     		_return_to_super_tree.setText( UpOneLevelTEXT );
     	}
     	else{
@@ -956,7 +956,7 @@ public class ControlPanel extends JPanel implements ActionListener {
             setActionWhenNodeClicked( NodeClickAction.COLOR_SUBTREE );
         }
         //******************************************START**********************************************************//
-    	else if(AppletParams.isTreePruner() && (action == keepRemoveConfiguration._keepSequences || 
+    	else if(AppletParams.isTreePrunerForAll() && (action == keepRemoveConfiguration._keepSequences || 
     											action == keepRemoveConfiguration._removeSequences)){
             int x = keepRemoveConfiguration.setClickToAction(action,this);
             _click_to_combobox.setSelectedIndex( x );
@@ -1029,7 +1029,7 @@ public class ControlPanel extends JPanel implements ActionListener {
      */
     void setupControls() {
       //******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTD()){
+    	if(AppletParams.isEitherTPorTDForAll()){
     		controlPanelAdditions = new ControlPanelAdditions(this);
     		keepRemoveConfiguration = new KeepRemoveConfiguration(_configuration);
     	}
@@ -1043,11 +1043,11 @@ public class ControlPanel extends JPanel implements ActionListener {
         // Zoom and quick edit buttons
         addButtons();
       //******************************************START**********************************************************//
-        if(AppletParams.isTreePruner()){
+        if(AppletParams.isTreePrunerForAll()){
 		     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
 		     controlPanelAdditions.callTreePrunerAutosaveToAdd();
         }
-        else if(AppletParams.isTreeDecorator()){
+        else if(AppletParams.isTreeDecoratorForAll()){
 		     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
 		     controlPanelAdditions.callTreeDecoratorAutosaveToAdd();
         }
@@ -1514,7 +1514,7 @@ public class ControlPanel extends JPanel implements ActionListener {
             cb_index++;
         }
       //******************************************START**********************************************************//
-        if(AppletParams.isTreePruner() ){
+        if(AppletParams.isTreePrunerForAll() ){
 	        if ( _configuration.doDisplayClickToOption( KeepRemoveConfiguration._KEEP_SEQUENCES)||
 	        		( _configuration.doDisplayClickToOption( KeepRemoveConfiguration._REMOVE_SEQUENCES ) )) {
 	        	

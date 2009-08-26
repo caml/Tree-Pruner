@@ -921,10 +921,10 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
      */
     private void addChildNode( final PhylogenyNode child ) {
     	//******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTD()){
+    	if(AppletParams.isEitherTPorTDForAll()){
     		Accession.extractAccessionFromStrain(child);
     	}
-    	if(AppletParams.isTreeDecorator()){
+    	if(AppletParams.isTreeDecoratorForAll()){
     		DecoratorJSONHandler.setExtraNodeInfoForTD(child);
     	}
         //********************************************END**********************************************************//
@@ -937,7 +937,7 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable {
         _id = 0;
         initializeData();
       //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTD()){
+        if(AppletParams.isEitherTPorTDForAll()){
         	extraNodeInfo = new ExtraNodeInfo();
         }
       //********************************************END**********************************************************//
