@@ -31,12 +31,10 @@ public class CrashRevovery {
 		JSONObject crashRecoveryJO;
 		JSONArray recoveredAccessions = null;
 		// String savedAcc = "file:////Users/kmohan/Desktop/2.txt";
-
+		if(AppletParams.isTreePrunerForBHB()){
+			TreePrunerCommunication.lockWSComm();
+		}
 		if (AppletParams.savedAccFlag.equals("true")) {
-			
-			if(AppletParams.isTreePrunerForBHB()){
-				TreePrunerCommunication.lockWSComm();
-			}
 			// wait till all the nodes have been successfully painted on the
 			// applet. After 2 secs hoping that all tree branches would have
 			// successfully painted by then

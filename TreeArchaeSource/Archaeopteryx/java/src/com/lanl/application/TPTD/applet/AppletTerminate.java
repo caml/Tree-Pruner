@@ -185,7 +185,7 @@ public class AppletTerminate {
 					e.printStackTrace();
 				}
 			}
-			else if(AppletParams.isTreePrunerForBHB() && AppletParams.savedAccFlag.equals("true")){
+			else if(AppletParams.isTreePrunerForBHB()){
 				TreePrunerCommunication.unlockWSComm();
 			}
 		}
