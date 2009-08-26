@@ -11,6 +11,10 @@ public enum TreePrunerCommunicationNames {
 	COMMIT("Commit"),
 	SAVE("Save"),
 	DISCARD("Discard"),
+	LOCK_WS("Lock"),
+	UNLOCK_WS("Unlock"),
+	LOCK_SUCCESS("Working Set locked successfully"),
+	UNLOCK_SUCCESS("Working Set unlocked successfully"),
 	SAVE_SUCCESS("Accessions saved successfully"),
 	DISCARD_SUCCESS("Accession successfully discarded"),
 	COMMIT_SUCCESS("Accessions successfully removed from DB");

@@ -59,6 +59,15 @@ public class TreePrunerCommunication {
 	       if(action.equals(TreePrunerCommunicationNames.DISCARD.getName())){
 	    	   wr.write(createJSONString(null, action,filename));
 	       }
+	       
+	       else if(action.equals(TreePrunerCommunicationNames.LOCK_WS.getName())){
+	    	   wr.write(createJSONString(null, action,filename));
+	       }
+	       
+	       else if(action.equals(TreePrunerCommunicationNames.UNLOCK_WS.getName())){
+	    	   wr.write(createJSONString(null, action,filename));
+	       }
+	       
 	       else{
 	    	   wr.write(createJSONString(jsonArray, action,filename));
 	       }
@@ -127,6 +136,34 @@ public class TreePrunerCommunication {
 	    else{
 	    	System.out.println("SAVE PRESSED / AUTOSAVE \n");
         	System.out.println(" Server reurned: Can't open file");
+	    }
+	}
+	
+	public static void lockWSComm(){  //BHB only
+		String returnedString = "";
+		String action = TreePrunerCommunicationNames.LOCK_WS.getName();
+		returnedString = connectToServer(null, action);
+	    if(returnedString.equals(TreePrunerCommunicationNames.LOCK_SUCCESS.getName())){
+	    	System.out.println("WorkingSet Lock \n");
+        	System.out.println(" Server reurned: Working Set locked successfully");
+	    }
+	    else{
+	    	System.out.println("WorkingSet Lock \n");
+        	System.out.println(" Server reurned:  Can't lock Working Set");
+	    }
+	}
+		
+	public static void unlockWSComm(){  //BHB only
+		String returnedString = "";
+		String action = TreePrunerCommunicationNames.UNLOCK_WS.getName();
+		returnedString = connectToServer(null, action);
+	    if(returnedString.equals(TreePrunerCommunicationNames.UNLOCK_SUCCESS.getName())){
+	    	System.out.println("WorkingSet Unlock \n");
+        	System.out.println(" Server reurned: Working Set unlocked successfully");
+	    }
+	    else{
+	    	System.out.println("WorkingSet Unlock \n");
+        	System.out.println(" Server reurned:  Can't unlock Working Set");
 	    }
 	}
 	
