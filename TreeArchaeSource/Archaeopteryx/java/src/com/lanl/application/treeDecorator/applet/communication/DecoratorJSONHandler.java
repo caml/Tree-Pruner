@@ -214,6 +214,9 @@ public class DecoratorJSONHandler {
 			if(innerNodeJO.length()>0 ||innerStrainJO.length()>0){
 				innerJO.put(CommunicationEnum.ACTION.getName(), CommunicationEnum.SAVE.getName());
 				innerJO.put(CommunicationEnum.FILENAME.getName(), AppletParams.filename);
+				if(AppletParams.isEitherTPorTDForLANL()){
+					innerJO.put(CommunicationEnum.REMOTE_USER.getName(), AppletParams.remoteUser);
+				}
 				if(innerNodeJO.length()>0){
 					innerJO.put(DecoratorUIConstants.NODE.getName(), innerNodeJO);
 				}
@@ -238,6 +241,9 @@ public class DecoratorJSONHandler {
 		try {
 			innerJO.put(CommunicationEnum.ACTION.getName(), CommunicationEnum.DISCARD.getName());
 			innerJO.put(CommunicationEnum.FILENAME.getName(), AppletParams.filename);
+			if(AppletParams.isEitherTPorTDForLANL()){
+				innerJO.put(CommunicationEnum.REMOTE_USER.getName(), AppletParams.remoteUser);
+			}
 			mainJO.put(CommunicationEnum.DECORATION.getName(), innerJO);
 			//System.out.println(mainJO.toString(2));
 			return mainJO.toString();

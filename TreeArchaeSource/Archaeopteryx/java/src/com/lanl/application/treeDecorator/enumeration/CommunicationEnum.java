@@ -32,6 +32,7 @@ public enum CommunicationEnum {
 	SAVE("Save"),
 	DISCARD("Discard"),
 	FILENAME("Filename"),
+	REMOTE_USER("remote_user"),
 	SAVE_SUCCESS("Decorations saved successfully"),
 	DISCARD_SUCCESS("Decorations successfully discarded");
 	private final String name;

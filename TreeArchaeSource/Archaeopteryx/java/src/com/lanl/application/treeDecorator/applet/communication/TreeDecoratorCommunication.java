@@ -114,6 +114,19 @@ public class TreeDecoratorCommunication {
 		} catch (IOException e) {
 			destroyWarningWindow();
 			System.err.println("Communication Failure");
+			if(e.getMessage().contains("500")){
+				JOptionPane.showMessageDialog( null, 
+						"Your action could not be completed.\n"+
+						"Please try to relaunch the applet and try again.\n" +
+						"If the problem persists, please contact flu@lanl.gov.","Error",JOptionPane.ERROR_MESSAGE);
+			}
+			if(e.getMessage().contains("403") && AppletParams.isEitherTPorTDForLANL()){
+				JOptionPane.showMessageDialog( null, 
+						"Your action could not be completed.\n"+
+						"Your session has either expired or is invalid. \n" +
+						"Please re-login to your account and try again.\n" +
+						"If the problem persists, please contact flu@lanl.gov.","Error",JOptionPane.ERROR_MESSAGE);
+			}
 			e.printStackTrace();
 		}
 
