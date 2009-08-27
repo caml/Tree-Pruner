@@ -37,6 +37,8 @@ public class TreePrunerCommunication {
 				innerJO.put(TreePrunerCommunicationNames.SEQ_ACC_TO_REMOVE.getName(), jsonArray);
 			}
 			jsonObject.put(TreePrunerCommunicationNames.PRUNER.getName(), innerJO);
+			System.out.println("OutGoing JSON String");
+			System.out.println(jsonObject.toString(2));
 			
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -49,6 +51,8 @@ public class TreePrunerCommunication {
 	private static String connectToServer(JSONArray jsonArray,String action){
 		String returnedString ="";
 		String filename = AppletParams.filename;
+		System.out.println("TPpostURL");
+     	System.out.println(TPpostURL);
 		try{
 			postURL  = new URL(TPpostURL);
 			HttpURLConnection postConn = (HttpURLConnection) postURL.openConnection();

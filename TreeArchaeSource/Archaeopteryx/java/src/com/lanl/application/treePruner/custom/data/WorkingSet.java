@@ -247,8 +247,9 @@ public class WorkingSet {
 				}
 				
 				
-				PhylogenyNode parent = r.getParent();                //remove the parent until the root for that node if remove all does not 
+				PhylogenyNode parent = r.getParent();                //remove the parent until the root for that node if remove all does not
 				PhylogenyNode nextParent = null;		 // contan that the parents child 1 or child 2
+				if(parent !=null)
 				while( ( nextParent = parent.getParent()) != null){
 	         		
 	        		if(REMOVE_ALL.contains(parent.getNodeId())){	
@@ -276,8 +277,9 @@ public class WorkingSet {
 						REMOVE_ALL.add(j);
 					}
 				}
-				PhylogenyNode parent = r.getParent();                //add the parent till the root if the parent not already in remove all 
-				PhylogenyNode nextParent = null;          
+				PhylogenyNode parent = r.getParent();                //add the parent till the root if the parent not already in remove all
+				PhylogenyNode nextParent = null;
+				if(parent !=null)
 	         	while( ( nextParent = parent.getParent()) != null){
 	         		if(!REMOVE_ALL.contains(parent.getNodeId()) && (REMOVE_ALL.contains(parent.getChildNode1().getNodeId())&&REMOVE_ALL.contains(parent.getChildNode2().getNodeId()))){
 	        		//	break;

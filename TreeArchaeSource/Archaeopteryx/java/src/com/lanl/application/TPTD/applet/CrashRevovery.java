@@ -52,6 +52,8 @@ public class CrashRevovery {
 			// successfully painted by then
 			// we will call the crash recovery and repaint the tree (see below).
 			// END
+			System.out.println("TPGetURL");
+			System.out.println(TPgetURL);
 			try {
 				savedAccURL = new URL(TPgetURL);
 				HttpURLConnection crashRecConn = (HttpURLConnection) savedAccURL.openConnection();
@@ -69,6 +71,8 @@ public class CrashRevovery {
 		        if(!TPgetJSON.equals("")){
 		        	JSONTokener jt = new JSONTokener(TPgetJSON);
 		        	crashRecoveryJO = new JSONObject(jt);
+		        	System.out.println("IncomingJSONString");
+		        	System.out.println(crashRecoveryJO.toString(2));
 		        	JSONObject innerJO = crashRecoveryJO.getJSONObject(TreePrunerCommunicationNames.PRUNER.getName());
 		        	recoveredAccessions = innerJO.getJSONArray(TreePrunerCommunicationNames.SEQ_ACC_TO_REMOVE.getName());
 		        	for (int i = 0; i < recoveredAccessions.length(); i++) {
