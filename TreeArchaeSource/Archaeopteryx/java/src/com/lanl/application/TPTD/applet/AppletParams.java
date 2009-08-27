@@ -25,9 +25,11 @@ public class AppletParams {
 	public static int applicationType = -1;     
 	public static String savedAccFlag = "";
 	public static String tabName = "";
+	public static String remoteUser = ""; //LANL only
 	
 	public static void setAppletParams(String urlOfTreeToLoad1,String configFileName1,URL codeBase1, String filename1,
-												String URLprefix1,int applicationType1, String savedAccFlag1, String tabName1){
+												String URLprefix1,int applicationType1, String savedAccFlag1, String tabName1,
+												String user1){
 		codeBase = codeBase1;
 		if(urlOfTreeToLoad1.startsWith("http")||urlOfTreeToLoad1.startsWith("file")){
 			urlOfTreeToLoad = urlOfTreeToLoad1;
@@ -46,7 +48,23 @@ public class AppletParams {
 		applicationType = applicationType1;
 		savedAccFlag = savedAccFlag1;
 		tabName = tabName1;
+		remoteUser = user1;  //LANL only
 		
+	}
+	
+	public static String getAllAppletParamsAsString(){
+		String params = "";
+		params+= "\nApplet Parameters:";
+		params+= "\nURL of Tree To Load: "+urlOfTreeToLoad;
+		params+= "\nConfig file url: "+configFilename;
+		params+= "\nCodebase: "+codeBase;
+		params+= "\nFilename: "+filename;
+		params+= "\nURL Prefix: "+URLprefix;
+		params+= "\nApplication type: "+applicationType;
+		params+= "\nSaved Accession Flag: "+savedAccFlag;
+		params+= "\nTab Name: "+tabName;
+		params+= "\nRemote User: "+remoteUser;
+		return params;
 	}
 	
 	private static String getFullURLString(String partialURL){

@@ -252,15 +252,16 @@ public class ArchaeopteryxA extends JApplet {
     	String savedAcc1 = getParameter("saved_acc");
     	String savedAccFlag1 = getParameter("saved_acc_flag");
     	String tabName1 = getParameter("tree_panel_tab_name"); 
+    	String remoteUser = "";
+    	if(AppletParams.isEitherTPorTDForLANL()){
+    		remoteUser = getParameter("remote_user");
+    	}
     	
     	AppletParams.setAppletParams(urlOfTreeToLoad1, configFileName1, getCodeBase(), filename1,
-    								URLprefix1, applicationType1, savedAccFlag1,tabName1);
+    								URLprefix1, applicationType1, savedAccFlag1,tabName1,remoteUser);
     	
     	
-    	System.out.println(AppletParams.applicationType + " " +AppletParams.configFilename+ " " +
-    			AppletParams.filename + " " +AppletParams.codeBase + " " +
-    			AppletParams.urlOfTreeToLoad + " " + AppletParams.savedAccFlag +" "
-     			+ "URL Prefix: "+AppletParams.URLprefix);
+    	System.out.println(AppletParams.getAllAppletParamsAsString());
     }
     
     public MainFrameApplet create_new_Frame(){

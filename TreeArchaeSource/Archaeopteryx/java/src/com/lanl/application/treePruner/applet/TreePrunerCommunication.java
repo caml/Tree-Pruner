@@ -33,6 +33,9 @@ public class TreePrunerCommunication {
 		try {
 			innerJO.put(TreePrunerCommunicationNames.ACTION.getName(), action);
 			innerJO.put(TreePrunerCommunicationNames.FILENAME.getName(), filename);
+			if(AppletParams.isEitherTPorTDForLANL()){
+				innerJO.put(TreePrunerCommunicationNames.REMOTE_USER.getName(), AppletParams.remoteUser);
+			}
 			if(jsonArray!=null){
 				innerJO.put(TreePrunerCommunicationNames.SEQ_ACC_TO_REMOVE.getName(), jsonArray);
 			}
@@ -93,6 +96,19 @@ public class TreePrunerCommunication {
 			ControlPanelAdditions.destroyWarningWindow();
 			System.err.println("Communication Failure");
 			e.printStackTrace();
+			if(e.getMessage().contains("500")){
+				JOptionPane.showMessageDialog( null, 
+						"Your action could not be completed.\n"+
+						"Please try to relaunch the applet and try again.\n" +
+						"If the problem persists, please contact flu@lanl.gov.","Error",JOptionPane.ERROR_MESSAGE);
+			}
+			if(e.getMessage().contains("403") && AppletParams.isEitherTPorTDForLANL()){
+				JOptionPane.showMessageDialog( null, 
+						"Your action could not be completed.\n"+
+						"Your session has either expired or is invalid. \n" +
+						"Please re-login to your account and try again.\n" +
+						"If the problem persists, please contact flu@lanl.gov.","Error",JOptionPane.ERROR_MESSAGE);
+			}
 		}
 		return returnedString;
 	}
@@ -118,7 +134,7 @@ public class TreePrunerCommunication {
 		String returnedString = "";
 		String action = TreePrunerCommunicationNames.DISCARD.getName();
 		returnedString = connectToServer(null, action);
-	    if(returnedString.equals(TreePrunerCommunicationNames.DISCARD_SUCCESS.getName())){
+		if(returnedString.equals(TreePrunerCommunicationNames.DISCARD_SUCCESS.getName())){
 	    	System.out.println("Discard PRESSED \n");
         	System.out.println(" Server reurned: file successfully deleted");
 	    }

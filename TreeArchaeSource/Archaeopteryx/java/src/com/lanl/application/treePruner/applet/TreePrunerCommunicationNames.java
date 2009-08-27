@@ -8,6 +8,7 @@ public enum TreePrunerCommunicationNames {
 	ACTION("Action"),
 	FILENAME("Filename"),
 	PRUNER("Pruner"),
+	REMOTE_USER("remote_user"),
 	COMMIT("Commit"),
 	SAVE("Save"),
 	DISCARD("Discard"),
