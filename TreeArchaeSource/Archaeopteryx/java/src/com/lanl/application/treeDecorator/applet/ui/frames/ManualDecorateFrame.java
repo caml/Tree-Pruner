@@ -46,6 +46,7 @@ public class ManualDecorateFrame implements ActionListener{
 	ArrayList<String> selectedCharValues = new ArrayList<String>();
 	String selectedStyle = "";
 	ArrayList<JRadioButton> styleRadioButtons = new ArrayList<JRadioButton>();
+	private JRadioButton noStyleRadioButton;
 	ArrayList<JCheckBox> charValueCheckBoxes = new ArrayList<JCheckBox>();
 	private JPanel characterValueLegendPanel,decorationStyleOptionsPanel;
 	private JButton applyButton, closeButton,resetButton,defaultButton;
@@ -164,6 +165,7 @@ public class ManualDecorateFrame implements ActionListener{
 			for(JRadioButton srb: styleRadioButtons){
 				srb.setEnabled(false);
 			}
+			noStyleRadioButton.setSelected(true);
 			for(JCheckBox jb : charValueCheckBoxes){
 				jb.setSelected(false);
 			}
@@ -176,6 +178,7 @@ public class ManualDecorateFrame implements ActionListener{
 			for(JRadioButton srb: styleRadioButtons){
 				srb.setEnabled(false);
 			}
+			noStyleRadioButton.setSelected(true);
 			for(JCheckBox jb : charValueCheckBoxes){
 				jb.setSelected(false);
 			}
@@ -192,6 +195,7 @@ public class ManualDecorateFrame implements ActionListener{
 			for(JRadioButton srb: styleRadioButtons){
 				srb.setEnabled(false);
 			}
+			noStyleRadioButton.setSelected(true);
 			for(JCheckBox jb : charValueCheckBoxes){
 				jb.setSelected(false);
 			}
@@ -268,6 +272,8 @@ public class ManualDecorateFrame implements ActionListener{
 			BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
 			this.setLayout(boxLayout);
 			styleRadioButtons.clear();
+			noStyleRadioButton = MakeRadioButton.getRadioButton("");
+			styleButtonGroup.add(noStyleRadioButton);
 			if(semiDecorateFrame.selectedDecorationSyle == DecoratorUIConstants.NODE_COLOR){
 				JLabel styleNameLabel = new JLabel(semiDecorateFrame.selectedCharacteristic.getName());
 				this.add(styleNameLabel);
@@ -478,6 +484,7 @@ public class ManualDecorateFrame implements ActionListener{
 				for(JRadioButton srb: styleRadioButtons){
 					srb.setEnabled(false);
 				}
+				noStyleRadioButton.setSelected(true);
 			}
 			else{
 				for(JRadioButton srb: styleRadioButtons){

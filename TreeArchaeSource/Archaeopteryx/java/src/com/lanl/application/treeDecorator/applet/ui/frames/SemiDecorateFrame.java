@@ -32,10 +32,10 @@ import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 
 
 public class SemiDecorateFrame implements ActionListener{
-	private JRadioButton countryRadioButton, yearRadioButon, ahaSerotypeRadioButton, anaSerotypeRadioButton, hostRadioButton;
-	private JRadioButton strainRadioButton, nodeRadioButton; 
-	private JRadioButton nodeColorRadioButton, shapesRadioButton;
-	private JRadioButton strainColorRadioButton, caseRadioButton, fontRadioButton, styleRadioButton, sizeRadioButton; 
+	private JRadioButton countryRadioButton, yearRadioButon, ahaSerotypeRadioButton, anaSerotypeRadioButton, hostRadioButton,noCharRadioButton;
+	private JRadioButton strainRadioButton, nodeRadioButton,noneToDecorateRadioButton; 
+	private JRadioButton nodeColorRadioButton, shapesRadioButton,noNodeDecorationRadioButton;
+	private JRadioButton strainColorRadioButton, caseRadioButton, fontRadioButton, styleRadioButton, sizeRadioButton,noStrainDecorationRadioButton;
 	protected JButton applyButton, closeButton,backButton,defaultButton;
 	protected JLabel selectedPathLabel;
 	protected JLabel toSelectLabel;
@@ -161,11 +161,14 @@ public class SemiDecorateFrame implements ActionListener{
 	private JPanel makeDecorationStylesPanel(){
 		nodeColorRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.NODE_COLOR.getName());
 		shapesRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.SHAPES.getName());
+		noNodeDecorationRadioButton = MakeRadioButton.getRadioButton("");
+		
 		strainColorRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.STRAIN_COLOR.getName());
 		caseRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.CASE.getName());
 		fontRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.FONT.getName());
 		styleRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.STYLE.getName());
 		sizeRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.SIZE.getName());
+		noStrainDecorationRadioButton = MakeRadioButton.getRadioButton("");
 
 		nodeColorRadioButton.setEnabled(false);
 		shapesRadioButton.setEnabled(false);
@@ -178,6 +181,7 @@ public class SemiDecorateFrame implements ActionListener{
 		decorateNodeButtonGroup = new ButtonGroup();
 		decorateNodeButtonGroup.add(nodeColorRadioButton);
 		decorateNodeButtonGroup.add(shapesRadioButton);
+		decorateNodeButtonGroup.add(noNodeDecorationRadioButton);
 
 		decorateStrainButtonGroup = new ButtonGroup();
 		decorateStrainButtonGroup.add(strainColorRadioButton);
@@ -185,6 +189,7 @@ public class SemiDecorateFrame implements ActionListener{
 		decorateStrainButtonGroup.add(fontRadioButton);
 		decorateStrainButtonGroup.add(styleRadioButton);
 		decorateStrainButtonGroup.add(sizeRadioButton);
+		decorateStrainButtonGroup.add(noStrainDecorationRadioButton);
 
 		nodeColorRadioButton.addActionListener(this);
 		shapesRadioButton.addActionListener(this);
@@ -217,6 +222,7 @@ public class SemiDecorateFrame implements ActionListener{
 	private JPanel makeToDecoratePanel(){
 		strainRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.STRAIN.getName()+"                   ");
 		nodeRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.NODE.getName());
+		noneToDecorateRadioButton = MakeRadioButton.getRadioButton("");
 		
 		strainRadioButton.setEnabled(false);
 		nodeRadioButton.setEnabled(false);
@@ -224,6 +230,7 @@ public class SemiDecorateFrame implements ActionListener{
 		toDecorateButtonGroup = new ButtonGroup();
 		toDecorateButtonGroup.add(strainRadioButton);
 		toDecorateButtonGroup.add(nodeRadioButton);
+		toDecorateButtonGroup.add(noneToDecorateRadioButton);
 		
 		strainRadioButton.addActionListener( this);
 		nodeRadioButton.addActionListener( this);
@@ -243,6 +250,7 @@ public class SemiDecorateFrame implements ActionListener{
 		ahaSerotypeRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.A_HA_SUBTYPE.getName());
 		anaSerotypeRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.A_NA_SYBTYPE.getName());
 		hostRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.HOST_SPECIES.getName());
+		noCharRadioButton = MakeRadioButton.getRadioButton("");
 		
 		characteristicButtonGroup = new ButtonGroup();
 		characteristicButtonGroup.add(countryRadioButton);
@@ -250,6 +258,7 @@ public class SemiDecorateFrame implements ActionListener{
 		characteristicButtonGroup.add(ahaSerotypeRadioButton);
 		characteristicButtonGroup.add(anaSerotypeRadioButton);
 		characteristicButtonGroup.add(hostRadioButton);
+		characteristicButtonGroup.add(noCharRadioButton);
 		
 		countryRadioButton.addActionListener( this);
 		yearRadioButon.addActionListener( this);
@@ -497,6 +506,7 @@ public class SemiDecorateFrame implements ActionListener{
 			ahaSerotypeRadioButton.setEnabled(enable);
 			anaSerotypeRadioButton.setEnabled(enable);
 			hostRadioButton.setEnabled(enable);
+			noCharRadioButton.setSelected(true);
 			backButton.setEnabled(false);
 		}
 		else{ //disable
@@ -543,6 +553,7 @@ public class SemiDecorateFrame implements ActionListener{
 		if(enable){
 			nodeRadioButton.setEnabled(enable);
 			strainRadioButton.setEnabled(enable);
+			noneToDecorateRadioButton.setSelected(true);
 		}
 		else{  //disable
 			if(selectedToDecorate == DecoratorUIConstants.NODE){
@@ -554,6 +565,7 @@ public class SemiDecorateFrame implements ActionListener{
 			else if(selectedToDecorate == DecoratorUIConstants.NULL){
 				strainRadioButton.setEnabled(enable);
 				nodeRadioButton.setEnabled(enable);
+				noneToDecorateRadioButton.setSelected(true);
 			}
 		}
 	}
@@ -607,6 +619,11 @@ public class SemiDecorateFrame implements ActionListener{
 				}
 				else shapesRadioButton.setEnabled(enable);
 			}
+			manualCheckBox.setEnabled(false);
+			applyButton.setEnabled(false);
+			defaultButton.setEnabled(false);
+			noStrainDecorationRadioButton.setSelected(true);
+			noNodeDecorationRadioButton.setSelected(true);
 		}
 		else{ //disable
 			if(selectedToDecorate == DecoratorUIConstants.STRAIN){
@@ -666,6 +683,7 @@ public class SemiDecorateFrame implements ActionListener{
 					manualCheckBox.setEnabled(enable);
 					applyButton.setEnabled(enable);
 					defaultButton.setEnabled(enable);
+					noStrainDecorationRadioButton.setSelected(true);
 				}
 			}
 			else if(selectedToDecorate == DecoratorUIConstants.NODE){
@@ -688,6 +706,7 @@ public class SemiDecorateFrame implements ActionListener{
 					manualCheckBox.setEnabled(enable);
 					applyButton.setEnabled(enable);
 					defaultButton.setEnabled(enable);
+					noNodeDecorationRadioButton.setSelected(true);
 				 }
 			}
 		}
