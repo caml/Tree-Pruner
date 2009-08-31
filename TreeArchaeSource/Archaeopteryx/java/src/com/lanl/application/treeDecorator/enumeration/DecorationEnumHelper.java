@@ -159,7 +159,7 @@ public class DecorationEnumHelper {
 			else {return false;}
 		}
 		else if(styleName == DecoratorUIConstants.CASE){
-			if(styleValue == DecorationStyles.LOWER){
+			if(styleValue == DecorationStyles.AS_IS){
 				return true;
 			}
 			else {return false;}
@@ -553,7 +553,7 @@ public class DecorationEnumHelper {
 			return DecorationStyles.BLACK;
 		}	
 		else if(styleName == DecoratorUIConstants.CASE){
-			return DecorationStyles.LOWER;
+			return DecorationStyles.AS_IS;
 		}	
 		else if(styleName == DecoratorUIConstants.FONT){
 			return DecorationStyles.ARIAL;
@@ -588,7 +588,13 @@ public class DecorationEnumHelper {
 	    			while( ( nextParent = parent.getParent()) != null){
 	    				if(DecoratorTable.nodeIDStyleValuesForBranchColoring.containsKey(nextParent.getChildNode1().getNodeId())&&
 	    					DecoratorTable.nodeIDStyleValuesForBranchColoring.containsKey(nextParent.getChildNode2().getNodeId())){
-	    					DecoratorTable.nodeIDStyleValuesForBranchColoring.put(nextParent.getNodeId(), styleValue);
+	    					if(DecoratorTable.nodeIDStyleValuesForBranchColoring.get(nextParent.getChildNode1().getNodeId())==
+	    						DecoratorTable.nodeIDStyleValuesForBranchColoring.get(nextParent.getChildNode2().getNodeId())){
+	    						DecoratorTable.nodeIDStyleValuesForBranchColoring.put(nextParent.getNodeId(), styleValue);
+	    					}
+	    					else{
+	    						break;
+	    					}
 	    				}
 	    				else{
 	    					break;
