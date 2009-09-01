@@ -89,15 +89,16 @@ public class ControlPanelAdditions {
 		final JLabel spacer2 = new JLabel("");
 		controlPanel.addLabel(spacer2);
 		controlPanel.addLabel(spacer2);
-		controlPanel.add_additional_JButton(refresh, controlPanel);
 		controlPanel.add_additional_JButton(semi_decorate, controlPanel);
-		controlPanel.add_additional_JButton(save_to_file, controlPanel);
+		controlPanel.add_additional_JButton(legend, controlPanel);
+		controlPanel.add_additional_JButton(refresh, controlPanel);
 		final JPanel discard_panel = new JPanel(new GridLayout(1, 2, 0, 0));
 		discard_panel.setBackground(controlPanel.getBackground());
 		controlPanel.addPanel(discard_panel);
 		controlPanel.add_additional_JButton(discard, discard_panel);
 		controlPanel.add_additional_JButton(undo, discard_panel);
-		controlPanel.add_additional_JButton(legend, controlPanel);
+		controlPanel.add_additional_JButton(save_to_file, controlPanel);
+		
 	}
 	
 	

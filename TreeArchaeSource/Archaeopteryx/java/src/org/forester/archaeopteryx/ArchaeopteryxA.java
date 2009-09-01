@@ -253,8 +253,8 @@ public class ArchaeopteryxA extends JApplet {
     	String savedAccFlag1 = getParameter("saved_acc_flag");
     	String tabName1 = getParameter("tree_panel_tab_name"); 
     	String remoteUser = "";
-    	if(AppletParams.isEitherTPorTDForLANL()){
-    		remoteUser = getParameter("remote_user");
+    	if(applicationType1 == 2 || applicationType1 == 5){   
+			remoteUser = getParameter("remote_user");
     	}
     	
     	AppletParams.setAppletParams(urlOfTreeToLoad1, configFileName1, getCodeBase(), filename1,

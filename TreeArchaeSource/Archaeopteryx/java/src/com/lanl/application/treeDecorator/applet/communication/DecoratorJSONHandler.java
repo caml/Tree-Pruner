@@ -123,7 +123,14 @@ public class DecoratorJSONHandler {
 				host = charValuesJO.getJSONObject(key).
 						getString(CommunicationEnum.HOST.getName());
 				if(c!=null){
-					if( !countryValuesList.contains(c)&&!c.equals("null")){
+					boolean present = false;
+					for(String s :  countryValuesList){
+						if( s.toLowerCase().equals(c.toLowerCase())){
+							present = true;
+							break;
+						}
+					}
+					if(present == false && !c.equals("null")){
 						countryValuesList.add(c);
 					}
 				}
@@ -143,7 +150,14 @@ public class DecoratorJSONHandler {
 					}
 				}
 				if(host!=null){
-					if(!hostValuesList.contains(host)&&!host.equals("null")){
+					boolean present = false;
+					for(String s :  hostValuesList){
+						if(s.toLowerCase().equals(host.toLowerCase())){
+							present = true;
+							break;
+						}
+					}
+					if(present == false && !host.equals("null")){
 						hostValuesList.add(host);
 					}
 				}
