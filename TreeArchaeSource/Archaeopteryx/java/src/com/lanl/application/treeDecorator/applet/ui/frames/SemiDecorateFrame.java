@@ -21,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.UIManager;
 
+import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.TPTD.applet.SubTreePanel;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
 import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
@@ -251,6 +252,11 @@ public class SemiDecorateFrame implements ActionListener{
 		anaSerotypeRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.A_NA_SYBTYPE.getName());
 		hostRadioButton = MakeRadioButton.getRadioButton(DecoratorUIConstants.HOST_SPECIES.getName());
 		noCharRadioButton = MakeRadioButton.getRadioButton("");
+		
+		if(!AppletParams.isFluTypeA){
+			ahaSerotypeRadioButton.setEnabled(false);
+			anaSerotypeRadioButton.setEnabled(false);
+		}
 		
 		characteristicButtonGroup = new ButtonGroup();
 		characteristicButtonGroup.add(countryRadioButton);
@@ -503,8 +509,10 @@ public class SemiDecorateFrame implements ActionListener{
 		if(enable){
 			countryRadioButton.setEnabled(enable);
 			yearRadioButon.setEnabled(enable);
-			ahaSerotypeRadioButton.setEnabled(enable);
-			anaSerotypeRadioButton.setEnabled(enable);
+			if(AppletParams.isFluTypeA){
+				ahaSerotypeRadioButton.setEnabled(enable);
+				anaSerotypeRadioButton.setEnabled(enable);
+			}
 			hostRadioButton.setEnabled(enable);
 			noCharRadioButton.setSelected(true);
 			backButton.setEnabled(false);
@@ -524,14 +532,14 @@ public class SemiDecorateFrame implements ActionListener{
 				hostRadioButton.setEnabled(enable);
 				backButton.setEnabled(true);
 			}
-			else if(selectedCharacteristic == DecoratorUIConstants.A_HA_SUBTYPE){
+			else if(selectedCharacteristic == DecoratorUIConstants.A_HA_SUBTYPE && AppletParams.isFluTypeA){
 				countryRadioButton.setEnabled(enable);
 				yearRadioButon.setEnabled(enable);
 				anaSerotypeRadioButton.setEnabled(enable);
 				hostRadioButton.setEnabled(enable);
 				backButton.setEnabled(true);
 			}
-			else if(selectedCharacteristic == DecoratorUIConstants.A_NA_SYBTYPE){
+			else if(selectedCharacteristic == DecoratorUIConstants.A_NA_SYBTYPE && AppletParams.isFluTypeA){
 				countryRadioButton.setEnabled(enable);
 				yearRadioButon.setEnabled(enable);
 				ahaSerotypeRadioButton.setEnabled(enable);

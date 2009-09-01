@@ -26,6 +26,7 @@ public class AppletParams {
 	public static String savedAccFlag = "";
 	public static String tabName = "";
 	public static String remoteUser = ""; //LANL only
+	public static boolean isFluTypeA = false;
 	
 	public static void setAppletParams(String urlOfTreeToLoad1,String configFileName1,URL codeBase1, String filename1,
 												String URLprefix1,int applicationType1, String savedAccFlag1, String tabName1,

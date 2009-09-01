@@ -25,6 +25,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 
+import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
 import com.lanl.application.treeDecorator.dataStructures.DecorateObject;
 import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
@@ -120,40 +121,6 @@ public class LegendFrame implements ItemListener{
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 5;
 		
-		ahaCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName());
-		ahaCheckBox.addItemListener(this);
-		ahaCheckBox.setName(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName());
-		content.add(ahaCheckBox, gbContraints);
-		gbContraints.insets = new Insets(0,0,10,0);
-		gbContraints.gridx = 0;
-		gbContraints.gridy = 6;
-		ahaJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.A_HA_SUBTYPE);
-		ahaScrollPanel = new JScrollPane(ahaJPanel);
-		ahaScrollPanel.setPreferredSize(new Dimension(width,height));
-		content.add(ahaScrollPanel, gbContraints);
-		ahaCheckBox.setSelected(true);
-		
-		gbContraints.insets = new Insets(0,0,0,0);
-		gbContraints.gridx = 0;
-		gbContraints.gridy = 7;
-		
-		anaCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName());
-		anaCheckBox.addItemListener(this);
-		anaCheckBox.setName(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName());
-		content.add(anaCheckBox, gbContraints);
-		gbContraints.insets = new Insets(0,0,10,0);
-		gbContraints.gridx = 0;
-		gbContraints.gridy = 8;
-		anaJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.A_NA_SYBTYPE);
-		anaScrollPanel = new JScrollPane(anaJPanel);
-		anaScrollPanel.setPreferredSize(new Dimension(width,height));
-		content.add(anaScrollPanel, gbContraints);
-		anaCheckBox.setSelected(true);
-		
-		gbContraints.insets = new Insets(0,0,0,0);
-		gbContraints.gridx = 0;
-		gbContraints.gridy = 9;
-		
 		hostCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_HOST_SPECIES.getName());
 		hostCheckBox.addItemListener(this);
 		hostCheckBox.setName(DecoratorUIConstants.SHOW_HOST_SPECIES.getName());
@@ -167,7 +134,42 @@ public class LegendFrame implements ItemListener{
 		content.add(hostScrollPanel, gbContraints);
 		hostCheckBox.setSelected(true);
 		
+		ahaJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.A_HA_SUBTYPE);
+		anaJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.A_NA_SYBTYPE);
 		
+		if(AppletParams.isFluTypeA){
+			gbContraints.insets = new Insets(0,0,0,0);
+			gbContraints.gridx = 0;
+			gbContraints.gridy = 7;
+			
+			ahaCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName());
+			ahaCheckBox.addItemListener(this);
+			ahaCheckBox.setName(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName());
+			content.add(ahaCheckBox, gbContraints);
+			gbContraints.insets = new Insets(0,0,10,0);
+			gbContraints.gridx = 0;
+			gbContraints.gridy = 6;
+			ahaScrollPanel = new JScrollPane(ahaJPanel);
+			ahaScrollPanel.setPreferredSize(new Dimension(width,height));
+			content.add(ahaScrollPanel, gbContraints);
+			ahaCheckBox.setSelected(true);
+			
+			gbContraints.insets = new Insets(0,0,0,0);
+			gbContraints.gridx = 0;
+			gbContraints.gridy = 9;
+			
+			anaCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName());
+			anaCheckBox.addItemListener(this);
+			anaCheckBox.setName(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName());
+			content.add(anaCheckBox, gbContraints);
+			gbContraints.insets = new Insets(0,0,10,0);
+			gbContraints.gridx = 0;
+			gbContraints.gridy = 8;
+			anaScrollPanel = new JScrollPane(anaJPanel);
+			anaScrollPanel.setPreferredSize(new Dimension(width,height));
+			content.add(anaScrollPanel, gbContraints);
+			anaCheckBox.setSelected(true);
+		}		
 	}
 	
 	public void dispose(){

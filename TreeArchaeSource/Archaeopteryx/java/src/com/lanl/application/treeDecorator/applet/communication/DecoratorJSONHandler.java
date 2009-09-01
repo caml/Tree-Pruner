@@ -102,6 +102,7 @@ public class DecoratorJSONHandler {
 		ArrayList<String> ahaValuesList = new ArrayList<String>();
 		ArrayList<String> anaValuesList = new ArrayList<String>();
 		ArrayList<String> hostValuesList = new ArrayList<String>();
+		AppletParams.isFluTypeA = false;
 		try{
 			JSONTokener incomingSeqDetailsJT = new JSONTokener(incomingSeqDetailsString);
 			JSONObject incomingSeqDetailsJO = new JSONObject(incomingSeqDetailsJT);
@@ -112,53 +113,59 @@ public class DecoratorJSONHandler {
 			while(iterator.hasNext()){
 				String c=null,y=null,ha=null,na=null,host=null;
 				String key = iterator.next().toString();
-				c = charValuesJO.getJSONObject(key).
-						getString(CommunicationEnum.COUNTRY.getName());
-				y = charValuesJO.getJSONObject(key).
-						getString(CommunicationEnum.YEAR.getName());
-				ha = charValuesJO.getJSONObject(key).
-						getString(CommunicationEnum.HA.getName());
-				na = charValuesJO.getJSONObject(key).
-						getString(CommunicationEnum.NA.getName());
-				host = charValuesJO.getJSONObject(key).
-						getString(CommunicationEnum.HOST.getName());
-				if(c!=null){
-					boolean present = false;
-					for(String s :  countryValuesList){
-						if( s.toLowerCase().equals(c.toLowerCase())){
-							present = true;
-							break;
+				if(key.equals(CommunicationEnum.FLU_TYPE.getName())){
+					if(charValuesJO.getString(key).equals("A")||charValuesJO.getString(key).equals("a"))
+						AppletParams.isFluTypeA = true;
+				}
+				else{
+					c = charValuesJO.getJSONObject(key).
+							getString(CommunicationEnum.COUNTRY.getName());
+					y = charValuesJO.getJSONObject(key).
+							getString(CommunicationEnum.YEAR.getName());
+					ha = charValuesJO.getJSONObject(key).
+							getString(CommunicationEnum.HA.getName());
+					na = charValuesJO.getJSONObject(key).
+							getString(CommunicationEnum.NA.getName());
+					host = charValuesJO.getJSONObject(key).
+							getString(CommunicationEnum.HOST.getName());
+					if(c!=null){
+						boolean present = false;
+						for(String s :  countryValuesList){
+							if( s.toLowerCase().equals(c.toLowerCase())){
+								present = true;
+								break;
+							}
+						}
+						if(present == false && !c.equals("null")){
+							countryValuesList.add(c);
 						}
 					}
-					if(present == false && !c.equals("null")){
-						countryValuesList.add(c);
-					}
-				}
-				if(y!=null){
-					if(!yearValuesList.contains(y)&&!y.equals("null")){
-						yearValuesList.add(y);
-					}
-				}
-				if(ha!=null){
-					if(!ahaValuesList.contains(ha)&&!ha.equals("null")){
-						ahaValuesList.add(ha);
-					}
-				}
-				if(na!=null){
-					if(!anaValuesList.contains(na)&&!na.equals("null")){
-						anaValuesList.add(na);
-					}
-				}
-				if(host!=null){
-					boolean present = false;
-					for(String s :  hostValuesList){
-						if(s.toLowerCase().equals(host.toLowerCase())){
-							present = true;
-							break;
+					if(y!=null){
+						if(!yearValuesList.contains(y)&&!y.equals("null")){
+							yearValuesList.add(y);
 						}
 					}
-					if(present == false && !host.equals("null")){
-						hostValuesList.add(host);
+					if(ha!=null){
+						if(!ahaValuesList.contains(ha)&&!ha.equals("null")){
+							ahaValuesList.add(ha);
+						}
+					}
+					if(na!=null){
+						if(!anaValuesList.contains(na)&&!na.equals("null")){
+							anaValuesList.add(na);
+						}
+					}
+					if(host!=null){
+						boolean present = false;
+						for(String s :  hostValuesList){
+							if(s.toLowerCase().equals(host.toLowerCase())){
+								present = true;
+								break;
+							}
+						}
+						if(present == false && !host.equals("null")){
+							hostValuesList.add(host);
+						}
 					}
 				}
 			}

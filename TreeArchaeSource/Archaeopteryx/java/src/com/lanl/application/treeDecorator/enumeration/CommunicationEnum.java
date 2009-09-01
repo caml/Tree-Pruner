@@ -8,6 +8,7 @@ public enum CommunicationEnum {
 	YEAR("Year"),
 	COUNTRY("Country"),
 	HOST("Host"),
+	FLU_TYPE("flu_type"),
 	
 	///incoming JSON - Saved Decoraion
 	/**
