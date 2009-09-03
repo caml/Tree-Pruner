@@ -15,6 +15,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -447,8 +448,10 @@ public class ManualDecorateFrame implements ActionListener{
 	
 	class  MakeCharValueLegendPanel extends JPanel implements ItemListener{
 		Map<String, DecorateObject> charMap = DecoratorTable.decoratorTable.get(semiDecorateFrame.selectedCharacteristic);
-		Set<String> charValues = charMap.keySet();
+		Set<String> charValueSet = charMap.keySet();
+		String[] charValueArray = (String []) charValueSet.toArray (new String [charValueSet.size ()]);
 		MakeCharValueLegendPanel(){
+			Arrays.sort(charValueArray, String.CASE_INSENSITIVE_ORDER);
 			this.setBackground(DecoratorColorSet.getBackgroundColor());
 			
 			BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
@@ -457,10 +460,10 @@ public class ManualDecorateFrame implements ActionListener{
 			JLabel charNameLabel = new JLabel(semiDecorateFrame.selectedCharacteristic.getName());
 			this.add(charNameLabel);
 			charValueCheckBoxes.clear();	
-			for(String charValue:charValues){
+			for(int count = 0 ; count<charValueArray.length;count++){
 				charValueCheckBox = new JCheckBox();
 				charValueCheckBox.addItemListener(this);
-				charValueCheckBox.setName(charValue);
+				charValueCheckBox.setName(charValueArray[count]);
 				charValueCheckBoxes.add(charValueCheckBox);
 				this.add(charValueCheckBox);
 				
@@ -513,25 +516,25 @@ public class ManualDecorateFrame implements ActionListener{
 					}
 				}
 			}
-			for(String charValue:charValues){
+			for(int count = 0 ; count<charValueArray.length;count++){
 				int x1 = this.getComponent(i).getX(); 
 				int y1 = this.getComponent(i).getY();
 				i++;
 				
 				Font charValueFont = DecorationEnumHelper.
-				getFont(charMap.get(charValue).getStrainFont(), charMap.get(charValue).getStrainStyle(),
-						charMap.get(charValue).getStrainSize());
+				getFont(charMap.get(charValueArray[count]).getStrainFont(), charMap.get(charValueArray[count]).getStrainStyle(),
+						charMap.get(charValueArray[count]).getStrainSize());
 				
-				DecorationEnumHelper.drawStrainWithColorFontCase(g, DecorationEnumHelper.getStringWithCase(charValue, 
-						charMap.get(charValue).getStrainCase()), charValueFont, 
-						new Point((x1+30),y1+16), charMap.get(charValue).getStrainStyle(),
-						charMap.get(charValue).getStrainColor());
+				DecorationEnumHelper.drawStrainWithColorFontCase(g, DecorationEnumHelper.getStringWithCase(charValueArray[count], 
+						charMap.get(charValueArray[count]).getStrainCase()), charValueFont, 
+						new Point((x1+30),y1+16), charMap.get(charValueArray[count]).getStrainStyle(),
+						charMap.get(charValueArray[count]).getStrainColor());
 				
 				if(allDefault == false){
 					DecorationEnumHelper.drawShapesWithColor
-					(charMap.get(charValue).getNodeShape(),
+					(charMap.get(charValueArray[count]).getNodeShape(),
 							g, new Point((x1+100),(y1+11) ),	10, 10,
-							charMap.get(charValue).getNodeColor());
+							charMap.get(charValueArray[count]).getNodeColor());
 				}
 			}
 		}
