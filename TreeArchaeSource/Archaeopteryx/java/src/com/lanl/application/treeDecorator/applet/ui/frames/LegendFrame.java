@@ -337,12 +337,12 @@ public class LegendFrame {
 				
 				DecorationEnumHelper.drawStrainWithColorFontCase(g, DecorationEnumHelper.getStringWithCase(charValueArray[count], 
 						charMap.get(charValueArray[count]).getStrainCase()), charValueFont, 
-						new Point((x1+30),y1+16), charMap.get(charValueArray[count]).getStrainStyle(),
+						new Point((x1+50),y1+16), charMap.get(charValueArray[count]).getStrainStyle(),
 						charMap.get(charValueArray[count]).getStrainColor());
 				
 				DecorationEnumHelper.drawShapesWithColor
 				(charMap.get(charValueArray[count]).getNodeShape(),
-						g, new Point((x1+100),(y1+11) ),	10, 10,
+						g, new Point((x1+30),(y1+11) ),	10, 10,
 						charMap.get(charValueArray[count]).getNodeColor());
 			}
 		}
