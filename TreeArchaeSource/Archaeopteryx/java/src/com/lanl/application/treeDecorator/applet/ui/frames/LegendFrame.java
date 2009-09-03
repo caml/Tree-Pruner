@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
@@ -27,13 +29,14 @@ import javax.swing.UIManager;
 
 import com.lanl.application.TPTD.applet.AppletParams;
 import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
+import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorShapes;
 import com.lanl.application.treeDecorator.dataStructures.DecorateObject;
 import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 import com.lanl.application.treeDecorator.enumeration.DecorationEnumHelper;
 import com.lanl.application.treeDecorator.enumeration.DecorationStyles;
 import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 
-public class LegendFrame implements ItemListener{
+public class LegendFrame {
 
 	int height = 120;
 	int width = 250;
@@ -41,7 +44,8 @@ public class LegendFrame implements ItemListener{
 	GridBagConstraints gbContraints;
 	public JPanel countryJPanel,yearJPanel,ahaJPanel,anaJPanel,hostJPanel;
 	JScrollPane countryScrollPanel,yearScrollPanel,ahaScrollPanel,anaScrollPanel,hostScrollPanel;
-	JCheckBox countryCheckBox,yearCheckBox,ahaCheckBox,anaCheckBox,hostCheckBox;
+	JPanel countryShowHidePanel,yearShowHidePanel,ahaShowHidePanel,anaShowHidePanel,hostShowHidePanel; 
+	boolean showingCountry= false,showingYear= false,showingAHA= false,showingANA= false,showingHost = false;
 	public LegendFrame(){
 		try{
 			String laf = UIManager.getSystemLookAndFeelClassName();
@@ -86,53 +90,45 @@ public class LegendFrame implements ItemListener{
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 1;
 		
-		countryCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_COUNTRY.getName());
-		countryCheckBox.addItemListener(this);
-		countryCheckBox.setName(DecoratorUIConstants.SHOW_COUNTRY.getName());
-		content.add(countryCheckBox, gbContraints);
+		
+		countryJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.COUNTRY);
+		countryShowHidePanel = new MakeShowHidePanel(DecoratorUIConstants.SHOW_COUNTRY);
+		content.add(countryShowHidePanel, gbContraints);
 		gbContraints.insets = new Insets(0,0,10,0);
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 2;
-		countryJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.COUNTRY);
 		countryScrollPanel = new JScrollPane(countryJPanel);
 		countryScrollPanel.setPreferredSize(new Dimension(width,height));
 		content.add(countryScrollPanel, gbContraints);
-		countryCheckBox.setSelected(true);
-		
 		
 		gbContraints.insets = new Insets(0,0,0,0);
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 3;
 		
-		yearCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_YEAR.getName());
-		yearCheckBox.addItemListener(this);
-		yearCheckBox.setName(DecoratorUIConstants.SHOW_YEAR.getName());
-		content.add(yearCheckBox, gbContraints);
+		yearJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.YEAR);
+		yearShowHidePanel = new MakeShowHidePanel(DecoratorUIConstants.SHOW_YEAR);
+		content.add(yearShowHidePanel, gbContraints);
 		gbContraints.insets = new Insets(0,0,10,0);
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 4;
-		yearJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.YEAR);
 		yearScrollPanel = new JScrollPane(yearJPanel);
 		yearScrollPanel.setPreferredSize(new Dimension(width,height));
 		content.add(yearScrollPanel, gbContraints);
-		yearCheckBox.setSelected(true);
 		
 		gbContraints.insets = new Insets(0,0,0,0);
 		gbContraints.gridx = 0;
 		gbContraints.gridy = 5;
 		
-		hostCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_HOST_SPECIES.getName());
-		hostCheckBox.addItemListener(this);
-		hostCheckBox.setName(DecoratorUIConstants.SHOW_HOST_SPECIES.getName());
-		content.add(hostCheckBox, gbContraints);
+		hostJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.HOST_SPECIES);
+		hostShowHidePanel = new MakeShowHidePanel(DecoratorUIConstants.SHOW_HOST_SPECIES);
+		content.add(hostShowHidePanel, gbContraints);
 		gbContraints.insets = new Insets(0,0,10,0);
 		gbContraints.gridx = 0;
-		gbContraints.gridy = 10;
-		hostJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.HOST_SPECIES);
+		gbContraints.gridy = 6;
 		hostScrollPanel = new JScrollPane(hostJPanel);
 		hostScrollPanel.setPreferredSize(new Dimension(width,height));
 		content.add(hostScrollPanel, gbContraints);
-		hostCheckBox.setSelected(true);
+		
 		
 		ahaJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.A_HA_SUBTYPE);
 		anaJPanel = new MakeCharNameLegendPanel(DecoratorUIConstants.A_NA_SYBTYPE);
@@ -142,33 +138,28 @@ public class LegendFrame implements ItemListener{
 			gbContraints.gridx = 0;
 			gbContraints.gridy = 7;
 			
-			ahaCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName());
-			ahaCheckBox.addItemListener(this);
-			ahaCheckBox.setName(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName());
-			content.add(ahaCheckBox, gbContraints);
+			ahaShowHidePanel = new MakeShowHidePanel(DecoratorUIConstants.SHOW_A_HA_SUBTYPE);
+			content.add(ahaShowHidePanel, gbContraints);
 			gbContraints.insets = new Insets(0,0,10,0);
 			gbContraints.gridx = 0;
-			gbContraints.gridy = 6;
+			gbContraints.gridy = 8;
 			ahaScrollPanel = new JScrollPane(ahaJPanel);
 			ahaScrollPanel.setPreferredSize(new Dimension(width,height));
 			content.add(ahaScrollPanel, gbContraints);
-			ahaCheckBox.setSelected(true);
+			
 			
 			gbContraints.insets = new Insets(0,0,0,0);
 			gbContraints.gridx = 0;
 			gbContraints.gridy = 9;
 			
-			anaCheckBox = new JCheckBox(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName());
-			anaCheckBox.addItemListener(this);
-			anaCheckBox.setName(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName());
-			content.add(anaCheckBox, gbContraints);
+			anaShowHidePanel = new MakeShowHidePanel(DecoratorUIConstants.SHOW_A_NA_SUBTYPE);
+			content.add(anaShowHidePanel, gbContraints);
 			gbContraints.insets = new Insets(0,0,10,0);
 			gbContraints.gridx = 0;
-			gbContraints.gridy = 8;
+			gbContraints.gridy = 10;
 			anaScrollPanel = new JScrollPane(anaJPanel);
 			anaScrollPanel.setPreferredSize(new Dimension(width,height));
 			content.add(anaScrollPanel, gbContraints);
-			anaCheckBox.setSelected(true);
 		}		
 	}
 	
@@ -177,6 +168,136 @@ public class LegendFrame implements ItemListener{
 			_frame.setVisible(false);
 			_frame.dispose();
 		}
+	}
+	
+	class MakeShowHidePanel extends JPanel implements MouseListener{
+		DecoratorUIConstants charName = DecoratorUIConstants.NULL;
+		boolean showing = false;
+		MakeShowHidePanel(DecoratorUIConstants charName1){
+			this.charName = charName1;
+			this.setBackground(DecoratorColorSet.getBackgroundColor());
+			JLabel tempLabel = new JLabel("     "+charName.getName());
+		    Font currentFont = tempLabel.getFont();
+		    float newSize = 12.f;
+		    Font newFont = currentFont.deriveFont(newSize);
+		    tempLabel.setFont(newFont);
+			
+			tempLabel.addMouseListener(this);
+			this.add(tempLabel);
+		}
+		public void paint(Graphics g){
+			super.paint(g);
+			int x1 = this.getComponent(0).getX(); 
+			int y1 = this.getComponent(0).getY();
+			int height=10,width = 10;
+			if(!showing){
+				DecoratorShapes.drawInvertedTriangleFilled(g, new Point(x1+10,y1+8), height, width, DecoratorColorSet.getBlack());
+			}
+			else{
+				DecoratorShapes.drawTriangleFilledpPointingToRight
+					(g, new Point(x1+10,y1+8), height, width, DecoratorColorSet.getBlack());
+			}
+			
+			
+		}
+		
+		public void mouseClicked(MouseEvent arg0) {
+			if(charName.getName().equals(DecoratorUIConstants.SHOW_COUNTRY.getName())){
+				if (!showingCountry) {
+					showing = false;
+					this.repaint();
+					countryScrollPanel.setVisible(true);
+					_frame.pack();
+					showingCountry = true;
+				}
+				else if (showingCountry){
+					showing = true;
+					this.repaint();
+					countryScrollPanel.setVisible(false);
+					_frame.pack();
+					showingCountry = false;
+				}
+			}
+			else if(charName.getName().equals(DecoratorUIConstants.SHOW_YEAR.getName())){
+				if (!showingYear) {
+					showing = false;
+					this.repaint();
+					yearScrollPanel.setVisible(true);
+					_frame.pack();
+					showingYear = true;
+				}
+				else if (showingYear){
+					showing = true;
+					this.repaint();
+					yearScrollPanel.setVisible(false);
+					_frame.pack();
+					showingYear = false;
+					
+				}
+			}
+			else if(charName.getName().equals(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName())){
+				if (!showingAHA) {
+					showing = false;
+					this.repaint();
+					ahaScrollPanel.setVisible(true);
+					_frame.pack();
+					showingAHA = true;
+				}
+				else if (showingAHA){
+					showing = true;
+					this.repaint();
+					ahaScrollPanel.setVisible(false);
+					_frame.pack();
+					showingAHA = false;
+					
+				}
+			}
+			else if(charName.getName().equals(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName())){
+				if (!showingANA) {
+					showing = false;
+					this.repaint();
+					anaScrollPanel.setVisible(true);
+					_frame.pack();
+					showingANA = true;
+				}
+				else if (showingANA){
+					showing = true;
+					this.repaint();
+					anaScrollPanel.setVisible(false);
+					_frame.pack();
+					showingANA = false;
+					
+				}
+			}
+			else if(charName.getName().equals(DecoratorUIConstants.SHOW_HOST_SPECIES.getName())){
+				if (!showingHost) {
+					showing = false;
+					this.repaint();
+					hostScrollPanel.setVisible(true);
+					_frame.pack();
+					showingHost = true;
+				}
+				else if (showingHost){
+					showing = true;
+					this.repaint();
+					hostScrollPanel.setVisible(false);
+					_frame.pack();
+					showingHost = false;
+				}
+			}
+		}
+
+		public void mouseEntered(MouseEvent arg0) {}
+		
+
+		public void mouseExited(MouseEvent arg0) {}
+		
+
+		public void mousePressed(MouseEvent arg0) {}
+		
+		
+		public void mouseReleased(MouseEvent arg0) {}
+		
 	}
 	class  MakeCharNameLegendPanel extends JPanel {
 		Map<String, DecorateObject> charMap;
@@ -225,65 +346,5 @@ public class LegendFrame implements ItemListener{
 						charMap.get(charValueArray[count]).getNodeColor());
 			}
 		}
-	}
-
-	public void itemStateChanged(ItemEvent e) {
-		JCheckBox selectedCheckBox = (JCheckBox)e.getSource();
-		if(selectedCheckBox.getName().equals(DecoratorUIConstants.SHOW_COUNTRY.getName())){
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				countryScrollPanel.setVisible(true);
-				_frame.pack();
-			}
-			else{
-				countryScrollPanel.setVisible(false);
-				_frame.pack();
-				
-			}
-		}
-		else if(selectedCheckBox.getName().equals(DecoratorUIConstants.SHOW_YEAR.getName())){
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				yearScrollPanel.setVisible(true);
-				_frame.pack();
-			}
-			else{
-				yearScrollPanel.setVisible(false);
-				_frame.pack();
-				
-			}
-		}
-		else if(selectedCheckBox.getName().equals(DecoratorUIConstants.SHOW_A_HA_SUBTYPE.getName())){
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				ahaScrollPanel.setVisible(true);
-				_frame.pack();
-			}
-			else{
-				ahaScrollPanel.setVisible(false);
-				_frame.pack();
-				
-			}
-		}
-		else if(selectedCheckBox.getName().equals(DecoratorUIConstants.SHOW_A_NA_SUBTYPE.getName())){
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				anaScrollPanel.setVisible(true);
-				_frame.pack();
-			}
-			else{
-				anaScrollPanel.setVisible(false);
-				_frame.pack();
-				
-			}
-		}
-		else if(selectedCheckBox.getName().equals(DecoratorUIConstants.SHOW_HOST_SPECIES.getName())){
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				hostScrollPanel.setVisible(true);
-				_frame.pack();
-			}
-			else{
-				hostScrollPanel.setVisible(false);
-				_frame.pack();
-				
-			}
-		}
-		
 	}
 }

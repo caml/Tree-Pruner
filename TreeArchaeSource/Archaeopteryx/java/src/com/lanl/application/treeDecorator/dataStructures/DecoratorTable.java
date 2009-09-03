@@ -13,12 +13,12 @@ import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 public class DecoratorTable {
 	
 	// (CharName => (CharValue->DecorateObject(node,strain))
-	public static Map<DecoratorUIConstants, Map<String, DecorateObject>> decoratorTable = new HashMap<DecoratorUIConstants, Map<String, DecorateObject>>();
+	public static Map<DecoratorUIConstants, CharValueAndDecorationMap<String, DecorateObject>> decoratorTable = new HashMap<DecoratorUIConstants, CharValueAndDecorationMap<String, DecorateObject>>();
 	//StyleName => charName
 	public static Map<DecoratorUIConstants,DecoratorUIConstants> styleCharacteristicMapping
 		= new HashMap<DecoratorUIConstants,DecoratorUIConstants>();
 	
-	public static Map<DecoratorUIConstants, Map<String, DecorateObject>> savedDecoratorTable = new HashMap<DecoratorUIConstants, Map<String, DecorateObject>>();
+	public static Map<DecoratorUIConstants, CharValueAndDecorationMap<String, DecorateObject>> savedDecoratorTable = new HashMap<DecoratorUIConstants, CharValueAndDecorationMap<String, DecorateObject>>();
 	
 	public static Map<DecoratorUIConstants,DecoratorUIConstants> savedStyleCharacteristicMapping
 		= new HashMap<DecoratorUIConstants,DecoratorUIConstants>();
@@ -30,35 +30,35 @@ public class DecoratorTable {
 	public static void decoratorTableInit(String[] countryNames, String[] year, String[] aha,
 			String[] ana, String[] host) {
 		clearAllTreeDecoratorDataStructures();
-		Map<String, DecorateObject> tempMap;
+		CharValueAndDecorationMap<String, DecorateObject> tempMap;
 		
-		tempMap = new HashMap<String, DecorateObject>();
+		tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 		for (int i = 0; i < countryNames.length; i++) {
 			tempMap.put(countryNames[i], new DecorateObject());
 		}
 		decoratorTable.put(DecoratorUIConstants.COUNTRY, tempMap);
 		
-		tempMap = new HashMap<String, DecorateObject>();
+		tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 		for (int i = 0; i < year.length; i++) {
 			tempMap.put(year[i], new DecorateObject());
 
 		}
 		decoratorTable.put(DecoratorUIConstants.YEAR, tempMap);
 		
-		tempMap = new HashMap<String, DecorateObject>();
+		tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 		for (int i = 0; i < aha.length; i++) {
 			tempMap.put(aha[i], new DecorateObject());
 
 		}
 		decoratorTable.put(DecoratorUIConstants.A_HA_SUBTYPE, tempMap);
 		
-		tempMap = new HashMap<String, DecorateObject>();
+		tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 		for (int i = 0; i < ana.length; i++) {
 			tempMap.put(ana[i], new DecorateObject());
 
 		}
 		decoratorTable.put(DecoratorUIConstants.A_NA_SYBTYPE, tempMap);
-		tempMap = new HashMap<String, DecorateObject>();
+		tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 
 		for (int i = 0; i < host.length; i++) {
 			tempMap.put(host[i], new DecorateObject());
@@ -88,9 +88,9 @@ public class DecoratorTable {
 	public static void copyStuffToSavedStuff(){
 		savedDecoratorTable.clear();
 		savedStyleCharacteristicMapping.clear();
-		Map<String, DecorateObject> tempMap;
+		CharValueAndDecorationMap<String, DecorateObject> tempMap;
 		for(DecoratorUIConstants charName: decoratorTable.keySet()){
-			tempMap = new HashMap<String, DecorateObject>();
+			tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 			for(String charValue: decoratorTable.get(charName).keySet()){
 				tempMap.put(charValue, new DecorateObject(
 						decoratorTable.get(charName).get(charValue).getNodeShape(),
@@ -113,9 +113,9 @@ public class DecoratorTable {
 			decoratorTable.clear();
 			styleCharacteristicMapping.clear();
 			clearBranchColoring();
-			Map<String, DecorateObject> tempMap;
+			CharValueAndDecorationMap<String, DecorateObject> tempMap;
 			for(DecoratorUIConstants charName: savedDecoratorTable.keySet()){
-				tempMap = new HashMap<String, DecorateObject>();
+				tempMap = new CharValueAndDecorationMap<String, DecorateObject>();
 				for(String charValue: savedDecoratorTable.get(charName).keySet()){
 					tempMap.put(charValue, new DecorateObject(
 							savedDecoratorTable.get(charName).get(charValue).getNodeShape(),

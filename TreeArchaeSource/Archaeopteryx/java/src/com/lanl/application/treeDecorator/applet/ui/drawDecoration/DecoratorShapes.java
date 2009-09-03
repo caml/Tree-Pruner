@@ -156,4 +156,21 @@ public class DecoratorShapes {
 
 		g.fillPolygon(poly);
 	}
+	
+	//for legend
+	public static void drawTriangleFilledpPointingToRight(Graphics g, Point location,
+			int height, int width, Color color) {
+		g.setColor(color);
+		int halfWidth = width / 2;
+		int halfHeight = height / 2;
+		Point point2 = new Point(location.x + halfWidth, location.y);
+		Point point3 = new Point(location.x - halfWidth, location.y
+				- halfHeight);
+		Point point1 = new Point(location.x-halfWidth, location.y + halfHeight);
+		Polygon poly = new Polygon();
+		poly.addPoint(point1.x, point1.y);
+		poly.addPoint(point2.x, point2.y);
+		poly.addPoint(point3.x, point3.y);
+		g.fillPolygon(poly);
+	}
 }

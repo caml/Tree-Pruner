@@ -39,11 +39,11 @@ public enum DecoratorUIConstants {
 	A_NA_SYBTYPE("A/NA subtype"),
 	HOST_SPECIES("Host species"),
 	CHARACTERISTIC("Characteristic"),
-	SHOW_COUNTRY("Show Country"),
-	SHOW_YEAR("Show Year"),
-	SHOW_A_HA_SUBTYPE("Show A/HA subtype"),
-	SHOW_A_NA_SUBTYPE("Show A/NA subtype"),
-	SHOW_HOST_SPECIES("Show Host species"),
+	SHOW_COUNTRY("Country"),
+	SHOW_YEAR("Year"),
+	SHOW_A_HA_SUBTYPE("A/HA subtype"),
+	SHOW_A_NA_SUBTYPE("A/NA subtype"),
+	SHOW_HOST_SPECIES("Host species"),
 	NULL("None");
 	
 	private final String name;
