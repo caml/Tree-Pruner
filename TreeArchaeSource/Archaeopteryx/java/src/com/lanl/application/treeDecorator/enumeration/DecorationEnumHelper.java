@@ -19,11 +19,11 @@ import com.lanl.application.treeDecorator.dataStructures.DecoratorTable;
 
 public class DecorationEnumHelper {
 	public static DecorationStyles[] allColors = {
-		DecorationStyles.LIGHT_GRAY,
+		DecorationStyles.EGGPLANT,
 		DecorationStyles.DARK_GRAY,
 		DecorationStyles.BROWN,
 		DecorationStyles.BLACK,
-		DecorationStyles.YELLOW,
+		DecorationStyles.TANGERINE,
 		DecorationStyles.RED,
 		DecorationStyles.PINK,
 		DecorationStyles.BLUE,
@@ -253,8 +253,8 @@ public class DecorationEnumHelper {
 	}
 	
 	public static Color getColor(DecorationStyles color){  //16
-		if(color == DecorationStyles.LIGHT_GRAY){
-			return DecoratorColorSet.getLightGray();
+		if(color == DecorationStyles.EGGPLANT){
+			return DecoratorColorSet.getEggplant();
 		}
 		else if(color == DecorationStyles.DARK_GRAY){
 			return DecoratorColorSet.getDarkGray();
@@ -265,8 +265,8 @@ public class DecorationEnumHelper {
 		else if(color == DecorationStyles.BLACK){
 			return DecoratorColorSet.getBlack();
 		}
-		else if(color == DecorationStyles.YELLOW){
-			return DecoratorColorSet.getYellow();
+		else if(color == DecorationStyles.TANGERINE){
+			return DecoratorColorSet.getTangerine();
 		}
 		else if(color == DecorationStyles.RED){
 			return DecoratorColorSet.getRed();
@@ -344,8 +344,8 @@ public class DecorationEnumHelper {
     //for communication get the DecorationStyles and DecoratorUIConstants object from string
     
     public static DecorationStyles getDecorationStylesObject(String s){
-    	if(s.equals(DecorationStyles.LIGHT_GRAY.getName())){
-    		return DecorationStyles.LIGHT_GRAY;
+    	if(s.equals(DecorationStyles.EGGPLANT.getName())){
+    		return DecorationStyles.EGGPLANT;
     	}
     	else if(s.equals(DecorationStyles.DARK_GRAY.getName())){
     		return DecorationStyles.DARK_GRAY;
@@ -356,8 +356,8 @@ public class DecorationEnumHelper {
     	else if(s.equals(DecorationStyles.BLACK.getName())){
     		return DecorationStyles.BLACK;
     	}
-    	else if(s.equals(DecorationStyles.YELLOW.getName())){
-    		return DecorationStyles.YELLOW;
+    	else if(s.equals(DecorationStyles.TANGERINE.getName())){
+    		return DecorationStyles.TANGERINE;
     	}
     	else if(s.equals(DecorationStyles.RED.getName())){
     		return DecorationStyles.RED;

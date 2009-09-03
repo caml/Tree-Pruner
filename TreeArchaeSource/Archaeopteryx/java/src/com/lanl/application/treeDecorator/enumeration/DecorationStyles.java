@@ -5,11 +5,11 @@ public enum DecorationStyles {
 	NULL("None"),
 	
 	//colors
-	LIGHT_GRAY("Light Gray"),
+	EGGPLANT("Eggplant"),
 	DARK_GRAY("Dark Gray"),
 	BROWN("Brown"),
 	BLACK("Black"),
-	YELLOW("Yellow"),
+	TANGERINE("Tangerine"),
 	RED("Red"),
 	PINK("Pink"),
 	BLUE("Blue"),

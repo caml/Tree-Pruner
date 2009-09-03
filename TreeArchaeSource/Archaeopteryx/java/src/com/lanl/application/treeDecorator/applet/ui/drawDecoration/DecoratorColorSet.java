@@ -4,11 +4,11 @@ import java.awt.Color;
 
 public class DecoratorColorSet {
 	//decoration colors
-	private static Color lightGray = new Color(213,213,214);  	//light gray
+	private static Color eggplant = new Color(64,0,128);  	//eggplant -- violet
 	private static Color darkGray = new Color(164,164,165);   	//dark gray
 	private static Color brown = new Color(126,86,43);		//brown
 	private static Color black = new Color(0,0,0);			//black
-	private static Color yellow = new Color(242,249,43);		//yellow
+	private static Color tangerine = new Color(255,128,0);		//tangerine - orange
 	private static Color red = new Color(245,49,51);		//red
 	private static Color pink = new Color(242,0,244);		//pink
 	private static Color blue = new Color(34,59,243);		//blue
@@ -23,8 +23,8 @@ public class DecoratorColorSet {
 	//other colors
 	private static Color backgroundColor = Color.WHITE;     //bgcolor
 	
-	public static Color getLightGray(){
-		return lightGray;
+	public static Color getEggplant(){
+		return eggplant;
 	}
 	
 	public static Color getDarkGray(){
@@ -39,8 +39,8 @@ public class DecoratorColorSet {
 		return black;
 	}
 	
-	public static Color getYellow(){
-		return yellow;
+	public static Color getTangerine(){
+		return tangerine;
 	}
 	
 	public static Color getRed(){
