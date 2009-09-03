@@ -76,7 +76,7 @@ public class ManualDecorateFrame implements ActionListener{
 	}
 	
 	public void makeManalDecoratorFrame(){
-		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 700, 500, 300, 300);
+		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 800, 500, 300, 300);
 		_frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing( final WindowEvent e ) {
 				semiDecorateFrame.backButton.setEnabled(true);
@@ -113,17 +113,17 @@ public class ManualDecorateFrame implements ActionListener{
 		characterValueLegendPanel = new MakeCharValueLegendPanel();
 		
 		JScrollPane scrollPaneForcharacterValueLegendPanel = new JScrollPane(characterValueLegendPanel);
-		scrollPaneForcharacterValueLegendPanel.setPreferredSize(new Dimension(150,350));
+		scrollPaneForcharacterValueLegendPanel.setPreferredSize(new Dimension(350,350));
 		content.add(scrollPaneForcharacterValueLegendPanel, gbContraints);
 		
-		gbContraints.insets = new Insets(5,300,5,5);
+		gbContraints.insets = new Insets(5,20,5,5);
 		gbContraints.gridwidth = 3;
 		gbContraints.gridx = 3;
 		gbContraints.gridy = 2;
 		decorationStyleOptionsPanel = new MakeDecorationStyleOptionsPanel();
 		
 		JScrollPane scrollPaneForDecorationStyleOptionsPanel = new JScrollPane(decorationStyleOptionsPanel);
-		scrollPaneForDecorationStyleOptionsPanel.setPreferredSize(new Dimension(150,350));
+		scrollPaneForDecorationStyleOptionsPanel.setPreferredSize(new Dimension(350,350));
 		content.add(scrollPaneForDecorationStyleOptionsPanel, gbContraints);
 		
 		JPanel applyClosePanel = MakeJPanel.getGridLayoutPanel(1,3);

@@ -39,7 +39,7 @@ import com.lanl.application.treeDecorator.enumeration.DecoratorUIConstants;
 public class LegendFrame {
 
 	int height = 120;
-	int width = 250;
+	int width = 360;
 	public JFrame _frame;
 	GridBagConstraints gbContraints;
 	public JPanel countryJPanel,yearJPanel,ahaJPanel,anaJPanel,hostJPanel;
@@ -62,7 +62,7 @@ public class LegendFrame {
 	}
 	
 	public void makeLegendFrame(){
-		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 400, 900, 400, 0);
+		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 360, 900, 400, 0);
 		
 		_frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing( final WindowEvent e ) {
