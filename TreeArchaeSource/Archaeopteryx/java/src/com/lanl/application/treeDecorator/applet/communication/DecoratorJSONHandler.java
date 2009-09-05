@@ -28,7 +28,8 @@ public class DecoratorJSONHandler {
 		try {
 			JSONTokener incomingSavedStylesJT = new JSONTokener(incomingSavedStyles);
 			JSONObject incomingSavedStylesJO = new JSONObject(incomingSavedStylesJT);
-			
+			System.out.println("Recoverd Decorations JSON String");
+			System.out.println(incomingSavedStylesJO.toString(2));
 			JSONObject  savedStylesJO = incomingSavedStylesJO.
 				getJSONObject(CommunicationEnum.DECORATION.getName());
 			
@@ -106,7 +107,8 @@ public class DecoratorJSONHandler {
 		try{
 			JSONTokener incomingSeqDetailsJT = new JSONTokener(incomingSeqDetailsString);
 			JSONObject incomingSeqDetailsJO = new JSONObject(incomingSeqDetailsJT);
-			
+			System.out.println("Incoming Sequence details JSON");
+			System.out.println(incomingSeqDetailsJO.toString(2));
 			sequenceDetailsJSON = new String(incomingSeqDetailsString);
 			JSONObject  charValuesJO = incomingSeqDetailsJO.getJSONObject(CommunicationEnum.SEQUENCE_DETAILS.getName());
 			Iterator iterator = charValuesJO.keys();
@@ -245,7 +247,8 @@ public class DecoratorJSONHandler {
 					innerJO.put(DecoratorUIConstants.STRAIN.getName(), innerStrainJO);	
 				}
 				mainJO.put(CommunicationEnum.DECORATION.getName(), innerJO);
-				//System.out.println(mainJO.toString(2));
+				System.out.println("Save/Autosave JSON String");
+				System.out.println(mainJO.toString(2));
 				return mainJO.toString();
 			}
 		}
@@ -266,7 +269,8 @@ public class DecoratorJSONHandler {
 				innerJO.put(CommunicationEnum.REMOTE_USER.getName(), AppletParams.remoteUser);
 			}
 			mainJO.put(CommunicationEnum.DECORATION.getName(), innerJO);
-			//System.out.println(mainJO.toString(2));
+			System.out.println("Discard JSON String");
+			System.out.println(mainJO.toString(2));
 			return mainJO.toString();
 		} catch (JSONException e) {
 			e.printStackTrace();

@@ -35,6 +35,8 @@ public class TreeDecoratorCommunication {
 			String seqDetailsJSONString="";
 			try {
 				seqDetailsURL= new URL(seqDetailsURLString);
+				System.out.println("GET sequence details URL");
+				System.out.println(seqDetailsURLString);
 				HttpURLConnection seqDetailsConn = (HttpURLConnection) seqDetailsURL.openConnection();
 				seqDetailsConn.setRequestMethod("GET");
 				BufferedReader rd;
@@ -62,6 +64,8 @@ public class TreeDecoratorCommunication {
 			String savedDecorationsJSONString="";
 			try {
 				crashRecoveryURL= new URL(crashRecoveryURLString);
+				System.out.println("GET saved decorations URL");
+				System.out.println(crashRecoveryURLString);
 				HttpURLConnection crashRecoveryConn = (HttpURLConnection)crashRecoveryURL.openConnection();
 				crashRecoveryConn.setRequestMethod("GET");
 				BufferedReader rd;
@@ -89,6 +93,8 @@ public class TreeDecoratorCommunication {
 		String returnedString ="";
 		try {
 			postURL = new URL(postURLString);
+			System.out.println("POST URL string");
+			System.out.println(postURLString);
 			HttpURLConnection postConn = (HttpURLConnection) postURL
 					.openConnection();
 			postConn.addRequestProperty("Content-Type", "text/JSON");
