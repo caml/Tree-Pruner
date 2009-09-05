@@ -1,0 +1,11 @@
+ {"Pruner": { 
+   "Action": "Save", 
+   "Filename": "892_7883_1", 
+   "Sequence Accession to Remove": [ 
+     "ISDN334860", 
+     "ISDN334865", 
+     "ISDN334861", 
+     "ISDN334864" 
+   ], 
+   "remote_user": "test" 
+ }} 

@@ -1,6 +1,17 @@
 Instructions to find a detailed README for Tree Pruner - Archae
 
-1. Open TreeArchaeSource folder and follow this path: TreeArchaeSource/Archaeopteryx/TreePrunerINSTALL
-2. In this folder you will find TreePruner.pdf (you would require a Portable Document Format reader to read this file) or TreePruner.doc (you will need a word processor to read this file) in which you can find File descriptions and usage details for this product.
+Note All documentation in this package are provided in doc and pdf formats. You would require a Portable Document Format reader to read pdf files OR you will need a word processor to read doc files.
 
 
+1. Open TreeArchaeSource folder and follow this path: TreeArchaeSource/Archaeopteryx/INSTALL
+2. In this folder you will find
+   a.  A folder called FilesAndApplicationTypeDocumentation/. The files in this folder will help ypu to decide the appropriate application type (app_type) for your Tree Pruner. Once you have decided on the app_type, the next section in those files will help you to find the example files and related documentation for the particular app_type.
+   b. A folder with the path: Documentation/TreePruner/. The files in this folder will give you the applet interface and communication technical spec for the particular app_type.
+
+
+Instructions to find a detailed README for Tree Decorator - Archae
+
+1. Open TreeArchaeSource folder and follow this path: TreeArchaeSource/Archaeopteryx/INSTALL
+2. In this folder you will find
+   a.  A folder called FilesAndApplicationTypeDocumentation/. The files in this folder will help ypu to decide the appropriate application type (app_type) for your Tree Decorator. Once you have decided on the app_type, the next section in those files will help you to find the example files and related documentation for the particular app_type.
+   b. A	 folder with the path: Documentation/TreeDecorator/. The files in this folder will give you the applet interface and communication technical spec for the particular app_type.
