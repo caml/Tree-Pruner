@@ -94,29 +94,30 @@ public class DecorationEnumHelper {
 	
 	public static void drawShapesWithColor(DecorationStyles shape, Graphics g, Point location, int height,
 			int width, DecorationStyles color){
+		int adjustment = 2;
 		if(shape == DecorationStyles.HOLLOW_TRIANGE){
-			DecoratorShapes.drawTriangleHollow(g, location, height, width, getColor(color));
+			DecoratorShapes.drawTriangleHollow(g, location, height+adjustment, width+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.FILLED_TRIANGE){
-			DecoratorShapes.drawTriangleFilled(g, location, height, width, getColor(color));
+			DecoratorShapes.drawTriangleFilled(g, location, height+adjustment, width+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.HOLLOW_CIRCLE){
-			DecoratorShapes.drawCircleHollow(g, location, height, getColor(color));
+			DecoratorShapes.drawCircleHollow(g, location, height+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.FILLED_CIRCLE){
-			DecoratorShapes.drawCircleFilled(g, location, height, getColor(color));
+			DecoratorShapes.drawCircleFilled(g, location, height+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.HOLLOW_INVERTED_TRIANGE){
-			DecoratorShapes.drawInvertedTriangleHollow(g, location, height, width, getColor(color));
+			DecoratorShapes.drawInvertedTriangleHollow(g, location, height+adjustment, width+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.FILLED_INVERTED_TRIANGE){
-			DecoratorShapes.drawInvertedTriangleFilled(g, location, height, width, getColor(color));
+			DecoratorShapes.drawInvertedTriangleFilled(g, location, height+adjustment, width+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.HOLLOW_DIAMOND){
-			DecoratorShapes.drawDiamondHollow(g, location, height, getColor(color));
+			DecoratorShapes.drawDiamondHollow(g, location, height+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.FILLED_DIAMOND){
-			DecoratorShapes.drawDiamondFilled(g, location, height, getColor(color));
+			DecoratorShapes.drawDiamondFilled(g, location, height+adjustment, getColor(color));
 		}
 		else if(shape == DecorationStyles.HOLLOW_SQUARE){
 			DecoratorShapes.drawSquareHollow(g, location, height, getColor(color));

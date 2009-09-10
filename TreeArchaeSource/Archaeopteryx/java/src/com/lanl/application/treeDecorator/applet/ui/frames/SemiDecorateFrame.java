@@ -76,7 +76,7 @@ public class SemiDecorateFrame implements ActionListener{
 	}
 	
 	public void makeSemiDecoratorFrame(){
-		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 750, 600, 300, 300);
+		_frame = MakeFrame.getFrame( DecoratorUIConstants.TREE_DECORATOR_FRAME_HEADER.getName(), 820, 620, 300, 300);
 		_frame.addWindowListener(closeWindowAdapter);
 		_frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Container content = _frame.getContentPane();
