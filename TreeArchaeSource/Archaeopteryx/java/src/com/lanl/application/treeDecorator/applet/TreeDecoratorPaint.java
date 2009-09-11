@@ -64,7 +64,7 @@ public class TreeDecoratorPaint {
 		DecorationEnumHelper.drawShapesWithColor(shape, g, new Point(x,y), height, width, color);
 	}
 	
-	public void decorateStrain(Graphics g,int x, int y,String s, PhylogenyNode node) {
+	public void decorateStrain(Graphics g,int x, int y,String s, PhylogenyNode node,boolean to_pdf) {
 		DecorationStyles color,_case,font, style,size;
 		
 		if(DecoratorTable.styleCharacteristicMapping.containsKey(DecoratorUIConstants.STRAIN_COLOR)){
@@ -162,7 +162,13 @@ public class TreeDecoratorPaint {
 			size = DecorationEnumHelper.getDefaultDecorationStyles(DecoratorUIConstants.SIZE);
 		}
 		
-		DecorationEnumHelper.drawStrainWithColorFontCase(g, DecorationEnumHelper.getStringWithCase(s, _case),
+		if(to_pdf){
+			DecorationEnumHelper.drawStrainWithColorFontCaseForPdf(g, DecorationEnumHelper.getStringWithCase(s, _case),
+					DecorationEnumHelper.getFont(font, style, size),
+					new Point(x,y), style, color);
+		}
+		else
+			DecorationEnumHelper.drawStrainWithColorFontCase(g, DecorationEnumHelper.getStringWithCase(s, _case),
 				DecorationEnumHelper.getFont(font, style, size),
 				new Point(x,y), style, color);
 	}

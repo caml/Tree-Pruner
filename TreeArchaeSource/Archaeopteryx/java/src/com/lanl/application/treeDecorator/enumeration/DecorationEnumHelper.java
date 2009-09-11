@@ -318,6 +318,21 @@ public class DecorationEnumHelper {
     	
     }
     
+	public static void drawStrainWithColorFontCaseForPdf( Graphics g, String s, Font f,Point location, 
+			DecorationStyles style,DecorationStyles color){
+		Color strainColor = getColor(color);
+		g.setFont(f);
+		g.setColor(strainColor);
+		if(style.getName().equals("10")){
+			g.drawLine(location.x, location.y,location.x+s.length()*6 ,location.y );
+			g.drawString(s,location.x, location.y);
+		}
+		else{
+			g.drawString(s,location.x, location.y);
+		}
+		
+	}
+	
     public static void drawStrainWithColorFontCase( Graphics g, String s, Font f,Point location, 
     				DecorationStyles style,DecorationStyles color){
     	Color strainColor = getColor(color);

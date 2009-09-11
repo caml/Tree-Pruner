@@ -1592,7 +1592,20 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
             g.setColor( PhylogenyMethods.getBranchColorValue( node ) );
         }
         else if ( to_pdf ) {
-            g.setColor( getTreeColorSet().getBranchColorForPdf() );
+        	//******************************************START CHANGED**********************************************************//
+        	if(AppletParams.isTreePrunerForAll() ){
+        		treePrunerPaint.initArrayLists();
+                treePrunerPaint.paintKeepRemove(g,node);
+            }
+        	else if(AppletParams.isTreeDecoratorForAll() ){
+        		treeDecoratorPaint.decorateBranch(g, node);      
+        	}
+        	else{
+        		g.setColor( getTreeColorSet().getBranchColorForPdf() ); 
+        	}
+            //commented -  changed
+           //********************************************END**********************************************************//
+            
         }
         else {
         	//******************************************START CHANGED**********************************************************//
@@ -2743,7 +2756,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                                 final boolean to_graphics_file,
                                 final boolean to_pdf,
                                 final boolean is_in_found_nodes ) {
-        if ( isNodeDataInvisible( node ) && !to_graphics_file && !to_pdf ) {
+    	if ( isNodeDataInvisible( node ) && !to_graphics_file && !to_pdf ) {
             return;
         }
         if ( getOptions().isShowBranchLengthValues()
@@ -2839,7 +2852,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
         		treeDecoratorPaint.decorateStrain(g, ForesterUtil.roundToInt
         				(node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE),
         				ForesterUtil.roundToInt(node.getYcoord()+ ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor))
-        						, _sb.toString(), node);
+        						, _sb.toString(), node,to_pdf);
         		}
         	}
         	else
