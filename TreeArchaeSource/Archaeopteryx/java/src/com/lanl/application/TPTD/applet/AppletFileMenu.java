@@ -109,7 +109,9 @@ public class AppletFileMenu implements ActionListener {
 	    _file_jmenu = createMenu( "File", conf_isUseNativeUI );
 	    _file_jmenu.add( _save_item = new JMenuItem( "Save Tree As..." ) );
 	    _file_jmenu.addSeparator();
-	    _file_jmenu.add( _write_to_pdf_item = new JMenuItem( "Export to PDF file ..." ) );
+	    if(!AppletParams.isTreeDecoratorForAll()){
+	    	_file_jmenu.add( _write_to_pdf_item = new JMenuItem( "Export to PDF file ..." ) );
+	    }
 /*	    if ( Util.canWriteFormat( "tif" ) || Util.canWriteFormat( "tiff" ) || Util.canWriteFormat( "TIF" ) ) {
 	        _file_jmenu.add( _write_to_tif_item = new JMenuItem( "Export to TIFF file..." ) );
 	    }*/
