@@ -21,20 +21,21 @@ public class DecorationEnumHelper {
 	public static DecorationStyles[] allColors = {
 		DecorationStyles.EGGPLANT,
 		DecorationStyles.DARK_GRAY,
-		DecorationStyles.BROWN,
-		DecorationStyles.BLACK,
 		DecorationStyles.TANGERINE,
-		DecorationStyles.RED,
-		DecorationStyles.PINK,
 		DecorationStyles.BLUE,
-		DecorationStyles.DARK_KHAKI,
-		DecorationStyles.FIRE_BRICK,
-		DecorationStyles.DARK_MAGENTA,
-		DecorationStyles.NAVY,
+		DecorationStyles.LIME,
 		DecorationStyles.STEEL_BLUE,
-		DecorationStyles.FOREST_GREEN,
+		DecorationStyles.RED,
+		DecorationStyles.BROWN,
+		DecorationStyles.FIRE_BRICK,
 		DecorationStyles.AQUA,
-		DecorationStyles.LIME
+		DecorationStyles.DARK_KHAKI,
+		DecorationStyles.DARK_MAGENTA,
+		DecorationStyles.BLACK,
+		DecorationStyles.NAVY,
+		DecorationStyles.PINK,
+		DecorationStyles.FOREST_GREEN
+		
 	};
 	
 	public static DecorationStyles[] allShapes = {
