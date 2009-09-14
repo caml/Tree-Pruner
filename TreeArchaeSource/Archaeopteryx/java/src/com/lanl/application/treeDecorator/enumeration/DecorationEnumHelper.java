@@ -2,6 +2,7 @@ package com.lanl.application.treeDecorator.enumeration;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -323,9 +324,10 @@ public class DecorationEnumHelper {
 			DecorationStyles style,DecorationStyles color){
 		Color strainColor = getColor(color);
 		g.setFont(f);
+		FontMetrics fm = g.getFontMetrics();
 		g.setColor(strainColor);
 		if(style.getName().equals("10")){
-			g.drawLine(location.x, location.y,location.x+s.length()*6 ,location.y );
+			g.drawLine(location.x, location.y,location.x+fm.stringWidth(s)-7 ,location.y );
 			g.drawString(s,location.x, location.y);
 		}
 		else{
