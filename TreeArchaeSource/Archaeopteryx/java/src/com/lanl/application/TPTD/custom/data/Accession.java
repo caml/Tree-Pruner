@@ -43,7 +43,8 @@ public class Accession {
 	        	else break;
 	         }
         }
-         node.extraNodeInfo.setNodeAcc(start);
+        if(node.extraNodeInfo!=null)
+        	node.extraNodeInfo.setNodeAcc(start);
 	     String str; 
 	      str = node.getNodeName().substring(j+1);
 	      if(m.matches())

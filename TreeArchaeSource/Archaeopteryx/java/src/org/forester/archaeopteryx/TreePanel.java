@@ -2795,7 +2795,7 @@ public class TreePanel extends JPanel implements ActionListener, MouseWheelListe
                 _sb.append( " " );
             }
             //******************************************START CHANGED**********************************************************//
-            if(AppletParams.isEitherTPorTDForAll()){
+            if(AppletParams.isEitherTPorTDForAll()||AppletParams.isArchaeopteryxForBHBorLANL()){
             	_sb.append(Accession.removeAccessionFromStrain(node));
             }
             else{
