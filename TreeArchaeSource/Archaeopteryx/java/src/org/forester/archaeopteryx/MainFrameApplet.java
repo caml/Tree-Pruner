@@ -121,7 +121,7 @@ public final class MainFrameApplet extends MainFrame {
             _jmenubar.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
         }
       //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTDForLANLorBHB()){
+        if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
         	appletFileMenu.buildFileMenu(_jmenubar, _configuration.isUseNativeUI());
         }
       //********************************************END**********************************************************//
