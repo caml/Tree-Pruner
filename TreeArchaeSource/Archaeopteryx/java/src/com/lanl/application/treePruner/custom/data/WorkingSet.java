@@ -100,15 +100,11 @@ public class WorkingSet {
 					if(!KEEP_ACTIVE.contains(id))
 						add=true;
 				}
-				int k =id;   //storing the last of the external node id's for later on adding them or removing them
 				if(add==false){   //Case 3 node is internal and remove because all external children are in keep active
 					if(KEEP_ACTIVE.contains(n.getNodeId()))
 						KEEP_ACTIVE.remove(KEEP_ACTIVE.indexOf(n.getNodeId()));
-					for(int j=n.getNodeId(); j<=k;j++){
-						if(KEEP_ACTIVE.contains(j)){
-							KEEP_ACTIVE.remove(KEEP_ACTIVE.indexOf(j));
-						}
-					}
+					deleteFromKeepChildrenRecurr(n.getChildNode1(),n.getChildNode2());
+				
 					PhylogenyNode parent = r;                //remove the parent until the root for that node if Keep Active does not 
 					PhylogenyNode nextParent = null;		 // contan that the parents child 1 or child 2
 					while( ( nextParent = parent.getParent()) != null){
@@ -131,11 +127,8 @@ public class WorkingSet {
 					if(!KEEP_ACTIVE.contains(n.getNodeId())){
 						KEEP_ACTIVE.add(n.getNodeId());
 					}
-					for(int j=n.getNodeId(); j<=k;j++){
-						if(!KEEP_ACTIVE.contains(j)){
-							KEEP_ACTIVE.add(j);
-						}
-					}
+					addToKeepChildrenRecurr(n.getChildNode1(),n.getChildNode2());
+					
 					PhylogenyNode parent = r;                //add the parent till the root if the parent not already in KEEP ACTIVE 
 					PhylogenyNode nextParent = null;          
 		         	while( ( nextParent = parent.getParent()) != null){
@@ -236,17 +229,11 @@ public class WorkingSet {
 				if(!REMOVE_ALL.contains(id))
 					add=true;
 			}
-			int k =id;   //storing the last of the external node id's for later on adding them or removing them
 			if(add==false){   //Case 3 node is internal and remove because all external children are in remove all
 				if(REMOVE_ALL.contains(n.getNodeId()))
 					REMOVE_ALL.remove(REMOVE_ALL.indexOf(n.getNodeId()));
-				for(int j=n.getNodeId(); j<=k;j++){
-					if(REMOVE_ALL.contains(j)){
-						REMOVE_ALL.remove(REMOVE_ALL.indexOf(j));
-					}
-				}
-				
-				
+				deleteFromRemoveChildrenRecurr(n.getChildNode1(),n.getChildNode2());
+			
 				PhylogenyNode parent = r.getParent();                //remove the parent until the root for that node if remove all does not
 				PhylogenyNode nextParent = null;		 // contan that the parents child 1 or child 2
 				if(parent !=null)
@@ -272,11 +259,8 @@ public class WorkingSet {
 				if(!REMOVE_ALL.contains(n.getNodeId())){
 					REMOVE_ALL.add(n.getNodeId());
 				}
-				for(int j=n.getNodeId(); j<=k;j++){
-					if(!REMOVE_ALL.contains(j)){
-						REMOVE_ALL.add(j);
-					}
-				}
+				addToRemoveChildrenRecurr(n.getChildNode1(),n.getChildNode2());
+				
 				PhylogenyNode parent = r.getParent();                //add the parent till the root if the parent not already in remove all
 				PhylogenyNode nextParent = null;
 				if(parent !=null)
@@ -303,6 +287,69 @@ public class WorkingSet {
 		}// end of !n.isExternal
 	} //end of method remove
 	
+	private void addToKeepChildrenRecurr(PhylogenyNode child1,PhylogenyNode child2){
+		if(child1!=null){
+			if(!KEEP_ACTIVE.contains(child1.getNodeId()))
+				KEEP_ACTIVE.add(child1.getNodeId());
+			if(!child1.isExternal())
+				addToKeepChildrenRecurr(child1.getChildNode1(),child1.getChildNode2());
+		}
+		if(child2!=null){
+			if(!KEEP_ACTIVE.contains(child2.getNodeId()))
+				KEEP_ACTIVE.add(child2.getNodeId());
+			if(!child2.isExternal())
+				addToKeepChildrenRecurr(child2.getChildNode1(),child2.getChildNode2());
+		}
+		return;
+	}
+	
+	private void deleteFromKeepChildrenRecurr(PhylogenyNode child1,PhylogenyNode child2){
+		if(child1!=null){
+			if(KEEP_ACTIVE.contains(child1.getNodeId()))
+				KEEP_ACTIVE.remove(KEEP_ACTIVE.indexOf(child1.getNodeId()));
+			if(!child1.isExternal())
+				deleteFromKeepChildrenRecurr(child1.getChildNode1(),child1.getChildNode2());
+		}
+		if(child2!=null){
+			if(KEEP_ACTIVE.contains(child2.getNodeId()))
+				KEEP_ACTIVE.remove(KEEP_ACTIVE.indexOf(child2.getNodeId()));
+			if(!child2.isExternal())
+				deleteFromKeepChildrenRecurr(child2.getChildNode1(),child2.getChildNode2());
+		}
+		return;
+	}
+	
+	private void addToRemoveChildrenRecurr(PhylogenyNode child1,PhylogenyNode child2){
+		if(child1!=null){
+			if(!REMOVE_ALL.contains(child1.getNodeId()))
+				REMOVE_ALL.add(child1.getNodeId());
+			if(!child1.isExternal())
+				addToRemoveChildrenRecurr(child1.getChildNode1(),child1.getChildNode2());
+		}
+		if(child2!=null){
+			if(!REMOVE_ALL.contains(child2.getNodeId()))
+				REMOVE_ALL.add(child2.getNodeId());
+			if(!child2.isExternal())
+				addToRemoveChildrenRecurr(child2.getChildNode1(),child2.getChildNode2());
+		}
+		return;
+	}
+	
+	private void deleteFromRemoveChildrenRecurr(PhylogenyNode child1,PhylogenyNode child2){
+		if(child1!=null){
+			if(REMOVE_ALL.contains(child1.getNodeId()))
+				REMOVE_ALL.remove(REMOVE_ALL.indexOf(child1.getNodeId()));
+			if(!child1.isExternal())
+				deleteFromRemoveChildrenRecurr(child1.getChildNode1(),child1.getChildNode2());
+		}
+		if(child2!=null){
+			if(REMOVE_ALL.contains(child2.getNodeId()))
+				REMOVE_ALL.remove(REMOVE_ALL.indexOf(child2.getNodeId()));
+			if(!child2.isExternal())
+				deleteFromRemoveChildrenRecurr(child2.getChildNode1(),child2.getChildNode2());
+		}
+		return;
+	}
 	//################################## KEEP/REMOVE ALGO FINISH ###########################################//
 	
 	//################################## CRASH RECOVERY ALGO BEGIN ###########################################//
