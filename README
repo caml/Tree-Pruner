@@ -15,3 +15,4 @@ Instructions to find a detailed README for Tree Decorator - Archae
 2. In this folder you will find
    a.  A folder called FilesAndApplicationTypeDocumentation/. The files in this folder will help ypu to decide the appropriate application type (app_type) for your Tree Decorator. Once you have decided on the app_type, the next section in those files will help you to find the example files and related documentation for the particular app_type.
    b. A	 folder with the path: Documentation/TreeDecorator/. The files in this folder will give you the applet interface and communication technical spec for the particular app_type.
+
