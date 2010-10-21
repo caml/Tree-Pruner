@@ -1,0 +1,35 @@
+ {"Decoration": { 
+   "Action": "Save", 
+   "Filename": "892_7883_1", 
+   "Label": { 
+     "Case": { 
+       "Characteristic": "Year", 
+       "Decorated by": {"lower case": ["2010"]} 
+     }, 
+     "Color  ": { 
+       "Characteristic": "Country", 
+       "Decorated by": { 
+         "Dark Gray": ["United States"], 
+         "Eggplant": ["China"] 
+       } 
+     }, 
+     "Style": { 
+       "Characteristic": "Host species", 
+       "Decorated by": {"1": ["Human"]} 
+     } 
+   }, 
+   "Node": { 
+     "Color": { 
+       "Characteristic": "A/HA subtype", 
+       "Decorated by": { 
+         "Dark Gray": ["1"], 
+         "Eggplant": ["5"] 
+       } 
+     }, 
+     "Shape": { 
+       "Characteristic": "A/NA subtype", 
+       "Decorated by": {"Hollow Triangle": ["1"]} 
+     } 
+   }, 
+   "remote_user": "test" 
+ }} 
