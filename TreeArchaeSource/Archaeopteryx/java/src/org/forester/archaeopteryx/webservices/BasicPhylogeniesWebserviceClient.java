@@ -64,42 +64,52 @@ public class BasicPhylogeniesWebserviceClient implements PhylogeniesWebserviceCl
         _proc_inst = proc_inst;
     }
 
+    @Override
     public String getDescription() {
         return _desc;
     }
 
+    @Override
     public String getInstructions() {
         return _instructions;
     }
 
+    @Override
     public String getMenuName() {
         return _menu_name;
     }
 
+    @Override
     public String getName() {
         return _name;
     }
 
+    @Override
     public PhylogenyNodeField getNodeField() {
         return _node_field;
     }
 
+    @Override
     public Object getProcessingInstructions() {
         return _proc_inst;
     }
 
+    @Override
     public String getReference() {
         return _ref;
     }
 
+    @Override
     public WsPhylogenyFormat getReturnFormat() {
         return _format;
     }
 
+    @Override
     public String getUrl() {
         return _url;
     }
 
+    @Override
     public boolean isQueryInteger() {
         return _integer;
     }

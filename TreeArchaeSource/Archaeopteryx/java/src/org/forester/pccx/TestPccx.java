@@ -1,4 +1,4 @@
-// $Id: TestPccx.java,v 1.7 2009/02/23 18:59:18 cmzmasek Exp $
+// $Id: TestPccx.java,v 1.9 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -40,15 +40,15 @@ public class TestPccx {
 
     private final static double ZERO_DIFF = 1.0E-6;
 
+    private static boolean isEqual( final double a, final double b ) {
+        return ( ( Math.abs( a - b ) ) < TestPccx.ZERO_DIFF );
+    }
+
     public static boolean test() {
         if ( !TestPccx.testExternalNodeBasedCoverage() ) {
             return false;
         }
         return true;
-    }
-
-    private static boolean isEqual( final double a, final double b ) {
-        return ( ( Math.abs( a - b ) ) < TestPccx.ZERO_DIFF );
     }
 
     private static boolean testExternalNodeBasedCoverage() {
@@ -235,7 +235,7 @@ public class TestPccx {
             final CoverageCalculationOptions options10 = new ExternalNodeBasedCoverageMethodOptions( "org.forester.pccx.BranchCountingBasedScoringMethod" );
             final CoverageCalculator cc10 = CoverageCalculator.getInstance( new ExternalNodeBasedCoverageMethod(),
                                                                             options10 );
-            final Coverage cov10 = cc10.calculateCoverage( phylogenies10, names10, true );
+            cc10.calculateCoverage( phylogenies10, names10, true );
         }
         catch ( final Exception e ) {
             e.printStackTrace( System.out );

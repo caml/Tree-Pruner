@@ -1,4 +1,4 @@
-// $Id: GoTerm.java,v 1.9 2008/11/26 01:14:02 cmzmasek Exp $
+// $Id: GoTerm.java,v 1.11 2009/11/10 23:12:22 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -30,6 +30,8 @@ import java.util.List;
 import org.forester.phylogeny.data.PhylogenyData;
 
 public interface GoTerm extends PhylogenyData, Comparable<GoTerm> {
+
+    public List<GoId> getAltIds();
 
     public String getComment();
 

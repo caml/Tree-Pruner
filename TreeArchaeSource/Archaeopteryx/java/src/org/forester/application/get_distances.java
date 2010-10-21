@@ -1,4 +1,4 @@
-// $Id: get_distances.java,v 1.5 2008/03/09 00:11:18 cmzmasek Exp $
+// $Id: get_distances.java,v 1.6 2009/11/20 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -53,7 +53,7 @@ public class get_distances {
         final File outfile = new File( args[ 2 ] );
         Phylogeny p = null;
         try {
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogeny_infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogeny_infile, true );
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
             p = factory.create( phylogeny_infile, pp )[ 0 ];
         }

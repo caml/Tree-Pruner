@@ -1,4 +1,4 @@
-// $Id: PropertiesMap.java,v 1.4 2009/06/09 00:05:05 cmzmasek Exp $
+// $Id: PropertiesMap.java,v 1.7 2010/06/23 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,8 +27,12 @@ package org.forester.phylogeny.data;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import org.forester.util.ForesterUtil;
 
 public class PropertiesMap implements PhylogenyData {
 
@@ -45,6 +49,7 @@ public class PropertiesMap implements PhylogenyData {
         getProperties().put( property.getRef(), property );
     }
 
+    @Override
     public StringBuffer asSimpleText() {
         final StringBuffer sb = new StringBuffer();
         boolean first = true;
@@ -60,10 +65,12 @@ public class PropertiesMap implements PhylogenyData {
         return sb;
     }
 
+    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
+    @Override
     public PhylogenyData copy() {
         final PropertiesMap new_one = new PropertiesMap();
         for( final String r : getProperties().keySet() ) {
@@ -79,22 +86,36 @@ public class PropertiesMap implements PhylogenyData {
     public Property[] getPropertiesArray() {
         final Property[] a = new Property[ getProperties().size() ];
         int i = 0;
-        for( final String r : getProperties().keySet() ) {
-            a[ i++ ] = getProperties().get( r );
+        for( final String ref : getProperties().keySet() ) {
+            a[ i++ ] = getProperties().get( ref );
         }
         return a;
     }
 
-    public Property getProperty( final String ref ) throws IllegalArgumentException {
-        Property p = null;
-        if ( getProperties() != null ) {
-            p = getProperties().get( ref );
+    public List<Property> getPropertiesWithGivenReferencePrefix( final String ref_prefix )
+            throws IllegalArgumentException {
+        if ( ForesterUtil.isEmpty( ref_prefix ) ) {
+            throw new IllegalArgumentException( "reference prefix is null or empty" );
         }
-        if ( p != null ) {
-            return p;
+        String my_ref_prefix = new String( ref_prefix.trim() );
+        if ( !my_ref_prefix.endsWith( ":" ) ) {
+            my_ref_prefix = my_ref_prefix + ":";
+        }
+        final List<Property> props = new ArrayList<Property>();
+        for( final String ref : getProperties().keySet() ) {
+            if ( ref.startsWith( my_ref_prefix ) ) {
+                props.add( getProperty( ref ) );
+            }
+        }
+        return props;
+    }
+
+    public Property getProperty( final String ref ) throws IllegalArgumentException {
+        if ( getProperties().containsKey( ref ) ) {
+            return getProperties().get( ref );
         }
         else {
-            throw new IllegalArgumentException( "Ref [" + ref + "] is not present" );
+            throw new IllegalArgumentException( "reference [" + ref + "] is not present" );
         }
     }
 
@@ -113,6 +134,7 @@ public class PropertiesMap implements PhylogenyData {
         return refs;
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
@@ -128,6 +150,16 @@ public class PropertiesMap implements PhylogenyData {
         return false;
     }
 
+    public Property removeProperty( final String ref ) throws IllegalArgumentException {
+        if ( getProperties().containsKey( ref ) ) {
+            return getProperties().remove( ref );
+        }
+        else {
+            throw new IllegalArgumentException( "reference [" + ref + "] is not present" );
+        }
+    }
+
+    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         if ( getProperties() != null ) {
@@ -138,6 +170,7 @@ public class PropertiesMap implements PhylogenyData {
         return sb;
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         if ( getProperties() != null ) {
             for( final String ref : getProperties().keySet() ) {

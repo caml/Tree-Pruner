@@ -1,4 +1,4 @@
-// $Id: goac.java,v 1.11 2009/05/11 22:57:50 cmzmasek Exp $
+// $Id: goac.java,v 1.14 2010/04/22 19:57:52 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,7 +27,6 @@ package org.forester.application;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +49,33 @@ public class goac {
     final static private String HELP_OPTION_2 = "h";
     final static private String PRG_NAME      = "goac";
     final static private String PRG_VERSION   = "1.03";
-    final static private String PRG_DATE      = "2009.05.08";
+    final static private String PRG_DATE      = "2010.04.21";
     final static private String E_MAIL        = "czmasek@burnham.org";
     final static private String WWW           = "www.phylosoft.org/forester/goac";
+
+    private static void addStats( final SortedMap<String, List<GoId>> data_to_be_analyzed,
+                                  final GeneralTable<String, Double> table ) {
+        for( final String go : table.getColumnIdentifiers() ) {
+            final DescriptiveStatistics stats = new BasicDescriptiveStatistics();
+            for( final String label : data_to_be_analyzed.keySet() ) {
+                if ( !label.equals( ALL ) ) {
+                    final Double value = table.getValue( go, label );
+                    stats.addValue( value == null ? 0.0 : value );
+                }
+            }
+            table.setValue( go, "{AVG}", stats.arithmeticMean() );
+            table.setValue( go, "{SUM}", stats.getSum() );
+            table.setValue( go, "{MED}", stats.median() );
+            if ( stats.getN() > 1 ) {
+                table.setValue( go, "{SD}", stats.sampleStandardDeviation() );
+            }
+            else {
+                table.setValue( go, "{SD}", new Double( 0 ) );
+            }
+            table.setValue( go, "{MIN}", stats.getMin() );
+            table.setValue( go, "{MAX}", stats.getMax() );
+        }
+    }
 
     public static void main( final String args[] ) {
         CommandLineArguments cla = null;
@@ -164,31 +187,12 @@ public class goac {
         System.out.println();
         System.out.println();
         System.out.println();
-        System.out.println( table_counts.toString( new DecimalFormat( "#.###" ) ) );
+        System.out.println( table_counts.toString( ForesterUtil.FORMATTER_3 ) );
         System.out.println();
         System.out.println();
         System.out.println();
-        System.out.println( table_percentage.toString( new DecimalFormat( "#.###" ) ) );
+        System.out.println( table_percentage.toString( ForesterUtil.FORMATTER_3 ) );
         System.out.println();
-    }
-
-    private static void addStats( final SortedMap<String, List<GoId>> data_to_be_analyzed,
-                                  final GeneralTable<String, Double> table ) {
-        for( final String go : table.getColumnIdentifiers() ) {
-            final DescriptiveStatistics stats = new BasicDescriptiveStatistics();
-            for( final String label : data_to_be_analyzed.keySet() ) {
-                if ( !label.equals( ALL ) ) {
-                    final Double value = table.getValue( go, label );
-                    stats.addValue( value == null ? 0.0 : value );
-                }
-            }
-            table.setValue( go, "{AVG}", stats.arithmeticMean() );
-            table.setValue( go, "{SUM}", stats.getSum() );
-            table.setValue( go, "{MED}", stats.median() );
-            table.setValue( go, "{SD}", stats.sampleStandardDeviation() );
-            table.setValue( go, "{MIN}", stats.getMin() );
-            table.setValue( go, "{MAX}", stats.getMax() );
-        }
     }
 
     private static void printHelp() {

@@ -1,4 +1,4 @@
-// $Id: PaupLogParser.java,v 1.2 2008/03/24 23:56:25 cmzmasek Exp $
+// $Id: PaupLogParser.java,v 1.4 2010/09/29 23:50:18 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -31,16 +31,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.forester.io.parsers.ParserUtils;
-import org.forester.io.parsers.PhylogenyParserException;
-import org.forester.phylogenyinference.BasicCharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix.BinaryStates;
+import org.forester.evoinference.matrix.character.BasicCharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.BinaryStates;
+import org.forester.io.parsers.util.ParserUtils;
+import org.forester.io.parsers.util.PhylogenyParserException;
 
 public class PaupLogParser {
 
     private static final String DATA_MATRIX_AND_RECONSTRUCTED_STATES_FOR_INTERNAL_NODES = "data matrix and reconstructed states for internal nodes";
     private Object              _nexus_source;
+
+    private Object getNexusSource() {
+        return _nexus_source;
+    }
 
     public CharacterStateMatrix<BinaryStates> parse() throws IOException {
         final BufferedReader reader = ParserUtils.createReader( getNexusSource() );
@@ -120,9 +124,5 @@ public class PaupLogParser {
             throw new PhylogenyParserException( getClass() + ": attempt to parse null object." );
         }
         _nexus_source = nexus_source;
-    }
-
-    private Object getNexusSource() {
-        return _nexus_source;
     }
 }

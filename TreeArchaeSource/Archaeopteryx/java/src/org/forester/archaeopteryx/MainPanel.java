@@ -1,4 +1,4 @@
-// $Id: MainPanel.java,v 1.12 2009/06/10 03:02:56 cmzmasek Exp $
+// $Id: MainPanel.java,v 1.23 2010/09/08 23:30:58 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,10 +27,7 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-/**
- * NOTE - The original file was obtained from SourceForge.net (ATV Version 4.1.04) on 2009.07.02
- *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
- */
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.AdjustmentEvent;
@@ -39,6 +36,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -49,29 +47,24 @@ import javax.swing.event.ChangeListener;
 
 import org.forester.archaeopteryx.phylogeny.data.RenderableDomainArchitecture;
 import org.forester.phylogeny.Phylogeny;
+import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
-//******************************************START**********************************************************//
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.AppletTerminate;
-//********************************************END**********************************************************//
-
 
 public class MainPanel extends JPanel implements ComponentListener {
 
-    private static final long serialVersionUID = -2682765312661416435L;
-    MainFrame                 _mainframe;
-    List<TreePanel>           _treepanels;
-    ControlPanel              _control_panel;
-    private List<JScrollPane> _treegraphic_scroll_panes;
-    private List<JPanel>      _treegraphic_scroll_pane_panels;
-    Configuration             _configuration;
-    private JTabbedPane       _tabbed_pane;
-    private TreeColorSet      _colorset;
-    private TreeFontSet       _fontset;
+    private static final long  serialVersionUID = -2682765312661416435L;
+    MainFrame                  _mainframe;
+    List<TreePanel>            _treepanels;
+    ControlPanel               _control_panel;
+    private List<JScrollPane>  _treegraphic_scroll_panes;
+    private List<JPanel>       _treegraphic_scroll_pane_panels;
+    Configuration              _configuration;
+    private JTabbedPane        _tabbed_pane;
+    private TreeColorSet       _colorset;
+    private TreeFontSet        _fontset;
+    private Phylogeny          _cut_or_copied_tree;
+    private Set<PhylogenyNode> _copied_and_pasted_nodes;
 
-  //******************************************START**********************************************************//
-    AppletTerminate appletTerminate = new AppletTerminate(_mainframe);
-  //********************************************END**********************************************************//
     MainPanel() {
     }
 
@@ -88,39 +81,6 @@ public class MainPanel extends JPanel implements ComponentListener {
         add( _control_panel, BorderLayout.WEST );
         setupTreeGraphic( configuration, getControlPanel() );
         getControlPanel().showWhole();
-    }
-
-    public void componentHidden( final ComponentEvent e ) {
-        // Do nothing.
-    }
-
-    public void componentMoved( final ComponentEvent e ) {
-        // Do nothing.
-    }
-
-    public void componentResized( final ComponentEvent e ) {
-        if ( getCurrentTreePanel() != null ) {
-            getCurrentTreePanel().updateOvSettings();
-            getCurrentTreePanel().updateOvSizes();
-        }
-    }
-
-    public void componentShown( final ComponentEvent e ) {
-        // Do nothing.
-    }
-
-    public TreeFontSet getTreeFontSet() {
-        return _fontset;
-    }
-
-    public void setArrowCursor() {
-        setCursor( TreePanel.ARROW_CURSOR );
-        repaint();
-    }
-
-    public void setWaitCursor() {
-        setCursor( TreePanel.WAIT_CURSOR );
-        repaint();
     }
 
     void addPhylogenyInNewTab( final Phylogeny phy,
@@ -142,11 +102,12 @@ public class MainPanel extends JPanel implements ComponentListener {
             name = default_name;
         }
         else {
-            name = "[" + getTabbedPane().getTabCount() + "]";
+            name = "[" + ( getTabbedPane().getTabCount() + 1 ) + "]";
         }
         final JScrollPane treegraphic_scroll_pane = new JScrollPane( treepanel );
         treegraphic_scroll_pane.getHorizontalScrollBar().addAdjustmentListener( new AdjustmentListener() {
 
+            @Override
             public void adjustmentValueChanged( final AdjustmentEvent e ) {
                 if ( treepanel.isOvOn() || getOptions().isShowScale() ) {
                     treepanel.repaint();
@@ -155,9 +116,11 @@ public class MainPanel extends JPanel implements ComponentListener {
         } );
         treegraphic_scroll_pane.getVerticalScrollBar().addAdjustmentListener( new AdjustmentListener() {
 
+            @Override
             public void adjustmentValueChanged( final AdjustmentEvent e ) {
                 if ( treepanel.isOvOn() || getOptions().isShowScale() ) {
                     treepanel.repaint();
+                    //System.out.println( e.getValue() );
                 }
             }
         } );
@@ -215,8 +178,39 @@ public class MainPanel extends JPanel implements ComponentListener {
         }
     }
 
+    @Override
+    public void componentHidden( final ComponentEvent e ) {
+        // Do nothing.
+    }
+
+    @Override
+    public void componentMoved( final ComponentEvent e ) {
+        // Do nothing.
+    }
+
+    @Override
+    public void componentResized( final ComponentEvent e ) {
+        if ( getCurrentTreePanel() != null ) {
+            getCurrentTreePanel().updateOvSettings();
+            getCurrentTreePanel().updateOvSizes();
+        }
+    }
+
+    @Override
+    public void componentShown( final ComponentEvent e ) {
+        // Do nothing.
+    }
+
+    private Configuration getConfiguration() {
+        return _configuration;
+    }
+
     ControlPanel getControlPanel() {
         return _control_panel;
+    }
+
+    public Set<PhylogenyNode> getCopiedAndPastedNodes() {
+        return _copied_and_pasted_nodes;
     }
 
     Phylogeny getCurrentPhylogeny() {
@@ -276,11 +270,15 @@ public class MainPanel extends JPanel implements ComponentListener {
         }
     }
 
+    Phylogeny getCutOrCopiedTree() {
+        return _cut_or_copied_tree;
+    }
+
     MainFrame getMainFrame() {
         return _mainframe;
     }
 
-    Options getOptions() {
+    public Options getOptions() {
         return _mainframe.getOptions();
     }
 
@@ -303,13 +301,17 @@ public class MainPanel extends JPanel implements ComponentListener {
         return _colorset;
     }
 
+    public TreeFontSet getTreeFontSet() {
+        return _fontset;
+    }
+
     List<TreePanel> getTreePanels() {
         return _treepanels;
     }
 
     void initialize() {
         if ( !getConfiguration().isUseNativeUI() ) {
-            setBackground( Constants.GUI_BACKGROUND_DEFAULT );
+            setBackground( getConfiguration().getGuiBackgroundColor() );
         }
         setTreeFontSet( new TreeFontSet( this ) );
         getTreeFontSet().setBaseFont( getOptions().getBaseFont() );
@@ -318,6 +320,10 @@ public class MainPanel extends JPanel implements ComponentListener {
         _treegraphic_scroll_panes = new ArrayList<JScrollPane>();
         _treegraphic_scroll_pane_panels = new ArrayList<JPanel>();
         _tabbed_pane = new JTabbedPane( SwingConstants.TOP );
+        if ( !getConfiguration().isUseNativeUI() ) {
+            _tabbed_pane.setBackground( getConfiguration().getGuiBackgroundColor() );
+            _tabbed_pane.setForeground( getConfiguration().getGuiBackgroundColor() );
+        }
         _tabbed_pane.addChangeListener( new ChangeListener() {
 
             // This method is called whenever the selected tab changes
@@ -326,13 +332,15 @@ public class MainPanel extends JPanel implements ComponentListener {
                 getControlPanel().tabChanged();
                 // Get current tab
                 final int sel = pane.getSelectedIndex();
-                if ( !getConfiguration().isUseNativeUI() ) {
-                    if ( _tabbed_pane.getTabCount() > 0 ) {
-                        _tabbed_pane.setForegroundAt( sel, Constants.TAB_LABEL_FOREGROUND_COLOR_SELECTED );
-                        for( int i = 0; i < _tabbed_pane.getTabCount(); ++i ) {
-                            if ( i != sel ) {
-                                _tabbed_pane.setBackgroundAt( i, Constants.TAB_LABEL_BACKGROUND_COLOR_NOT_SELECTED );
-                                _tabbed_pane.setForegroundAt( i, Constants.TAB_LABEL_FOREGROUND_COLOR_NOT_SELECTED );
+                if ( sel >= 0 ) {
+                    if ( !getConfiguration().isUseNativeUI() ) {
+                        if ( _tabbed_pane.getTabCount() > 0 ) {
+                            _tabbed_pane.setForegroundAt( sel, Constants.TAB_LABEL_FOREGROUND_COLOR_SELECTED );
+                            for( int i = 0; i < _tabbed_pane.getTabCount(); ++i ) {
+                                if ( i != sel ) {
+                                    _tabbed_pane.setBackgroundAt( i, getConfiguration().getGuiBackgroundColor() );
+                                    _tabbed_pane.setForegroundAt( i, getConfiguration().getGuiCheckboxTextColor() );
+                                }
                             }
                         }
                     }
@@ -344,6 +352,19 @@ public class MainPanel extends JPanel implements ComponentListener {
         }
         _tabbed_pane.setTabLayoutPolicy( JTabbedPane.SCROLL_TAB_LAYOUT );
         add( _tabbed_pane, BorderLayout.CENTER );
+    }
+
+    public void setArrowCursor() {
+        setCursor( TreePanel.ARROW_CURSOR );
+        repaint();
+    }
+
+    public void setCopiedAndPastedNodes( final Set<PhylogenyNode> copied_and_pasted_nodes ) {
+        _copied_and_pasted_nodes = copied_and_pasted_nodes;
+    }
+
+    void setCutOrCopiedTree( final Phylogeny cut_or_copied_tree ) {
+        _cut_or_copied_tree = cut_or_copied_tree;
     }
 
     void setTreeColorSet( final TreeColorSet colorset ) {
@@ -363,66 +384,14 @@ public class MainPanel extends JPanel implements ComponentListener {
         RenderableDomainArchitecture.setColorMap( config_settings.getDomainColors() );
     }
 
+    public void setWaitCursor() {
+        setCursor( TreePanel.WAIT_CURSOR );
+        repaint();
+    }
+
     void terminate() {
-    	//******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTDForAll()){
-    		appletTerminate.terminateAdditionalTasks(this);
-    	}
-        //********************************************END**********************************************************//
-    	
         for( final TreePanel atvtreepanel : _treepanels ) {
             atvtreepanel.removeAllEditNodeJFrames();
         }
     }
-
-    private Configuration getConfiguration() {
-        return _configuration;
-    }
-    
-  //******************************************START**********************************************************//
-    void terminateOnDelete() {
-    	appletTerminate.terminateOnDeleteAdditionalTasks();
-        for( final TreePanel atvtreepanel : _treepanels ) {
-            atvtreepanel.removeAllEditNodeJFrames();
-        }
-    }
-    
-    public MainFrame returnMainFrame(){
-    	return _mainframe;
-    }
-    public ControlPanel get_control_panel() {
-        return _control_panel;
-    }
-    
-    public void adjust_JScroll_pane() {
-        if ( getTabbedPane() != null ) {
-            getCurrentScrollPanePanel().remove( getCurrentScrollPane() );
-            getCurrentScrollPanePanel().add( getCurrentScrollPane(), BorderLayout.CENTER );
-        }
-        getCurrentScrollPane().revalidate();
-    }
-    
-    public  TreePanel get_current_treePanel() {
-        final int selected = getTabbedPane().getSelectedIndex();
-        if ( selected >= 0 ) {
-            return _treepanels.get( selected );
-        }
-        else {
-            if ( _treepanels.size() == 1 ) {
-                return _treepanels.get( 0 );
-            }
-            else {
-                return null;
-            }
-        }
-    }
-    
-    public Phylogeny get_current_phylogeny() {
-    	if ( getCurrentTreePanel() == null ) {
-    		return null;
-    	}
-    	return getCurrentTreePanel().getPhylogeny();
-    }
-   //********************************************END**********************************************************//
 }
-

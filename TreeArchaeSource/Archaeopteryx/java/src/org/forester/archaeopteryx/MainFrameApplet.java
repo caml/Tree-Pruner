@@ -1,4 +1,4 @@
-// $Id: MainFrameApplet.java,v 1.20 2009/06/15 18:31:33 cmzmasek Exp $
+// $Id: MainFrameApplet.java,v 1.31 2010/10/02 21:34:07 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,42 +27,36 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-/**
- * NOTE - The original file was obtained from SourceForge.net (ATV Version 4.1.04) on 2009.07.02
- *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
- */
+
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.net.URI;
 import java.net.URL;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JApplet;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.forester.archaeopteryx.Options.CLADOGRAM_TYPE;
 import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
-//******************************************START**********************************************************//
-import com.lanl.application.TPTD.applet.AppletFileMenu;
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.NewWindowSubtree;
-//********************************************END**********************************************************//
+
 public final class MainFrameApplet extends MainFrame {
 
     private static final long    serialVersionUID = 1941019292746717053L;
     private final static int     FRAME_X_SIZE     = 640, FRAME_Y_SIZE = 580;
     private final ArchaeopteryxA _applet;
-    //******************************************START**********************************************************//
-    AppletFileMenu appletFileMenu = new AppletFileMenu(this);
-    //********************************************END**********************************************************//
+    private ButtonGroup          _radio_group_1;
+
     MainFrameApplet( final ArchaeopteryxA parent_applet, final Configuration configuration ) {
         setTitle( ArchaeopteryxA.NAME );
         _applet = parent_applet;
@@ -78,11 +72,6 @@ public final class MainFrameApplet extends MainFrame {
             }
             catch ( final Exception e ) {
                 ForesterUtil.printErrorMessage( ArchaeopteryxA.NAME, e.toString() );
-              //******************************************START**********************************************************//
-                if(AppletParams.isTreePrunerForAll() ){
-                	NewWindowSubtree.destroyWarningWindow();
-                }
-               //********************************************END**********************************************************//
                 e.printStackTrace();
                 JOptionPane
                         .showMessageDialog( this,
@@ -96,7 +85,7 @@ public final class MainFrameApplet extends MainFrame {
         // Load the tree from URL
         if ( url != null ) {
             try {
-                phys = Util.readPhylogeniesFromUrl( url );
+                phys = Util.readPhylogeniesFromUrl( url, getConfiguration().isValidatePhyloXmlAgainstSchema() );
             }
             catch ( final Exception e ) {
                 ForesterUtil.printErrorMessage( ArchaeopteryxA.NAME, e.toString() );
@@ -118,13 +107,8 @@ public final class MainFrameApplet extends MainFrame {
         // build the menu bar
         _jmenubar = new JMenuBar();
         if ( !_configuration.isUseNativeUI() ) {
-            _jmenubar.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
+            _jmenubar.setBackground( _configuration.getGuiMenuBackgroundColor() );
         }
-      //******************************************START**********************************************************//
-        if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
-        	appletFileMenu.buildFileMenu(_jmenubar, _configuration.isUseNativeUI());
-        }
-      //********************************************END**********************************************************//
         buildToolsMenu();
         buildViewMenu();
         buildFontSizeMenu();
@@ -136,18 +120,14 @@ public final class MainFrameApplet extends MainFrame {
         _contentpane.setLayout( new BorderLayout() );
         _contentpane.add( _mainpanel, BorderLayout.CENTER );
         setSize( FRAME_X_SIZE, FRAME_Y_SIZE );
-      //******************************************START CHANGED**********************************************************//
-        addWindowListener(closeWindowAdapter);
-        /**addWindowListener( new WindowAdapter() {  //Using predefined variable closeWindowAdapter - changed
+        addWindowListener( new WindowAdapter() {
 
             @Override
             public void windowClosing( final WindowEvent e ) {
                 close();
             }
-        } );*/
-
-        //********************************************END**********************************************************//
-                addComponentListener( new ComponentAdapter() {
+        } );
+        addComponentListener( new ComponentAdapter() {
 
             @Override
             public void componentResized( final ComponentEvent e ) {
@@ -172,6 +152,7 @@ public final class MainFrameApplet extends MainFrame {
         _options_jmenu = MainFrame.createMenu( MainFrame.OPTIONS_HEADER, getConfiguration() );
         _options_jmenu.addChangeListener( new ChangeListener() {
 
+            @Override
             public void stateChanged( final ChangeEvent e ) {
                 MainFrame.setOvPlacementColorChooseMenuItem( _overview_placment_mi, getCurrentTreePanel() );
                 MainFrame.setTextColorChooseMenuItem( _switch_colors_mi, getCurrentTreePanel() );
@@ -182,14 +163,22 @@ public final class MainFrameApplet extends MainFrame {
                 MainFrame.updateOptionsMenuDependingOnPhylogenyType( getMainPanel(),
                                                                      _show_scale_cbmi,
                                                                      _show_branch_length_values_cbmi,
-                                                                     _non_lined_up_cladograms_cbmi,
+                                                                     _non_lined_up_cladograms_rbmi,
+                                                                     _uniform_cladograms_rbmi,
+                                                                     _ext_node_dependent_cladogram_rbmi,
                                                                      _label_direction_cbmi );
             }
         } );
         _options_jmenu.add( MainFrame.customizeMenuItemAsLabel( new JMenuItem( MainFrame.DISPLAY_SUBHEADER ),
                                                                 getConfiguration() ) );
         _options_jmenu
-                .add( _non_lined_up_cladograms_cbmi = new JCheckBoxMenuItem( MainFrame.NON_LINED_UP_CLADOGRAMS_LABEL ) );
+                .add( _ext_node_dependent_cladogram_rbmi = new JRadioButtonMenuItem( MainFrame.NONUNIFORM_CLADOGRAMS_LABEL ) );
+        _options_jmenu.add( _uniform_cladograms_rbmi = new JRadioButtonMenuItem( MainFrame.UNIFORM_CLADOGRAMS_LABEL ) );
+        _options_jmenu.add( _non_lined_up_cladograms_rbmi = new JRadioButtonMenuItem( NON_LINED_UP_CLADOGRAMS_LABEL ) );
+        _radio_group_1 = new ButtonGroup();
+        _radio_group_1.add( _ext_node_dependent_cladogram_rbmi );
+        _radio_group_1.add( _uniform_cladograms_rbmi );
+        _radio_group_1.add( _non_lined_up_cladograms_rbmi );
         _options_jmenu.add( _show_node_boxes_cbmi = new JCheckBoxMenuItem( MainFrame.DISPLAY_NODE_BOXES_LABEL ) );
         _options_jmenu.add( _show_scale_cbmi = new JCheckBoxMenuItem( MainFrame.DISPLAY_SCALE_LABEL ) );
         _options_jmenu
@@ -197,7 +186,13 @@ public final class MainFrameApplet extends MainFrame {
         _options_jmenu.add( _show_overview_cbmi = new JCheckBoxMenuItem( MainFrame.SHOW_OVERVIEW_LABEL ) );
         _options_jmenu.add( _label_direction_cbmi = new JCheckBoxMenuItem( LABEL_DIRECTION_LABEL ) );
         _label_direction_cbmi.setToolTipText( LABEL_DIRECTION_TIP );
+        _options_jmenu.add( _color_labels_same_as_parent_branch = new JCheckBoxMenuItem( COLOR_LABELS_LABEL ) );
+        _color_labels_same_as_parent_branch.setToolTipText( MainFrame.COLOR_LABELS_TIP );
         _options_jmenu.add( _screen_antialias_cbmi = new JCheckBoxMenuItem( MainFrame.SCREEN_ANTIALIAS_LABEL ) );
+        _options_jmenu.add( _background_gradient_cbmi = new JCheckBoxMenuItem( MainFrame.BG_GRAD_LABEL ) );
+        if ( getConfiguration().doDisplayOption( Configuration.show_domain_architectures ) ) {
+            _options_jmenu.add( _show_domain_labels = new JCheckBoxMenuItem( SHOW_DOMAIN_LABELS_LABEL ) );
+        }
         _options_jmenu.add( _choose_minimal_confidence_mi = new JMenuItem( "" ) );
         _options_jmenu.add( _overview_placment_mi = new JMenuItem( "" ) );
         _options_jmenu.add( _switch_colors_mi = new JMenuItem( "" ) );
@@ -214,10 +209,18 @@ public final class MainFrameApplet extends MainFrame {
         customizeJMenuItem( _choose_minimal_confidence_mi );
         customizeJMenuItem( _overview_placment_mi );
         customizeCheckBoxMenuItem( _show_node_boxes_cbmi, getOptions().isShowNodeBoxes() );
+        customizeCheckBoxMenuItem( _color_labels_same_as_parent_branch, getOptions().isColorLabelsSameAsParentBranch() );
         customizeCheckBoxMenuItem( _screen_antialias_cbmi, getOptions().isAntialiasScreen() );
+        customizeCheckBoxMenuItem( _background_gradient_cbmi, getOptions().isBackgroundColorGradient() );
+        customizeCheckBoxMenuItem( _show_domain_labels, getOptions().isShowDomainLabels() );
         customizeCheckBoxMenuItem( _search_case_senstive_cbmi, getOptions().isSearchCaseSensitive() );
         customizeCheckBoxMenuItem( _show_scale_cbmi, getOptions().isShowScale() );
-        customizeCheckBoxMenuItem( _non_lined_up_cladograms_cbmi, getOptions().isNonLinedUpCladogram() );
+        customizeRadioButtonMenuItem( _non_lined_up_cladograms_rbmi,
+                                      getOptions().getCladogramType() == CLADOGRAM_TYPE.NON_LINED_UP );
+        customizeRadioButtonMenuItem( _uniform_cladograms_rbmi,
+                                      getOptions().getCladogramType() == CLADOGRAM_TYPE.TOTAL_NODE_SUM_DEP );
+        customizeRadioButtonMenuItem( _ext_node_dependent_cladogram_rbmi,
+                                      getOptions().getCladogramType() == CLADOGRAM_TYPE.EXT_NODE_SUM_DEP );
         customizeCheckBoxMenuItem( _show_branch_length_values_cbmi, getOptions().isShowBranchLengthValues() );
         customizeCheckBoxMenuItem( _show_overview_cbmi, getOptions().isShowOverview() );
         customizeCheckBoxMenuItem( _label_direction_cbmi,
@@ -227,6 +230,27 @@ public final class MainFrameApplet extends MainFrame {
         _jmenubar.add( _options_jmenu );
     }
 
+    void buildToolsMenu() {
+        _tools_menu = MainFrame.createMenu( "Tools", getConfiguration() );
+        _tools_menu.add( _confcolor_item = new JMenuItem( "Colorize Branches Depending on Confidence" ) );
+        customizeJMenuItem( _confcolor_item );
+        _tools_menu.add( _taxcolor_item = new JMenuItem( "Taxonomy Colorize Branches" ) );
+        customizeJMenuItem( _taxcolor_item );
+        _tools_menu.add( _remove_branch_color_item = new JMenuItem( "Delete Branch Colors" ) );
+        _remove_branch_color_item.setToolTipText( "To delete branch color values from the current phylogeny." );
+        customizeJMenuItem( _remove_branch_color_item );
+        _tools_menu.addSeparator();
+        _tools_menu.add( _midpoint_root_item = new JMenuItem( "Midpoint-Root" ) );
+        customizeJMenuItem( _midpoint_root_item );
+        _tools_menu.addSeparator();
+        _tools_menu
+                .add( _infer_common_sn_names_item = new JMenuItem( "Infer Common Parts of Internal Scientific Names" ) );
+        customizeJMenuItem( _infer_common_sn_names_item );
+        _tools_menu.add( _collapse_species_specific_subtrees = new JMenuItem( "Collapse Species-Specific Subtrees" ) );
+        customizeJMenuItem( _collapse_species_specific_subtrees );
+        _jmenubar.add( _tools_menu );
+    }
+
     JApplet getApplet() {
         return _applet;
     }
@@ -234,26 +258,6 @@ public final class MainFrameApplet extends MainFrame {
     @Override
     MainPanel getMainPanel() {
         return _mainpanel;
-    }
-
-    @Override
-    void openPhyloXmlWebsite() {
-        try {
-            Util.launchWebBrowser( new URI( Constants.PHYLOXML_WEB_SITE ), true, getApplet(), Constants.PRG_NAME );
-        }
-        catch ( final Exception e ) {
-            ForesterUtil.printErrorMessage( Constants.PRG_NAME, e.toString() );
-        }
-    }
-
-    @Override
-    void openWebsite() {
-        try {
-            Util.launchWebBrowser( new URI( Constants.WEB_SITE ), true, getApplet(), Constants.PRG_NAME );
-        }
-        catch ( final Exception e ) {
-            ForesterUtil.printErrorMessage( Constants.PRG_NAME, e.toString() );
-        }
     }
 
     @Override

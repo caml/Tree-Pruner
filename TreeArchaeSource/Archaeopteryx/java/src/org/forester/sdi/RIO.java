@@ -1,4 +1,4 @@
-// $Id: RIO.java,v 1.18 2009/04/15 23:11:36 cmzmasek Exp $
+// $Id: RIO.java,v 1.27 2010/09/29 23:50:17 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,9 +27,7 @@
 
 package org.forester.sdi;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,102 +35,74 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.Vector;
 
+import org.forester.evoinference.matrix.distance.DistanceMatrix;
+import org.forester.io.parsers.SymmetricalDistanceMatrixParser;
 import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
+import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
+import org.forester.util.ForesterUtil;
 
 /*
  * @author Christian M. Zmasek
  */
-public class RIO {
+public final class RIO {
 
     private final static boolean                      ROOT_BY_MINIMIZING_MAPPING_COST = false;
     private final static boolean                      ROOT_BY_MINIMIZING_SUM_OF_DUPS  = true;
     private final static boolean                      ROOT_BY_MINIMIZING_TREE_HEIGHT  = true;
     private final static boolean                      TIME                            = false;
-    // This is just to create StringBuffers
-    // of optimal size, number of bootstraps is
-    // flexible.
-    private HashMap<String, HashMap<String, Integer>> o_hash_maps_;                           // HashMap of HashMaps
-    // (key=name,value=HashMap).
-    // The resulting orthologs are stored in this.
-    private HashMap<String, HashMap<String, Integer>> so_hash_maps_;                          // HashMap of HashMaps
-    // (key=name,value=HashMap).
-    // The resulting super orthologs are stored in
-    // this.
-    private HashMap<String, HashMap<String, Integer>> up_hash_maps_;                          // HashMap of HashMaps
-    // (key=name,value=HashMap).
-    // The resulting ultra paralogs are stored in
-    // this.
-    private HashMap<String, HashMap<String, Integer>> sn_hash_maps_;                          // HashMap of HashMaps
-    // (key=name,value=HashMap).
-    // The resulting "subtree neighbors" are stored
-    // in this.
-    private HashMap<String, Vector>                   _m;                                     // HashMap of Vectors
-    // (key=name,value=Vector).
-    // The distance matrix might be stored in this.
-    private HashMap<String, Double>                   _l;                                     // HashMap
-    // of
-    // Doubles
-    // (key=name,value=Double).
-    // The distance list might be stored in this.
-    // Same function as m_ but used if distances
-    // come as list as opposed to a matrix.
-    private String[]                                  seq_names_;                             // Stores
-    // all
-    // sequencs
-    // names
-    // in the
-    // gene
-    // tree.
-    private int                                       bootstraps_, ext_nodes_;                // Ext
-    // nodes
-    // in
-    // analyzed
-    // gene
-    // trees
-    // (after
-    // stripping).
-    private long                                      time_;
+    private HashMap<String, HashMap<String, Integer>> _o_hash_maps;
+    private HashMap<String, HashMap<String, Integer>> _so_hash_maps;
+    private HashMap<String, HashMap<String, Integer>> _up_hash_maps;
+    private HashMap<String, HashMap<String, Integer>> _sn_hash_maps;                          // HashMap of HashMaps
+    private DistanceMatrix                            _m;
+    private HashMap<String, Double>                   _l;
+    private String[]                                  _seq_names;
+    private int                                       _bootstraps;
+    private int                                       _ext_nodes_;
+    private long                                      _time;
 
     /**
      * Default constructor.
      */
     public RIO() {
         reset();
-    } // RIO()
+    }
 
     /**
      * Returns the numbers of trees analyzed.
-     * <p>
-     * (Last modified: 02/20/00)
      * 
      * @return the numbers of trees analyzed
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
-    public int getBootstraps() {
-        return bootstraps_;
+    public final int getBootstraps() {
+        return _bootstraps;
+    }
+
+    // Helper method for inferredOrthologsToString.
+    // inferredOrthologsToArrayList,
+    // and inferredUltraParalogsToString.
+    private final double getBootstrapValueFromHash( final HashMap<String, Integer> h, final String name ) {
+        if ( !h.containsKey( name ) ) {
+            return 0.0;
+        }
+        final int i = h.get( name );
+        return ( i * 100.0 / getBootstraps() );
     }
 
     /**
      * Returns the distance to a sequences/taxa after a distance list file has
      * been read in with readDistanceList(File). Throws an exception if name is
      * not found or if no list has been read in.
-     * <p>
-     * (Last modified: 05/30/01)
      * 
      * @param name
      *            a sequence name
-     * @see #readDistanceList(File)
      */
-    public double getDistance( String name ) {
+    public final double getDistance( String name ) {
         double distance = 0.0;
         name = name.trim();
         if ( _l == null ) {
@@ -143,59 +113,25 @@ public class RIO {
         }
         distance = ( _l.get( name ) ).doubleValue();
         return distance;
-    } // getDistance( String )
+    }
 
-    /**
-     * Returns the distance between two sequences/taxa after a distance matrix
-     * file has been read in with readDistanceMatrix(File). Throws an exception
-     * if name1 or name2 are not found or if no matrix has been read in.
-     * <p>
-     * (Last modified: 11/28/00)
-     * 
-     * @param name1
-     *            a sequence name name2 a sequence name
-     * @see #readDistanceMatrix(File)
-     */
-    public double getDistance( String name1, String name2 ) {
-        Vector<Integer> vector1 = null;
-        Vector<String> vector2 = null;
-        int position = 0;
-        String distance_value = null;
-        double distance = 0.0;
-        name1 = name1.trim();
-        name2 = name2.trim();
-        if ( _m == null ) {
-            throw new IllegalStateException( "Distance matrix has probably not been read in (successfully)." );
+    public final double getDistance( final String name1, final String name2 ) {
+        try {
+            return _m.getValue( _m.getIndex( name1 ), _m.getIndex( name2 ) );
         }
-        vector1 = _m.get( name1 );
-        if ( vector1 == null ) {
-            throw new IllegalArgumentException( name1 + " not found." );
+        catch ( final Exception e ) {
+            return 1;
         }
-        vector2 = _m.get( name2 );
-        if ( vector2 == null ) {
-            throw new IllegalArgumentException( name2 + " not found." );
-        }
-        position = vector1.elementAt( 0 );
-        distance_value = vector2.elementAt( position + 1 );
-        if ( distance_value == null ) {
-            throw new RuntimeException( "Unexpected failure in method getDistance" );
-        }
-        distance = Double.parseDouble( distance_value.trim() );
-        return distance;
-    } // getDistance( String, String )
+    }
 
     /**
      * Returns the numbers of number of ext nodes in gene trees analyzed (after
      * stripping).
-     * <p>
-     * (Last modified: 05/02/00)
      * 
      * @return number of ext nodes in gene trees analyzed (after stripping)
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
-    public int getExtNodesOfAnalyzedGeneTrees() {
-        return ext_nodes_;
+    public final int getExtNodesOfAnalyzedGeneTrees() {
+        return _ext_nodes_;
     }
 
     /**
@@ -203,249 +139,73 @@ public class RIO {
      * tree node with the sequence name seq_name. Sequence names are the keys
      * (String), numbers of observations are the values (Int). Orthologs are to
      * be inferred by method "inferOrthologs". Throws an exception if seq_name
-     * is not found. (Last modified: 05/08/01)
+     * is not found.
      * 
      * @param seq_name
      *            sequence name of a external node of the gene trees
      * @return HashMap containing the inferred orthologs
      *         (name(String)->value(Int))
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
-    public HashMap<String, Integer> getInferredOrthologs( final String seq_name ) {
-        if ( o_hash_maps_ == null ) {
+    public final HashMap<String, Integer> getInferredOrthologs( final String seq_name ) {
+        if ( _o_hash_maps == null ) {
             return null;
         }
-        return o_hash_maps_.get( seq_name );
-    } // getInferredOrthologs( String )
+        return _o_hash_maps.get( seq_name );
+    }
 
-    /**
-     * Returns a HashMap containing the inferred "subtree neighbors" of the
-     * external gene tree node with the sequence name seq_name. Sequence names
-     * are the keys (String), numbers of observations are the values (Int).
-     * "subtree neighbors" are to be inferred by method "inferOrthologs". Throws
-     * an exception if seq_name is not found. (Last modified: 12/26/01)
-     * 
-     * @param seq_name
-     *            sequence name of a external node of the gene trees
-     * @return HashMap containing the inferred "subtree neighbors"
-     *         (name(String)->value(Int))
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
-     */
-    public HashMap<String, Integer> getInferredSubtreeNeighbors( final String seq_name ) {
-        if ( sn_hash_maps_ == null ) {
+    private final HashMap<String, Integer> getInferredSubtreeNeighbors( final String seq_name ) {
+        if ( _sn_hash_maps == null ) {
             return null;
         }
-        return sn_hash_maps_.get( seq_name );
-    } // getInferredSubtreeNeighbors( String )
+        return _sn_hash_maps.get( seq_name );
+    }
 
     /**
      * Returns a HashMap containing the inferred "super orthologs" of the
      * external gene tree node with the sequence name seq_name. Sequence names
      * are the keys (String), numbers of observations are the values (Int).
      * Super orthologs are to be inferred by method "inferOrthologs". Throws an
-     * exception if seq_name is not found. (Last modified: 05/08/01)
+     * exception if seq_name is not found.
      * 
      * @param seq_name
      *            sequence name of a external node of the gene trees
      * @return HashMap containing the inferred super orthologs
      *         (name(String)->value(Int))
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
-    public HashMap<String, Integer> getInferredSuperOrthologs( final String seq_name ) {
-        if ( so_hash_maps_ == null ) {
+    public final HashMap<String, Integer> getInferredSuperOrthologs( final String seq_name ) {
+        if ( _so_hash_maps == null ) {
             return null;
         }
-        return so_hash_maps_.get( seq_name );
-    } // getInferredSuperOrthologs( String )
+        return _so_hash_maps.get( seq_name );
+    }
 
     /**
      * Returns a HashMap containing the inferred "ultra paralogs" of the
      * external gene tree node with the sequence name seq_name. Sequence names
      * are the keys (String), numbers of observations are the values (Int).
      * "ultra paralogs" are to be inferred by method "inferOrthologs". Throws an
-     * exception if seq_name is not found. (Last modified: 05/08/01)
+     * exception if seq_name is not found. 
      * 
      * @param seq_name
      *            sequence name of a external node of the gene trees
      * @return HashMap containing the inferred ultra paralogs
      *         (name(String)->value(Int))
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
-    public HashMap<String, Integer> getInferredUltraParalogs( final String seq_name ) {
-        if ( up_hash_maps_ == null ) {
+    public final HashMap<String, Integer> getInferredUltraParalogs( final String seq_name ) {
+        if ( _up_hash_maps == null ) {
             return null;
         }
-        return up_hash_maps_.get( seq_name );
-    } // getInferredUltraParalogs( String )
-
-    /**
-     * Returns the order in which ortholog (o), "super ortholog" (s) and
-     * distance (d) are returned and sorted (priority of sort always goes from
-     * left to right), given sort. For the meaning of sort
-     * 
-     * @see #inferredOrthologsToString(String,int,double,double)
-     *      <p>
-     *      
-     * @param sort
-     *            determines order and sort priority
-     * @return String indicating the order
-     * @see #inferredOrthologsToString(String,int,double,double)
-     */
-    public String getOrder( final int sort ) {
-        String order = "";
-        switch ( sort ) {
-            case 0:
-                order = "orthologies";
-                break;
-            case 1:
-                order = "orthologies > super orthologies";
-                break;
-            case 2:
-                order = "super orthologies > orthologies";
-                break;
-            case 3:
-                order = "orthologies > distance to query";
-                break;
-            case 4:
-                order = "distance to query > orthologies";
-                break;
-            case 5:
-                order = "orthologies > super orthologies > distance to query";
-                break;
-            case 6:
-                order = "orthologies > distance to query > super orthologies";
-                break;
-            case 7:
-                order = "super orthologies > orthologies > distance to query";
-                break;
-            case 8:
-                order = "super orthologies > distance to query > orthologies";
-                break;
-            case 9:
-                order = "distance to query > orthologies > super orthologies";
-                break;
-            case 10:
-                order = "distance to query > super orthologies > orthologies";
-                break;
-            case 11:
-                order = "orthologies > subtree neighbors > distance to query";
-                break;
-            case 12:
-                order = "orthologies > subtree neighbors > super orthologies > distance to query";
-                break;
-            case 13:
-                order = "orthologies > super orthologies > subtree neighbors > distance to query";
-                break;
-            case 14:
-                order = "subtree neighbors > orthologies > super orthologies > distance to query";
-                break;
-            case 15:
-                order = "subtree neighbors > distance to query > orthologies > super orthologies";
-                break;
-            case 16:
-                order = "orthologies > distance to query > subtree neighbors > super orthologies";
-                break;
-            case 17:
-                order = "orthologies > subtree neighbors > distance to query > super orthologies";
-                break;
-            default:
-                order = "orthologies";
-                break;
-        }
-        return order;
-    } // getOrder( int )
+        return _up_hash_maps.get( seq_name );
+    }
 
     /**
      * Returns the time (in ms) needed to run "inferOrthologs". Final variable
      * TIME needs to be set to true.
-     * <p>
-     * (Last modified: 11/14/00)
      * 
      * @return time (in ms) needed to run method "inferOrthologs"
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
     public long getTime() {
-        return time_;
-    }
-
-    /**
-     * Infers the orthologs (as well the "super orthologs", the "x orthologs",
-     * and the "ultra paralogs") for each external node in Phylogeny array
-     * gene_trees. Tallies how many times each sequence is (super-) orthologous
-     * towards all other ones. Tallies how many times each sequence is ultra
-     * paralogous towards all other ones. Tallies how many times each sequence
-     * is a subtree neighbor of the query. Gene duplications are inferred using
-     * SDI. Modifies its argument species_tree. Might be a little slower than
-     * "inferOrthologs(File,Phylogeny,String)". Needs less memory than
-     * "inferOrthologs(Phylogeny[],Phylogeny)" since not all gene Trees have to
-     * be kept in memory.
-     * <p>
-     * To obtain the results use the methods listed below.
-     * <p>
-     * (Last modified: 10/19/01)
-     * 
-     * @param gene_trees_file
-     *            a File containing gene Trees in NH format, which is the result
-     *            of performing a bootstrap analysis in PHYLIP
-     * @param species_tree
-     *            a species Phylogeny, which has species names in its species
-     *            fields
-     * @see #inferOrthologs(File,Phylogeny,String)
-     * @see #getInferredOrthologs(String)
-     * @see #getInferredSuperOrthologs(String)
-     * @see #inferredOrthologsToString(String,int,double,double)
-     * @see #inferredOrthologTableToFile(File)
-     * @see #inferredSuperOrthologTableToFile(File)
-     */
-    public void inferOrthologs( final File gene_trees_file, final Phylogeny species_tree ) throws IOException {
-        int bs = 0;
-        if ( RIO.TIME ) {
-            time_ = System.currentTimeMillis();
-        }
-        if ( !gene_trees_file.exists() ) {
-            throw new IOException( gene_trees_file.getAbsolutePath() + " does not exist." );
-        }
-        else if ( !gene_trees_file.isFile() ) {
-            throw new IOException( gene_trees_file.getAbsolutePath() + " is not a file." );
-        }
-        // Read in first tree to get its sequence names
-        // and strip species_tree.
-        final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-        final Phylogeny gene_tree = factory.create( gene_trees_file, new PhyloXmlParser() )[ 0 ];
-        // Removes from species_tree all species not found in gene_tree.
-        PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( gene_tree, species_tree );
-        // Removes from gene_tree all species not found in species_tree.
-        PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( species_tree, gene_tree );
-        seq_names_ = gene_tree.getAllExternalSeqNames();
-        if ( ( seq_names_ == null ) || ( seq_names_.length < 1 ) ) {
-            return;
-        }
-        o_hash_maps_ = new HashMap<String, HashMap<String, Integer>>( seq_names_.length );
-        so_hash_maps_ = new HashMap<String, HashMap<String, Integer>>( seq_names_.length );
-        up_hash_maps_ = new HashMap<String, HashMap<String, Integer>>( seq_names_.length );
-        sn_hash_maps_ = new HashMap<String, HashMap<String, Integer>>( seq_names_.length );
-        for( int i = 0; i < seq_names_.length; ++i ) {
-            o_hash_maps_.put( seq_names_[ i ], new HashMap<String, Integer>( seq_names_.length ) );
-            so_hash_maps_.put( seq_names_[ i ], new HashMap<String, Integer>( seq_names_.length ) );
-            up_hash_maps_.put( seq_names_[ i ], new HashMap<String, Integer>( seq_names_.length ) );
-            sn_hash_maps_.put( seq_names_[ i ], new HashMap<String, Integer>( seq_names_.length ) );
-        }
-        // Go through all gene trees in the file.
-        final Phylogeny[] gene_trees = factory.create( gene_trees_file, new PhyloXmlParser() );
-        for( final Phylogeny gt : gene_trees ) {
-            bs++;
-            PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( species_tree, gt );
-            doInferOrthologs( gt, species_tree );
-        }
-        setBootstraps( bs );
-        if ( RIO.TIME ) {
-            time_ = ( System.currentTimeMillis() - time_ );
-        }
+        return _time;
     }
 
     /**
@@ -461,8 +221,6 @@ public class RIO {
      * query.
      * <p>
      * To obtain the results use the methods listed below.
-     * <p>
-     * (Last modified: 10/19/01)
      * 
      * @param gene_trees_file
      *            a File containing gene Trees in NH format, which is the result
@@ -473,17 +231,12 @@ public class RIO {
      * @param query
      *            the sequence name of the squence whose orthologs are to be
      *            inferred
-     * @see #getInferredOrthologs(String)
-     * @see #getInferredSuperOrthologs(String)
-     * @see #inferredOrthologsToString(String,int,double,double)
-     * @see #inferredOrthologTableToFile(File)
-     * @see #inferredSuperOrthologTableToFile(File)
      */
     public void inferOrthologs( final File gene_trees_file, final Phylogeny species_tree, final String query )
             throws IOException {
         int bs = 0;
         if ( RIO.TIME ) {
-            time_ = System.currentTimeMillis();
+            _time = System.currentTimeMillis();
         }
         if ( !gene_trees_file.exists() ) {
             throw new IllegalArgumentException( gene_trees_file.getAbsolutePath() + " does not exist." );
@@ -499,94 +252,73 @@ public class RIO {
         PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( gene_tree, species_tree );
         // Removes from gene_tree all species not found in species_tree.
         PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( species_tree, gene_tree );
-        seq_names_ = gene_tree.getAllExternalSeqNames();
-        if ( ( seq_names_ == null ) || ( seq_names_.length < 1 ) ) {
+        _seq_names = getAllExternalSequenceNames( gene_tree );
+        if ( ( _seq_names == null ) || ( _seq_names.length < 1 ) ) {
             return;
         }
-        o_hash_maps_ = new HashMap( 1 );
-        so_hash_maps_ = new HashMap( 1 );
-        up_hash_maps_ = new HashMap( 1 );
-        sn_hash_maps_ = new HashMap( 1 );
-        o_hash_maps_.put( query, new HashMap( seq_names_.length ) );
-        so_hash_maps_.put( query, new HashMap( seq_names_.length ) );
-        up_hash_maps_.put( query, new HashMap( seq_names_.length ) );
-        sn_hash_maps_.put( query, new HashMap( seq_names_.length ) );
+        _o_hash_maps = new HashMap<String, HashMap<String, Integer>>();
+        _so_hash_maps = new HashMap<String, HashMap<String, Integer>>();
+        _up_hash_maps = new HashMap<String, HashMap<String, Integer>>();
+        _sn_hash_maps = new HashMap<String, HashMap<String, Integer>>();
+        _o_hash_maps.put( query, new HashMap<String, Integer>( _seq_names.length ) );
+        _so_hash_maps.put( query, new HashMap<String, Integer>( _seq_names.length ) );
+        _up_hash_maps.put( query, new HashMap<String, Integer>( _seq_names.length ) );
+        _sn_hash_maps.put( query, new HashMap<String, Integer>( _seq_names.length ) );
         // Go through all gene trees in the file.
         final Phylogeny[] gene_trees = factory.create( gene_trees_file, new PhyloXmlParser() );
         for( final Phylogeny gt : gene_trees ) {
             bs++;
             // Removes from gene_tree all species not found in species_tree.
             PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( species_tree, gt );
-            doInferOrthologs( gt, species_tree, query );
+            inferOrthologsHelper( gt, species_tree, query );
+            // System.out.println( bs );
         }
         setBootstraps( bs );
         if ( RIO.TIME ) {
-            time_ = ( System.currentTimeMillis() - time_ );
+            _time = ( System.currentTimeMillis() - _time );
         }
     }
 
-    /**
-     * Infers the orthologs (as well the "super orthologs", the "x orthologs",
-     * and the "ultra paralogs") for each external node in Phylogeny array
-     * gene_trees. Tallies how many times each sequence is (super-) orthologous
-     * towards all other ones. Tallies how many times each sequence is super
-     * paralogous towards all other ones. Tallies how many times each sequence
-     * is a subtree neighbor of the query. Gene duplications are inferred using
-     * SDI. Modifies its arguments gene_trees and species_tree. Method
-     * "inferOrthologs(File,Phylogeny)" accomplishes the same, but needs less
-     * memory since not all gene Trees have to be kept in memory.
-     * <p>
-     * To obtain the results use the methods listed below.
-     * <p>
-     * (Last modified: 12/07/00)
-     * 
-     * @param gene_trees
-     *            a Phylogeny[] which is the result of performing a bootstrap
-     *            analysis, nodes of trees must have species names and sequence
-     *            names in the appropriate fields
-     * @param species_tree
-     *            a species Phylogeny, which has species names in its species
-     *            fields
-     * @see #getInferredOrthologs(String)
-     * @see #getInferredSuperOrthologs(String)
-     * @see #inferredOrthologsToString(String,int,double,double)
-     * @see #inferredOrthologTableToFile(File)
-     * @see #inferredSuperOrthologTableToFile(File)
-     */
-    public void inferOrthologs( final Phylogeny[] gene_trees, final Phylogeny species_tree ) {
-        if ( RIO.TIME ) {
-            time_ = System.currentTimeMillis();
+    // Helper method which performs the actual ortholog inference for
+    // the external node with seqname query.
+    private void inferOrthologsHelper( final Phylogeny gene_tree, final Phylogeny species_tree, final String query ) {
+        Phylogeny assigned_tree = null;
+        List<PhylogenyNode> nodes = null;
+        final SDIR sdiunrooted = new SDIR();
+        List<PhylogenyNode> orthologs = null;
+        List<PhylogenyNode> super_orthologs = null;
+        List<PhylogenyNode> ultra_paralogs = null;
+        List<PhylogenyNode> subtree_neighbors = null;
+        assigned_tree = sdiunrooted.infer( gene_tree,
+                                           species_tree,
+                                           RIO.ROOT_BY_MINIMIZING_MAPPING_COST,
+                                           RIO.ROOT_BY_MINIMIZING_SUM_OF_DUPS,
+                                           RIO.ROOT_BY_MINIMIZING_TREE_HEIGHT,
+                                           true,
+                                           1 )[ 0 ];
+        setExtNodesOfAnalyzedGeneTrees( assigned_tree.getNumberOfExternalNodes() );
+        nodes = assigned_tree.getNodesViaSequenceName( query );
+        if ( nodes.size() > 1 ) {
+            throw new IllegalArgumentException( "node named [" + query + "] not unique" );
         }
-        // Removes from species_tree all species not found in gene_trees_[0].
-        PhylogenyMethods.taxonomyBasedDeletionOfExternalNodes( gene_trees[ 0 ], species_tree );
-        seq_names_ = gene_trees[ 0 ].getAllExternalSeqNames();
-        if ( ( seq_names_ == null ) || ( seq_names_.length < 1 ) ) {
-            return;
+        else if ( nodes.isEmpty() ) {
+            throw new IllegalArgumentException( "no node containing a sequence named [" + query + "] found" );
         }
-        o_hash_maps_ = new HashMap( seq_names_.length );
-        so_hash_maps_ = new HashMap( seq_names_.length );
-        up_hash_maps_ = new HashMap( seq_names_.length );
-        sn_hash_maps_ = new HashMap( seq_names_.length );
-        for( int i = 0; i < seq_names_.length; ++i ) {
-            o_hash_maps_.put( seq_names_[ i ], new HashMap( seq_names_.length ) );
-            so_hash_maps_.put( seq_names_[ i ], new HashMap( seq_names_.length ) );
-            up_hash_maps_.put( seq_names_[ i ], new HashMap( seq_names_.length ) );
-            sn_hash_maps_.put( seq_names_[ i ], new HashMap( seq_names_.length ) );
-        }
-        for( int i = 0; i < gene_trees.length; ++i ) {
-            doInferOrthologs( gene_trees[ i ], species_tree );
-        }
-        setBootstraps( gene_trees.length );
-        if ( RIO.TIME ) {
-            time_ = ( System.currentTimeMillis() - time_ );
-        }
-    } // inferOrthologs( Phylogeny[], Phylogeny )
+        final PhylogenyNode query_node = nodes.get( 0 );
+        final PhylogenyMethods methods = PhylogenyMethods.getInstance();
+        orthologs = methods.getOrthologousNodes( assigned_tree, query_node );
+        updateHash( _o_hash_maps, query, orthologs );
+        super_orthologs = PhylogenyMethods.getSuperOrthologousNodes( query_node );
+        updateHash( _so_hash_maps, query, super_orthologs );
+        subtree_neighbors = getSubtreeNeighbors( query_node, 2 );
+        updateHash( _sn_hash_maps, query, subtree_neighbors );
+        ultra_paralogs = PhylogenyMethods.getUltraParalogousNodes( query_node );
+        updateHash( _up_hash_maps, query, ultra_paralogs );
+    }
 
     /**
      * Returns an ArrayList containg the names of orthologs of the PhylogenyNode
      * with seq name seq_name.
-     * <p>
-     * (Last modified: 10/07/01)
      * 
      * @param seq_name
      *            sequence name of a external node of the gene trees
@@ -595,16 +327,13 @@ public class RIO {
      *            reported as orthologous as percentage (0.0-100.0%)
      * @return ArrayList containg the names of orthologs of the PhylogenyNode
      *         with seq name seq_name
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
-     * @see #getOrder(int)
      */
-    public ArrayList inferredOrthologsToArrayList( final String seq_name, double threshold_orthologs ) {
-        HashMap o_hashmap = null;
+    public ArrayList<String> inferredOrthologsToArrayList( final String seq_name, double threshold_orthologs ) {
+        HashMap<String, Integer> o_hashmap = null;
         String name = null;
         double o = 0.0;
-        final ArrayList arraylist = new ArrayList();
-        if ( o_hash_maps_ == null ) {
+        final ArrayList<String> arraylist = new ArrayList<String>();
+        if ( _o_hash_maps == null ) {
             throw new IllegalStateException( "Orthologs have not been calculated (successfully)." );
         }
         if ( threshold_orthologs < 0.0 ) {
@@ -617,10 +346,9 @@ public class RIO {
         if ( o_hashmap == null ) {
             throw new IllegalStateException( "Orthologs for " + seq_name + " were not established." );
         }
-        if ( seq_names_.length > 0 ) {
-            final ArrayList nv = new ArrayList();
-            I: for( int i = 0; i < seq_names_.length; ++i ) {
-                name = seq_names_[ i ];
+        if ( _seq_names.length > 0 ) {
+            I: for( int i = 0; i < _seq_names.length; ++i ) {
+                name = _seq_names[ i ];
                 if ( name.equals( seq_name ) ) {
                     continue I;
                 }
@@ -629,10 +357,10 @@ public class RIO {
                     continue I;
                 }
                 arraylist.add( name );
-            } // End of I for loop.
+            }
         }
         return arraylist;
-    } // inferredOrthologsToArrayList( String, double )
+    }
 
     /**
      * Returns a String containg the names of orthologs of the PhylogenyNode
@@ -690,25 +418,27 @@ public class RIO {
      * @see #inferOrthologs(File,Phylogeny)
      * @see #getOrder(int)
      */
-    public String inferredOrthologsToString( final String query_name,
-                                             int sort,
-                                             double threshold_orthologs,
-                                             double threshold_subtreeneighborings ) {
-        HashMap o_hashmap = null, s_hashmap = null, n_hashmap = null;
-        String name = "", orthologs = "";
+    public StringBuffer inferredOrthologsToString( final String query_name,
+                                                   int sort,
+                                                   double threshold_orthologs,
+                                                   double threshold_subtreeneighborings ) {
+        HashMap<String, Integer> o_hashmap = null;
+        HashMap<String, Integer> s_hashmap = null;
+        HashMap<String, Integer> n_hashmap = null;
+        String name = "";
         double o = 0.0, // Orthologs.
         s = 0.0, // Super orthologs.
         sn = 0.0, // Subtree neighbors.
         value1 = 0.0, value2 = 0.0, value3 = 0.0, value4 = 0.0, d = 0.0;
         final ArrayList<Tuplet> nv = new ArrayList<Tuplet>();
-        if ( ( o_hash_maps_ == null ) || ( so_hash_maps_ == null ) || ( sn_hash_maps_ == null ) ) {
-            throw new IllegalStateException( "Orthologs have not been calculated (successfully)." );
+        if ( ( _o_hash_maps == null ) || ( _so_hash_maps == null ) || ( _sn_hash_maps == null ) ) {
+            throw new IllegalStateException( "Orthologs have not been calculated (successfully)" );
         }
         if ( ( sort < 0 ) || ( sort > 17 ) ) {
             sort = 12;
         }
         if ( ( sort > 2 ) && ( _m == null ) && ( _l == null ) ) {
-            throw new IllegalStateException( "Distance list or matrix have not been read in (successfully)." );
+            throw new IllegalStateException( "Distance list or matrix have not been read in (successfully)" );
         }
         if ( threshold_orthologs < 0.0 ) {
             threshold_orthologs = 0.0;
@@ -728,9 +458,10 @@ public class RIO {
         if ( ( o_hashmap == null ) || ( s_hashmap == null ) || ( n_hashmap == null ) ) {
             throw new IllegalStateException( "Orthologs for " + query_name + " were not established" );
         }
-        if ( seq_names_.length > 0 ) {
-            I: for( int i = 0; i < seq_names_.length; ++i ) {
-                name = seq_names_[ i ];
+        final StringBuffer orthologs = new StringBuffer();
+        if ( _seq_names.length > 0 ) {
+            I: for( int i = 0; i < _seq_names.length; ++i ) {
+                name = _seq_names[ i ];
                 if ( name.equals( query_name ) ) {
                     continue I;
                 }
@@ -811,6 +542,7 @@ public class RIO {
                 }
             } // End of I for loop.
             if ( ( nv != null ) && ( nv.size() > 0 ) ) {
+                orthologs.append( "[seq name]\t\t[ortho]\t[st-n]\t[sup-o]\t[dist]" + ForesterUtil.LINE_SEPARATOR );
                 final Tuplet[] nv_array = new Tuplet[ nv.size() ];
                 for( int j = 0; j < nv.size(); ++j ) {
                     nv_array[ j ] = nv.get( j );
@@ -822,16 +554,56 @@ public class RIO {
                     value2 = nv_array[ i ].getValue2();
                     value3 = nv_array[ i ].getValue3();
                     value4 = nv_array[ i ].getValue4();
-                    orthologs += addNameAndValues( name, value1, value2, value3, value4, sort );
+                    orthologs.append( addNameAndValues( name, value1, value2, value3, value4, sort ) );
                 }
             }
         }
         // No orthologs found.
         if ( ( orthologs == null ) || ( orthologs.length() < 1 ) ) {
-            orthologs = "-";
+            orthologs.append( "-" );
         }
         return orthologs;
     } // inferredOrthologsToString( String, int, double )
+
+    // Helper method for inferredOrthologTableToFile.
+    // Returns individual rows for the table as String.
+    private String inferredOrthologsToTableHelper( final String name2,
+                                                   final String[] names,
+                                                   final int j,
+                                                   final boolean super_orthologs ) {
+        HashMap<String, Integer> hashmap = null;
+        String name = null, orthologs = new String( "" );
+        int value = 0;
+        if ( !super_orthologs ) {
+            hashmap = getInferredOrthologs( name2 );
+        }
+        else {
+            hashmap = getInferredSuperOrthologs( name2 );
+        }
+        if ( hashmap == null ) {
+            throw new RuntimeException( "Unexpected failure in method inferredOrthologsToTableHelper" );
+        }
+        for( int i = 0; i < names.length; ++i ) {
+            name = names[ i ];
+            if ( !hashmap.containsKey( name ) ) {
+                value = 0;
+            }
+            else {
+                value = hashmap.get( name );
+            }
+            if ( i == j ) {
+                // Sanity check.
+                if ( value != 0 ) {
+                    throw new RuntimeException( "Failed sanity check in method inferredOrthologsToTableHelper: value not 0." );
+                }
+                orthologs += ( " " + "\t" );
+            }
+            else {
+                orthologs += ( value + "\t" );
+            }
+        }
+        return orthologs;
+    }
 
     /**
      * Writes the orthologs for each external node of the gene trees to outfile
@@ -840,33 +612,64 @@ public class RIO {
      * 
      * @param outfile
      *            the File to write to
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
     public void inferredOrthologTableToFile( final File outfile ) throws IOException {
-        if ( o_hash_maps_ == null ) {
+        if ( _o_hash_maps == null ) {
             return;
         }
         inferredOrthologTableToFile( outfile, false );
-    } // inferredOrthologTableToFile( File )
+    }
+
+    // Helper for inferredOrthologTableToFile(File).
+    // (Last modified: 11/28/00)
+    private void inferredOrthologTableToFile( final File outfile, final boolean super_orthologs ) throws IOException {
+        String name = "", line = "";
+        PrintWriter out = null;
+        if ( _seq_names == null ) {
+            throw new IllegalStateException( "inferredOrthologTableToFile: seq_names_ is null." );
+        }
+        Arrays.sort( _seq_names );
+        out = new PrintWriter( new FileWriter( outfile ), true );
+        if ( out == null ) {
+            throw new RuntimeException( "inferredOrthologTableToFile: failure to create PrintWriter." );
+        }
+        line = "\t\t\t\t";
+        for( int i = 0; i < _seq_names.length; ++i ) {
+            line += ( i + ")\t" );
+        }
+        line += "\n";
+        out.println( line );
+        for( int i = 0; i < _seq_names.length; ++i ) {
+            name = _seq_names[ i ];
+            if ( name.length() < 8 ) {
+                line = i + ")\t" + name + "\t\t\t";
+            }
+            else if ( name.length() < 16 ) {
+                line = i + ")\t" + name + "\t\t";
+            }
+            else {
+                line = i + ")\t" + name + "\t";
+            }
+            line += inferredOrthologsToTableHelper( name, _seq_names, i, super_orthologs );
+            out.println( line );
+        }
+        out.close();
+    }
 
     /**
      * Writes the "super orthologs" for each external nodes of the gene trees to
      * outfile in the form of a table. Super orthologs are to be inferred by
-     * method "inferOrthologs". Overwrites without asking! (Last modified:
-     * 11/28/00)
+     * method "inferOrthologs". Overwrites without asking!
      * 
      * @param outfile
      *            the File to write to
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
      */
     public void inferredSuperOrthologTableToFile( final File outfile ) throws IOException {
-        if ( so_hash_maps_ == null ) {
+        if ( _so_hash_maps == null ) {
             return;
         }
         inferredOrthologTableToFile( outfile, true );
-    } // inferredSuperOrthologTableToFile( File )
+    }
 
     /**
      * Returns a String containg the names of orthologs of the PhylogenyNode
@@ -875,8 +678,6 @@ public class RIO {
      * orthologs have been found (given threshold_orthologs).
      * <p>
      * Orthologs are to be inferred by method "inferOrthologs".
-     * <p>
-     * (Last modified: 10/16/01)
      * 
      * @param query_name
      *            sequence name of a external node of the gene trees
@@ -885,26 +686,22 @@ public class RIO {
      *            between 1 and 100
      * @return String containing the inferred orthologs, String containing "-"
      *         if no orthologs have been found null in case of error
-     * @see #inferOrthologs(File,Phylogeny,String)
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
-     * @see #getOrder(int)
      */
     public String inferredUltraParalogsToString( final String query_name,
                                                  final boolean return_dists,
                                                  double threshold_ultra_paralogs ) {
-        HashMap sp_hashmap = null;
+        HashMap<String, Integer> sp_hashmap = null;
         String name = "", ultra_paralogs = "";
         int sort = 0;
         double sp = 0.0, value1 = 0.0, value2 = 0.0, d = 0.0;
-        final ArrayList nv = new ArrayList();
+        final List<Tuplet> nv = new ArrayList<Tuplet>();
         if ( threshold_ultra_paralogs < 1.0 ) {
             threshold_ultra_paralogs = 1.0;
         }
         else if ( threshold_ultra_paralogs > 100.0 ) {
             threshold_ultra_paralogs = 100.0;
         }
-        if ( up_hash_maps_ == null ) {
+        if ( _up_hash_maps == null ) {
             throw new IllegalStateException( "Ultra paralogs have not been calculated (successfully)." );
         }
         if ( return_dists && ( _m == null ) && ( _l == null ) ) {
@@ -914,9 +711,9 @@ public class RIO {
         if ( sp_hashmap == null ) {
             throw new IllegalStateException( "Ultra paralogs for " + query_name + " were not established" );
         }
-        if ( seq_names_.length > 0 ) {
-            I: for( int i = 0; i < seq_names_.length; ++i ) {
-                name = seq_names_[ i ];
+        if ( _seq_names.length > 0 ) {
+            I: for( int i = 0; i < _seq_names.length; ++i ) {
+                name = _seq_names[ i ];
                 if ( name.equals( query_name ) ) {
                     continue I;
                 }
@@ -940,7 +737,7 @@ public class RIO {
             if ( ( nv != null ) && ( nv.size() > 0 ) ) {
                 final Tuplet[] nv_array = new Tuplet[ nv.size() ];
                 for( int j = 0; j < nv.size(); ++j ) {
-                    nv_array[ j ] = ( Tuplet ) nv.get( j );
+                    nv_array[ j ] = nv.get( j );
                 }
                 Arrays.sort( nv_array );
                 if ( return_dists ) {
@@ -962,156 +759,88 @@ public class RIO {
             ultra_paralogs = "-";
         }
         return ultra_paralogs;
-    } // inferredUltraParalogsToString( String )
+    }
 
-    /**
-     * Reads in the distance list file dist_list. The file must have the
-     * following format.
-     * <p>
-     * 
-     * <pre>
-     *  
-     *   
-     *    
-     *         name x
-     *         name x
-     *         name x
-     *         
-     *    
-     *   
-     * </pre>
-     * 
-     * Number of white spaces does not matter. Such files are produces by
-     * modified TREE-PUZZLE.
-     * <p>
-     * (Last modified: 05/30/01)
-     * 
-     * @param dist_list
-     *            a File containing a distance matrix
-     * @see #getDistance(String)
-     */
-    public void readDistanceList( final File dist_list ) throws IOException {
-        String incoming = null;
-        StringTokenizer st = null;
-        if ( !dist_list.exists() ) {
-            throw new IOException( dist_list.getAbsolutePath() + " does not exist." );
+    public final void readDistanceMatrix( final File matrix_file ) throws IOException {
+        DistanceMatrix[] matrices = null;
+        final SymmetricalDistanceMatrixParser parser = SymmetricalDistanceMatrixParser.createInstance();
+        matrices = parser.parse( matrix_file );
+        if ( ( matrices == null ) || ( matrices.length == 0 ) ) {
+            throw new IOException( "failed to parse distance matrix from [" + matrix_file + "]" );
         }
-        else if ( !dist_list.isFile() ) {
-            throw new IOException( dist_list.getAbsolutePath() + " is not a file." );
+        if ( matrices.length > 1 ) {
+            throw new IOException( "[" + matrix_file + "] contains more than once distance matrix" );
         }
-        _m = null;
-        _l = new HashMap();
-        final BufferedReader in = new BufferedReader( new FileReader( dist_list ) );
-        if ( in == null ) {
-            throw new RuntimeException( "readDistanceList: failure to create BufferedReader." );
-        }
-        while ( ( incoming = in.readLine() ) != null ) {
-            st = new StringTokenizer( incoming, " \t\n\r" );
-            if ( st.countTokens() == 2 ) {
-                _l.put( st.nextToken(), new Double( st.nextToken().toString() ) );
-                // Name is key, Double is value.
-            }
-        }
-        in.close();
-    } // readDistanceList( File )
-
-    /**
-     * Reads in the distance matrix file matrix_file. The file must have the
-     * following format.
-     * <p>
-     * 
-     * <pre>
-     *  
-     *   
-     *    
-     *         [number of sequences, is ignored, and is not necessary]
-     *         name x x x 
-     *         name x x x
-     *         name x x x
-     *         
-     *    
-     *   
-     * </pre>
-     * 
-     * <p>
-     * Number of white spaces does not matter. Such files are produces by PHYLIP
-     * PROTDIST. Files produced by TREE-PUZZLE need to be modified to remove the
-     * newlines "inside" the rows.
-     * <p>
-     * (Last modified: 11/28/00)
-     * 
-     * @param matrix_file
-     *            a File containing a distance matrix
-     * @see #getDistance(String,String)
-     */
-    public void readDistanceMatrix( final File matrix_file ) throws IOException {
-        String incoming = null;
-        StringTokenizer st = null;
-        int i = 0, j = 0;
-        if ( !matrix_file.exists() ) {
-            throw new IOException( matrix_file.getAbsolutePath() + " does not exist." );
-        }
-        else if ( !matrix_file.isFile() ) {
-            throw new IOException( matrix_file.getAbsolutePath() + " is not a file." );
-        }
-        _m = new HashMap();
-        _l = null;
-        final BufferedReader in = new BufferedReader( new FileReader( matrix_file ) );
-        if ( in == null ) {
-            throw new RuntimeException( "readDistanceMatrix: failure to create BufferedReader." );
-        }
-        i = j = 0;
-        while ( ( incoming = in.readLine() ) != null ) {
-            st = new StringTokenizer( incoming, " \t\n\r" );
-            if ( st.countTokens() > 2 ) {
-                final Vector current = new Vector();
-                _m.put( st.nextToken(), current ); // Name is key, Vector is
-                // value.
-                current.addElement( i++ ); // Number at position 0.
-                while ( st.hasMoreTokens() ) {
-                    current.addElement( st.nextToken() );
-                }
-                // Sanity check.
-                if ( ( j != 0 ) && ( current.size() != j ) ) {
-                    throw new RuntimeException( "readDistanceMatrix: " + matrix_file
-                            + " might not have the expected format (failed sanity check)." );
-                }
-                j = current.size();
-            }
-        }
-        in.close();
-        // Sanity check.
-        if ( ( j - 1 ) != _m.size() ) {
-            throw new RuntimeException( "readDistanceMatrix: " + matrix_file
-                    + " might not have the expected format (failed sanity check)." );
-        }
-    } // readDistanceMatrix( File )
+        _m = matrices[ 0 ];
+    }
 
     /**
      * Brings this into the same state as immediately after construction.
      */
-    public void reset() {
-        o_hash_maps_ = null;
-        so_hash_maps_ = null;
-        up_hash_maps_ = null;
-        sn_hash_maps_ = null;
-        seq_names_ = null;
+    private final void reset() {
+        _o_hash_maps = null;
+        _so_hash_maps = null;
+        _up_hash_maps = null;
+        _seq_names = null;
         _m = null;
         _l = null;
-        bootstraps_ = 1;
-        ext_nodes_ = 0;
-        time_ = 0;
-    } // reset()
+        _bootstraps = 1;
+        _ext_nodes_ = 0;
+        _time = 0;
+    }
+
+    /**
+     * Sets the numbers of trees analyzed.
+     * @param the
+     *            numbers of trees analyzed
+     */
+    private void setBootstraps( int i ) {
+        if ( i < 1 ) {
+            i = 1;
+        }
+        _bootstraps = i;
+    }
+
+    /**
+     * Sets number of ext nodes in gene trees analyzed (after stripping).
+     * @param the
+     *            number of ext nodes in gene trees analyzed (after stripping)
+     */
+    private void setExtNodesOfAnalyzedGeneTrees( int i ) {
+        if ( i < 1 ) {
+            i = 0;
+        }
+        _ext_nodes_ = i;
+    }
+
+    // Helper for doInferOrthologs( Phylogeny, Phylogeny, String )
+    // and doInferOrthologs( Phylogeny, Phylogeny ).
+    private void updateHash( final HashMap<String, HashMap<String, Integer>> counter_map,
+                             final String query_seq_name,
+                             final List<PhylogenyNode> nodes ) {
+        final HashMap<String, Integer> hash_map = counter_map.get( query_seq_name );
+        if ( hash_map == null ) {
+            throw new RuntimeException( "Unexpected failure in method updateHash." );
+        }
+        for( int j = 0; j < nodes.size(); ++j ) {
+            final String seq_name = ( nodes.get( j ) ).getNodeData().getSequence().getName();
+            if ( hash_map.containsKey( seq_name ) ) {
+                hash_map.put( seq_name, hash_map.get( seq_name ) + 1 );
+            }
+            else {
+                hash_map.put( seq_name, 1 );
+            }
+        }
+    }
 
     // Helper method for inferredOrthologsToString
     // and inferredUltraParalogsToString.
-    // (Last modified: 10/06/01)
-    private String addNameAndValues( final String name,
-                                     final double value1,
-                                     final double value2,
-                                     final double value3,
-                                     final double value4,
-                                     final int sort ) {
+    private final static String addNameAndValues( final String name,
+                                                  final double value1,
+                                                  final double value2,
+                                                  final double value3,
+                                                  final double value4,
+                                                  final int sort ) {
         final java.text.DecimalFormat df = new java.text.DecimalFormat( "0.#####" );
         df.setDecimalSeparatorAlwaysShown( false );
         String line = "";
@@ -1242,13 +971,12 @@ public class RIO {
                 line += addToLine( value2, df );
                 break;
         }
-        line += "\n";
+        line += ForesterUtil.LINE_SEPARATOR;
         return line;
-    } // addNameAndValues
+    }
 
     // Helper for addNameAndValues.
-    // (Last modified: 05/08/01)
-    private String addToLine( final double value, final java.text.DecimalFormat df ) {
+    private final static String addToLine( final double value, final java.text.DecimalFormat df ) {
         String s = "";
         if ( value != Tuplet.DEFAULT ) {
             s = df.format( value ) + "\t";
@@ -1257,222 +985,142 @@ public class RIO {
             s = "-\t";
         }
         return s;
-    } // addToLine( double, java.text.DecimalFormat )
-
-    // Helper method which performs the actual ortholog inference for
-    // each sequence in gene_tree.
-    // (Last modified: 10/07/01)
-    private void doInferOrthologs( final Phylogeny gene_tree, final Phylogeny species_tree ) {
-        Phylogeny assigned_tree = null;
-        PhylogenyNode node = null;
-        final SDIR sdiunrooted = new SDIR();
-        List orthologs = null, super_orthologs = null, ultra_paralogs = null, subtree_neighbors = null;
-        assigned_tree = sdiunrooted.infer( gene_tree,
-                                           species_tree,
-                                           RIO.ROOT_BY_MINIMIZING_MAPPING_COST,
-                                           RIO.ROOT_BY_MINIMIZING_SUM_OF_DUPS,
-                                           RIO.ROOT_BY_MINIMIZING_TREE_HEIGHT,
-                                           true,
-                                           1 )[ 0 ];
-        setExtNodesOfAnalyzedGeneTrees( assigned_tree.getNumberOfExternalNodes() );
-        node = assigned_tree.getFirstExternalNode();
-        while ( node != null ) {
-            orthologs = PhylogenyMethods.getOrthologousNodes( node );
-            updateHash( o_hash_maps_, node, orthologs );
-            super_orthologs = PhylogenyMethods.getSuperOrthologousNodes( node );
-            updateHash( so_hash_maps_, node, super_orthologs );
-            subtree_neighbors = PhylogenyMethods.getSubtreeNeighbors( node );
-            updateHash( sn_hash_maps_, node, subtree_neighbors );
-            ultra_paralogs = PhylogenyMethods.getUltraParalogousNodes( node );
-            updateHash( up_hash_maps_, node, ultra_paralogs );
-            node = node.getNextExternalNode();
-        }
-    } // doInferOrthologs( Phylogeny, Phylogeny )
-
-    // Helper method which performs the actual ortholog inference for
-    // the external node with seqname query.
-    // (Last modified: 10/07/01)
-    private void doInferOrthologs( final Phylogeny gene_tree, final Phylogeny species_tree, final String query ) {
-        Phylogeny assigned_tree = null;
-        PhylogenyNode node = null;
-        final SDIR sdiunrooted = new SDIR();
-        List orthologs = null, super_orthologs = null, ultra_paralogs = null, subtree_neighbors = null;
-        assigned_tree = sdiunrooted.infer( gene_tree,
-                                           species_tree,
-                                           RIO.ROOT_BY_MINIMIZING_MAPPING_COST,
-                                           RIO.ROOT_BY_MINIMIZING_SUM_OF_DUPS,
-                                           RIO.ROOT_BY_MINIMIZING_TREE_HEIGHT,
-                                           true,
-                                           1 )[ 0 ];
-        setExtNodesOfAnalyzedGeneTrees( assigned_tree.getNumberOfExternalNodes() );
-        node = assigned_tree.getNode( query );
-        orthologs = PhylogenyMethods.getOrthologousNodes( node );
-        updateHash( o_hash_maps_, node, orthologs );
-        super_orthologs = PhylogenyMethods.getSuperOrthologousNodes( node );
-        updateHash( so_hash_maps_, node, super_orthologs );
-        subtree_neighbors = PhylogenyMethods.getSubtreeNeighbors( node );
-        updateHash( sn_hash_maps_, node, subtree_neighbors );
-        ultra_paralogs = PhylogenyMethods.getUltraParalogousNodes( node );
-        updateHash( up_hash_maps_, node, ultra_paralogs );
-    } // doInferOrthologs( Phylogeny, Phylogeny, String )
-
-    // Helper method for inferredOrthologsToString.
-    // inferredOrthologsToArrayList,
-    // and inferredUltraParalogsToString.
-    // (Last modified: 10/06/01)
-    private double getBootstrapValueFromHash( final HashMap<String, Integer> h, final String name ) {
-        if ( !h.containsKey( name ) ) {
-            return 0.0;
-        }
-        final int i = h.get( name );
-        return ( i * 100.0 / getBootstraps() );
     }
 
-    // Helper method for inferredOrthologTableToFile.
-    // Returns individual rows for the table as String.
-    // (Last modified: 11/14/00)
-    private String inferredOrthologsToTableHelper( final String name2,
-                                                   final String[] names,
-                                                   final int j,
-                                                   final boolean super_orthologs ) {
-        HashMap<String, Integer> hashmap = null;
-        String name = null, orthologs = new String( "" );
-        int value = 0;
-        if ( !super_orthologs ) {
-            hashmap = getInferredOrthologs( name2 );
+    private static String[] getAllExternalSequenceNames( final Phylogeny phy ) {
+        if ( phy.isEmpty() ) {
+            return null;
+        }
+        int i = 0;
+        final String[] names = new String[ phy.getNumberOfExternalNodes() ];
+        for( final PhylogenyNodeIterator iter = phy.iteratorExternalForward(); iter.hasNext(); ) {
+            names[ i++ ] = iter.next().getNodeData().getSequence().getName();
+        }
+        return names;
+    }
+
+    /**
+     * Returns the order in which ortholog (o), "super ortholog" (s) and
+     * distance (d) are returned and sorted (priority of sort always goes from
+     * left to right), given sort. For the meaning of sort
+     * 
+     * @see #inferredOrthologsToString(String,int,double,double)
+     *      
+     * @param sort
+     *            determines order and sort priority
+     * @return String indicating the order
+     */
+    public final static String getOrder( final int sort ) {
+        String order = "";
+        switch ( sort ) {
+            case 0:
+                order = "orthologies";
+                break;
+            case 1:
+                order = "orthologies > super orthologies";
+                break;
+            case 2:
+                order = "super orthologies > orthologies";
+                break;
+            case 3:
+                order = "orthologies > distance to query";
+                break;
+            case 4:
+                order = "distance to query > orthologies";
+                break;
+            case 5:
+                order = "orthologies > super orthologies > distance to query";
+                break;
+            case 6:
+                order = "orthologies > distance to query > super orthologies";
+                break;
+            case 7:
+                order = "super orthologies > orthologies > distance to query";
+                break;
+            case 8:
+                order = "super orthologies > distance to query > orthologies";
+                break;
+            case 9:
+                order = "distance to query > orthologies > super orthologies";
+                break;
+            case 10:
+                order = "distance to query > super orthologies > orthologies";
+                break;
+            case 11:
+                order = "orthologies > subtree neighbors > distance to query";
+                break;
+            case 12:
+                order = "orthologies > subtree neighbors > super orthologies > distance to query";
+                break;
+            case 13:
+                order = "orthologies > super orthologies > subtree neighbors > distance to query";
+                break;
+            case 14:
+                order = "subtree neighbors > orthologies > super orthologies > distance to query";
+                break;
+            case 15:
+                order = "subtree neighbors > distance to query > orthologies > super orthologies";
+                break;
+            case 16:
+                order = "orthologies > distance to query > subtree neighbors > super orthologies";
+                break;
+            case 17:
+                order = "orthologies > subtree neighbors > distance to query > super orthologies";
+                break;
+            default:
+                order = "orthologies";
+                break;
+        }
+        return order;
+    }
+
+    public final static StringBuffer getOrderHelp() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append( "  0: orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  1: orthologies > super orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  2: super orthologies > orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  3: orthologies > distance to query" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  4: distance to query > orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  5: orthologies > super orthologies > distance to query" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  6: orthologies > distance to query > super orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  7: super orthologies > orthologies > distance to query" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  8: super orthologies > distance to query > orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( "  9: distance to query > orthologies > super orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 10: distance to query > super orthologies > orthologies" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 11: orthologies > subtree neighbors > distance to query" + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 12: orthologies > subtree neighbors > super orthologies > distance to query"
+                + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 13: orthologies > super orthologies > subtree neighbors > distance to query"
+                + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 14: subtree neighbors > orthologies > super orthologies > distance to query"
+                + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 15: subtree neighbors > distance to query > orthologies > super orthologies"
+                + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 16: orthologies > distance to query > subtree neighbors > super orthologies"
+                + ForesterUtil.LINE_SEPARATOR );
+        sb.append( " 17: orthologies > subtree neighbors > distance to query > super orthologies"
+                + ForesterUtil.LINE_SEPARATOR );
+        return sb;
+    }
+
+    private final static List<PhylogenyNode> getSubtreeNeighbors( final PhylogenyNode query, final int level ) {
+        PhylogenyNode node = query;
+        if ( !node.isExternal() ) {
+            return null;
+        }
+        if ( !node.isRoot() ) {
+            node = node.getParent();
+        }
+        if ( level == 2 ) {
+            if ( !node.isRoot() ) {
+                node = node.getParent();
+            }
         }
         else {
-            hashmap = getInferredSuperOrthologs( name2 );
+            throw new IllegalArgumentException( "currently only supporting level 2 subtree neighbors " );
         }
-        if ( hashmap == null ) {
-            throw new RuntimeException( "Unexpected failure in method inferredOrthologsToTableHelper" );
-        }
-        for( int i = 0; i < names.length; ++i ) {
-            name = names[ i ];
-            if ( !hashmap.containsKey( name ) ) {
-                value = 0;
-            }
-            else {
-                value = hashmap.get( name );
-            }
-            if ( i == j ) {
-                // Sanity check.
-                if ( value != 0 ) {
-                    throw new RuntimeException( "Failed sanity check in method inferredOrthologsToTableHelper: value not 0." );
-                }
-                orthologs += ( " " + "\t" );
-            }
-            else {
-                orthologs += ( value + "\t" );
-            }
-        }
-        return orthologs;
-    } // inferredOrthologsToTableHelper
-
-    // Helper for inferredOrthologTableToFile(File).
-    // (Last modified: 11/28/00)
-    private void inferredOrthologTableToFile( final File outfile, final boolean super_orthologs ) throws IOException {
-        String name = "", line = "";
-        PrintWriter out = null;
-        if ( seq_names_ == null ) {
-            throw new IllegalStateException( "inferredOrthologTableToFile: seq_names_ is null." );
-        }
-        Arrays.sort( seq_names_ );
-        out = new PrintWriter( new FileWriter( outfile ), true );
-        if ( out == null ) {
-            throw new RuntimeException( "inferredOrthologTableToFile: failure to create PrintWriter." );
-        }
-        line = "\t\t\t\t";
-        for( int i = 0; i < seq_names_.length; ++i ) {
-            line += ( i + ")\t" );
-        }
-        line += "\n";
-        out.println( line );
-        for( int i = 0; i < seq_names_.length; ++i ) {
-            name = seq_names_[ i ];
-            if ( name.length() < 8 ) {
-                line = i + ")\t" + name + "\t\t\t";
-            }
-            else if ( name.length() < 16 ) {
-                line = i + ")\t" + name + "\t\t";
-            }
-            else {
-                line = i + ")\t" + name + "\t";
-            }
-            line += inferredOrthologsToTableHelper( name, seq_names_, i, super_orthologs );
-            out.println( line );
-        }
-        out.close();
-    } // inferredOrthologTableToFile( File, boolean )
-
-    /**
-     * Sets the numbers of trees analyzed.
-     * <p>
-     * (Last modified: 02/20/00)
-     * 
-     * @param the
-     *            numbers of trees analyzed
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
-     */
-    private void setBootstraps( int i ) {
-        if ( i < 1 ) {
-            i = 1;
-        }
-        bootstraps_ = i;
-    }
-
-    /**
-     * Sets number of ext nodes in gene trees analyzed (after stripping).
-     * <p>
-     * (Last modified: 05/02/00)
-     * 
-     * @param the
-     *            number of ext nodes in gene trees analyzed (after stripping)
-     * @see #inferOrthologs(Phylogeny[],Phylogeny)
-     * @see #inferOrthologs(File,Phylogeny)
-     */
-    private void setExtNodesOfAnalyzedGeneTrees( int i ) {
-        if ( i < 1 ) {
-            i = 0;
-        }
-        ext_nodes_ = i;
-    }
-
-    // Helper for doInferOrthologs( Phylogeny, Phylogeny, String )
-    // and doInferOrthologs( Phylogeny, Phylogeny ).
-    // (Last modified: 08/16/06)
-    private void updateHash( final HashMap h, final PhylogenyNode n, final List v ) {
-        String name = null;
-        int i = 0;
-        final HashMap<String, Integer> hash_map = ( HashMap<String, Integer> ) h.get( n.getNodeName() );
-        if ( hash_map == null ) {
-            throw new RuntimeException( "Unexpected failure in method updateHash." );
-        }
-        for( int j = 0; j < v.size(); ++j ) {
-            name = ( ( PhylogenyNode ) v.get( j ) ).getNodeName();
-            if ( hash_map.containsKey( name ) ) {
-                i = hash_map.get( name );
-                i++;
-            }
-            else {
-                hash_map.put( name, 1 );
-            }
-        }
-    }
-
-    /**
-     * Rounds a double to a int.
-     * <p>
-     * (Last modified: 03/15/01)
-     * 
-     * @param d
-     *            a double to be rounded to a int
-     * @return d rounded to a int
-     */
-    public static int roundToInt( final double d ) {
-        int i = 0;
-        i = ( int ) ( d + 0.5 );
-        return i;
+        final List<PhylogenyNode> sn = node.getAllExternalDescendants();
+        sn.remove( query );
+        return sn;
     }
 }

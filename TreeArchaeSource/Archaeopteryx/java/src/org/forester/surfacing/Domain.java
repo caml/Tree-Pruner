@@ -1,4 +1,4 @@
-// $Id: Domain.java,v 1.2 2008/03/09 00:11:13 cmzmasek Exp $
+// $Id: Domain.java,v 1.5 2009/11/17 03:51:34 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -32,29 +32,25 @@ public interface Domain extends Comparable<Domain> {
 
     public void addGoId( GoId go_id );
 
-    public double getConfidence();
-
     public DomainId getDomainId();
 
     public int getFrom();
 
     public GoId getGoId( int i );
 
-    public int getLength();
-
     public short getNumber();
 
     public int getNumberOfGoIds();
 
-    public double getScore();
+    public double getPerDomainEvalue();
 
-    public String getSearchParameter();
+    public double getPerDomainScore();
+
+    public double getPerSequenceEvalue();
+
+    public double getPerSequenceScore();
 
     public int getTo();
 
     public short getTotalCount();
-
-    public boolean isCompleteQueryMatch();
-
-    public boolean isCompleteTargetMatch();
 }

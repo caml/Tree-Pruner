@@ -4,7 +4,7 @@
 # Copyright::  Copyright (C) 2006-2007 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: nexus_writer.rb,v 1.3 2007/06/12 04:51:35 cmzmasek Exp $
+# $Id: nexus_writer.rb,v 1.4 2009/11/04 01:50:59 cmzmasek Exp $
 #
 # last modified: 05/16/2007
 
@@ -38,7 +38,6 @@ module Evoruby
                 raise StandardError, error_msg, caller
             end
 
-
             Util.check_file_for_writability( path )
 
             f = File.open( path, "a" )
@@ -64,6 +63,7 @@ module Evoruby
                 name = Util.normalize_seq_name( name, @max_name_length )
                 f.print( "      " )
                 f.print( name )
+                f.print( " " )
                 if ( @clean )
                     seq = Util.clean_seq_str( seq )
                 end

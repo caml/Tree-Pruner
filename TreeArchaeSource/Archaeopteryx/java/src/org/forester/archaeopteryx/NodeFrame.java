@@ -1,4 +1,4 @@
-// $Id: NodeFrame.java,v 1.2 2009/02/22 02:05:44 cmzmasek Exp $
+// $Id: NodeFrame.java,v 1.7 2009/10/27 00:26:46 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -41,13 +41,13 @@ final class NodeFrame extends javax.swing.JFrame {
 
     private static final long serialVersionUID = -6943510233968557246L;
     private final TreePanel   _reepanel;
-    private int               index            = -1;
+    private int               _index           = -1;
 
     NodeFrame( final PhylogenyNode n, final Phylogeny tree, final TreePanel tp, final int x ) {
         super( "Node " + ( ForesterUtil.isEmpty( n.getNodeName() ) ? n.getNodeId() : n.getNodeName() ) );
         _reepanel = tp;
         setSize( Constants.NODE_FRAME_SIZE );
-        index = x;
+        _index = x;
         final Container contentPane = getContentPane();
         final NodePanel nodepanel = new NodePanel( n );
         contentPane.add( nodepanel, BorderLayout.CENTER );
@@ -64,13 +64,40 @@ final class NodeFrame extends javax.swing.JFrame {
         setVisible( true );
     }
 
+    NodeFrame( final PhylogenyNode n, final Phylogeny tree, final TreePanel tp, final int x, final String dummy ) {
+        super( "Editable Node " + ( ForesterUtil.isEmpty( n.getNodeName() ) ? n.getNodeId() : n.getNodeName() ) );
+        _reepanel = tp;
+        setSize( Constants.NODE_FRAME_SIZE );
+        _index = x;
+        final Container contentPane = getContentPane();
+        final NodeEditPanel nodepanel = new NodeEditPanel( n, tp );
+        contentPane.add( nodepanel, BorderLayout.CENTER );
+        addWindowListener( new WindowAdapter() {
+
+            @Override
+            public void windowClosing( final WindowEvent e ) {
+                try {
+                    nodepanel.writeAll();
+                }
+                catch ( final Exception ex ) {
+                    // Do nothing.
+                }
+                remove(); // to release slot in array
+                dispose();
+            }
+        } );
+        setResizable( false );
+        nodepanel.setVisible( true );
+        setVisible( true );
+    }
+
     TreePanel getTreePanel() {
         return _reepanel;
     }
 
     void remove() {
-        if ( index > -1 ) {
-            _reepanel.removeEditNodeFrame( index ); // to release slot in array
+        if ( _index > -1 ) {
+            _reepanel.removeEditNodeFrame( _index ); // to release slot in array
         }
     }
 }

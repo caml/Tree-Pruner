@@ -1,4 +1,4 @@
-// $Id: SimpleDomain.java,v 1.3 2008/11/14 01:12:50 cmzmasek Exp $
+// $Id: SimpleDomain.java,v 1.5 2009/11/17 03:51:34 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -44,6 +44,7 @@ public class SimpleDomain implements Domain {
         _id = new DomainId( id_str );
     }
 
+    @Override
     public void addGoId( final GoId go_id ) {
         throw new RuntimeException( "method not implemented" );
     }
@@ -55,10 +56,6 @@ public class SimpleDomain implements Domain {
         return getDomainId().compareTo( domain.getDomainId() );
     }
 
-    public double getConfidence() {
-        throw new RuntimeException( "method not implemented" );
-    }
-
     public DomainId getDomainId() {
         return _id;
     }
@@ -67,6 +64,7 @@ public class SimpleDomain implements Domain {
         throw new RuntimeException( "method not implemented" );
     }
 
+    @Override
     public GoId getGoId( final int i ) {
         throw new RuntimeException( "method not implemented" );
     }
@@ -79,11 +77,26 @@ public class SimpleDomain implements Domain {
         throw new RuntimeException( "method not implemented" );
     }
 
+    @Override
     public int getNumberOfGoIds() {
         throw new RuntimeException( "method not implemented" );
     }
 
-    public double getScore() {
+    @Override
+    public double getPerDomainEvalue() {
+        throw new RuntimeException( "method not implemented" );
+    }
+
+    @Override
+    public double getPerDomainScore() {
+        throw new RuntimeException( "method not implemented" );
+    }
+
+    public double getPerSequenceEvalue() {
+        throw new RuntimeException( "method not implemented" );
+    }
+
+    public double getPerSequenceScore() {
         throw new RuntimeException( "method not implemented" );
     }
 

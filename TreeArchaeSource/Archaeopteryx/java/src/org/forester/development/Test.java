@@ -1,4 +1,4 @@
-// $Id: Test.java,v 1.15 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: Test.java,v 1.36 2010/09/29 23:50:16 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -25,37 +25,38 @@
 
 package org.forester.development;
 
+import java.io.File;
 import java.util.Date;
+import java.util.Locale;
 
-import org.forester.phylogeny.Phylogeny;
+import org.forester.util.ForesterUtil;
 
 /*
  * *
  */
 public class Test {
 
+    private final static String PATH_TO_TEST_DATA = System.getProperty( "user.dir" ) + ForesterUtil.getFileSeparator()
+                                                          + "test_data" + ForesterUtil.getFileSeparator();
+
     public static void main( final String[] args ) {
-        int failed = 0;
-        int succeeded = 0;
+        System.out.println( "[Java version: " + ForesterUtil.JAVA_VERSION + " " + ForesterUtil.JAVA_VENDOR + "]" );
+        System.out.println( "[OS: " + ForesterUtil.OS_NAME + " " + ForesterUtil.OS_ARCH + " " + ForesterUtil.OS_VERSION
+                + "]" );
+        Locale.setDefault( Locale.US );
+        System.out.println( "[Locale: " + Locale.getDefault() + "]" );
+        final int failed = 0;
+        final int succeeded = 0;
+        System.out.print( "[Test if directory with files for testing exists/is readable: " );
+        if ( Test.testDir( PATH_TO_TEST_DATA ) ) {
+            System.out.println( "OK.]" );
+        }
+        else {
+            System.out.println( "could not find/read from directory \"" + PATH_TO_TEST_DATA + "\".]" );
+            System.out.println( "Testing aborted." );
+            System.exit( -1 );
+        }
         final long start_time = new Date().getTime();
-        System.out.print( "Amino acid sequence: " );
-        if ( Test.testAminoAcidSequence() ) {
-            System.out.println( "OK." );
-            succeeded++;
-        }
-        else {
-            System.out.println( "failed." );
-            failed++;
-        }
-        System.out.println( "Creation of balanced phylogeny: " );
-        if ( Test.testCreateBalancedPhylogeny() ) {
-            System.out.println( "OK." );
-            succeeded++;
-        }
-        else {
-            System.out.println( "failed." );
-            failed++;
-        }
         System.out.println( "\nTime requirement:  " + ( new Date().getTime() - start_time ) + "ms." );
         System.out.println();
         System.out.println( "Successful tests: " + succeeded );
@@ -69,79 +70,20 @@ public class Test {
         }
     }
 
-    private static boolean testAminoAcidSequence() {
+    private static boolean testDir( final String file ) {
         try {
-            final AminoAcidSequence aa0 = new AminoAcidSequence( 12 );
-            if ( aa0.getLength() != 12 ) {
+            final File f = new File( file );
+            if ( !f.exists() ) {
                 return false;
             }
-            final AminoAcidSequence aa1 = new AminoAcidSequence( "aa1", " aAklm-?xX*z$#" );
-            final AminoAcidSequence aa2 = aa1.copy();
-            aa1.setStateAt( 0, ( byte ) 1 );
-            aa1.setResidueAt( 1, 'r' );
-            if ( aa1.getLength() != 14 ) {
+            if ( !f.isDirectory() ) {
                 return false;
             }
-            if ( aa1.getResidueAt( 0 ) != 'R' ) {
-                return false;
-            }
-            if ( aa1.getResidueAt( 1 ) != 'R' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 0 ) != '?' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 1 ) != 'A' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 6 ) != '-' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 7 ) != '?' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 8 ) != '?' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 9 ) != '?' ) {
-                return false;
-            }
-            if ( aa2.getResidueAt( 10 ) != '*' ) {
-                return false;
-            }
-            if ( !aa2.getSequenceAsString().equals( "?AAKLM-???*???" ) ) {
-                return false;
-            }
-            if ( !aa1.getSequenceAsString().equals( "RRAKLM-???*???" ) ) {
+            if ( !f.canRead() ) {
                 return false;
             }
         }
         catch ( final Exception e ) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean testCreateBalancedPhylogeny() {
-        try {
-            final Phylogeny p0 = DevelopmentTools.createBalancedPhylogeny( 6, 5 );
-            if ( p0.getRoot().getNumberOfDescendants() != 5 ) {
-                return false;
-            }
-            if ( p0.getNumberOfExternalNodes() != 15625 ) {
-                return false;
-            }
-            final Phylogeny p1 = DevelopmentTools.createBalancedPhylogeny( 2, 10 );
-            if ( p1.getRoot().getNumberOfDescendants() != 10 ) {
-                return false;
-            }
-            if ( p1.getNumberOfExternalNodes() != 100 ) {
-                return false;
-            }
-        }
-        catch ( final Exception e ) {
-            e.printStackTrace();
             return false;
         }
         return true;

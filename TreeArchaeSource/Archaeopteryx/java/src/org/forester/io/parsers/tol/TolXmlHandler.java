@@ -1,4 +1,4 @@
-// $Id: TolXmlHandler.java,v 1.6 2009/03/19 02:12:45 cmzmasek Exp $
+// $Id: TolXmlHandler.java,v 1.10 2010/09/29 23:50:18 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -28,8 +28,8 @@ package org.forester.io.parsers.tol;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.forester.io.parsers.PhylogenyParserException;
 import org.forester.io.parsers.phyloxml.XmlElement;
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.data.Identifier;
@@ -42,14 +42,21 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public final class TolXmlHandler extends DefaultHandler {
 
-    private String          _current_element_name;
-    private Phylogeny       _current_phylogeny;
-    private List<Phylogeny> _phylogenies;
-    private XmlElement      _current_xml_element;
-    private PhylogenyNode   _current_node;
+    private String                    _current_element_name;
+    private Phylogeny                 _current_phylogeny;
+    private List<Phylogeny>           _phylogenies;
+    private XmlElement                _current_xml_element;
+    private PhylogenyNode             _current_node;
+    private final static StringBuffer _buffer = new StringBuffer();
 
     TolXmlHandler() {
         // Constructor.
+    }
+
+    private void addNode() {
+        final PhylogenyNode new_node = new PhylogenyNode();
+        getCurrentNode().addAsChild( new_node );
+        setCurrentNode( new_node );
     }
 
     @Override
@@ -94,44 +101,6 @@ public final class TolXmlHandler extends DefaultHandler {
         }
     }
 
-    @Override
-    public void startDocument() throws SAXException {
-        init();
-    }
-
-    @Override
-    public void startElement( final String namespace_uri,
-                              final String local_name,
-                              final String qualified_name,
-                              final Attributes attributes ) throws SAXException {
-        setCurrentElementName( local_name );
-        if ( local_name.equals( TolXmlMapping.CLADE ) ) {
-            final XmlElement element = new XmlElement( namespace_uri, local_name, local_name, attributes );
-            getCurrentXmlElement().addChildElement( element );
-            setCurrentXmlElement( element );
-            newClade();
-        }
-        else if ( local_name.equals( TolXmlMapping.PHYLOGENY ) ) {
-            setCurrentXmlElement( new XmlElement( "", "", "", null ) );
-            newPhylogeny();
-        }
-        else if ( getCurrentPhylogeny() != null ) {
-            final XmlElement element = new XmlElement( namespace_uri, local_name, local_name, attributes );
-            getCurrentXmlElement().addChildElement( element );
-            setCurrentXmlElement( element );
-        }
-    }
-
-    List<Phylogeny> getPhylogenies() {
-        return _phylogenies;
-    }
-
-    private void addNode() {
-        final PhylogenyNode new_node = new PhylogenyNode();
-        getCurrentNode().addAsChild( new_node );
-        setCurrentNode( new_node );
-    }
-
     private void finishPhylogeny() throws SAXException {
         getCurrentPhylogeny().setRooted( true );
         getCurrentPhylogeny().recalculateNumberOfExternalDescendants( false );
@@ -152,6 +121,10 @@ public final class TolXmlHandler extends DefaultHandler {
 
     private XmlElement getCurrentXmlElement() {
         return _current_xml_element;
+    }
+
+    List<Phylogeny> getPhylogenies() {
+        return _phylogenies;
     }
 
     private void init() {
@@ -211,6 +184,34 @@ public final class TolXmlHandler extends DefaultHandler {
         _phylogenies = phylogenies;
     }
 
+    @Override
+    public void startDocument() throws SAXException {
+        init();
+    }
+
+    @Override
+    public void startElement( final String namespace_uri,
+                              final String local_name,
+                              final String qualified_name,
+                              final Attributes attributes ) throws SAXException {
+        setCurrentElementName( local_name );
+        if ( local_name.equals( TolXmlMapping.CLADE ) ) {
+            final XmlElement element = new XmlElement( namespace_uri, local_name, local_name, attributes );
+            getCurrentXmlElement().addChildElement( element );
+            setCurrentXmlElement( element );
+            newClade();
+        }
+        else if ( local_name.equals( TolXmlMapping.PHYLOGENY ) ) {
+            setCurrentXmlElement( new XmlElement( "", "", "", null ) );
+            newPhylogeny();
+        }
+        else if ( getCurrentPhylogeny() != null ) {
+            final XmlElement element = new XmlElement( namespace_uri, local_name, local_name, attributes );
+            getCurrentXmlElement().addChildElement( element );
+            setCurrentXmlElement( element );
+        }
+    }
+
     public static boolean attributeEqualsValue( final XmlElement element,
                                                 final String attributeName,
                                                 final String attributeValue ) {
@@ -266,6 +267,48 @@ public final class TolXmlHandler extends DefaultHandler {
                     }
                     else {
                         node.getNodeData().getTaxonomy().setCommonName( name );
+                    }
+                }
+            }
+            else if ( qualified_name.equals( TolXmlMapping.AUTHORITY ) ) {
+                String auth = element.getValueAsString();
+                if ( !ForesterUtil.isEmpty( auth ) && !auth.equalsIgnoreCase( "null" ) ) {
+                    if ( !node.getNodeData().isHasTaxonomy() ) {
+                        node.getNodeData().setTaxonomy( new Taxonomy() );
+                    }
+                    auth = auth.replaceAll( "&amp;", "&" );
+                    node.getNodeData().getTaxonomy().setAuthority( auth );
+                }
+            }
+            else if ( qualified_name.equals( TolXmlMapping.AUTHDATE ) ) {
+                final String authdate = element.getValueAsString();
+                if ( !ForesterUtil.isEmpty( authdate ) && !authdate.equalsIgnoreCase( "null" ) ) {
+                    if ( node.getNodeData().isHasTaxonomy()
+                            && !ForesterUtil.isEmpty( node.getNodeData().getTaxonomy().getAuthority() ) ) {
+                        _buffer.setLength( 0 );
+                        _buffer.append( node.getNodeData().getTaxonomy().getAuthority() );
+                        _buffer.append( " " );
+                        _buffer.append( authdate );
+                        node.getNodeData().getTaxonomy().setAuthority( _buffer.toString() );
+                    }
+                }
+            }
+            else if ( qualified_name.equals( TolXmlMapping.OTHERNAMES ) ) {
+                for( int j = 0; j < element.getNumberOfChildElements(); ++j ) {
+                    final XmlElement element_j = element.getChildElement( j );
+                    if ( element_j.getQualifiedName().equals( TolXmlMapping.OTHERNAME ) ) {
+                        for( int z = 0; z < element_j.getNumberOfChildElements(); ++z ) {
+                            final XmlElement element_z = element_j.getChildElement( z );
+                            if ( element_z.getQualifiedName().equals( TolXmlMapping.OTHERNAME_NAME ) ) {
+                                final String syn = element_z.getValueAsString();
+                                if ( !ForesterUtil.isEmpty( syn ) && !syn.equalsIgnoreCase( "null" ) ) {
+                                    if ( !node.getNodeData().isHasTaxonomy() ) {
+                                        node.getNodeData().setTaxonomy( new Taxonomy() );
+                                    }
+                                    node.getNodeData().getTaxonomy().getSynonyms().add( syn );
+                                }
+                            }
+                        }
                     }
                 }
             }

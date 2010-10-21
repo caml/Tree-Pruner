@@ -1,4 +1,4 @@
-// $Id: PrintableDomainSimilarity.java,v 1.13 2009/01/13 19:49:32 cmzmasek Exp $
+// $Id: PrintableDomainSimilarity.java,v 1.15 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -51,7 +51,6 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
     final private double                                                 _min;
     final private double                                                 _max;
     final private double                                                 _mean;
-    final private double                                                 _median;
     final private double                                                 _sd;
     final private int                                                    _n;
     private final int                                                    _max_difference_in_counts;
@@ -115,7 +114,6 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
         _min = min;
         _max = max;
         _mean = mean;
-        _median = median;
         _sd = sd;
         _n = n;
         _max_difference_in_counts = max_difference_in_counts;
@@ -136,6 +134,142 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
             if ( getMaximalDifference() < 0 ) {
                 throw new IllegalArgumentException( "attempt to use negative max difference with more than two species" );
             }
+        }
+    }
+
+    private void addGoInformation( final StringBuffer sb, final boolean for_table, final boolean html ) {
+        if ( !for_table ) {
+            sb.append( "<" );
+        }
+        switch ( getGoAnnotationOutput() ) {
+            case ALL: {
+                final int go_ids = getCombinableDomains().getKeyDomain().getNumberOfGoIds();
+                boolean first = true;
+                for( int i = 0; i < go_ids; ++i ) {
+                    final GoId go_id = getCombinableDomains().getKeyDomain().getGoId( i );
+                    if ( getGoIdToTermMap() != null ) {
+                        if ( getGoIdToTermMap().containsKey( go_id ) ) {
+                            first = appendGoTerm( sb, getGoIdToTermMap().get( go_id ), first, html );
+                        }
+                        else {
+                            sb.append( "go id \"" + go_id + "\" not found ["
+                                    + getCombinableDomains().getKeyDomain().getId() + "]" );
+                        }
+                    }
+                    else {
+                        if ( !first ) {
+                            sb.append( ", " );
+                        }
+                        if ( html ) {
+                            sb.append( "<a href=\"" + SurfacingConstants.AMIGO_LINK + go_id
+                                    + "\" target=\"amigo_window\">" + go_id + "</a>" );
+                        }
+                        else {
+                            sb.append( go_id );
+                        }
+                        first = false;
+                    }
+                }
+                break;
+            }
+            case NONE: {
+                break;
+            }
+            default:
+                throw new IllegalStateException( "unknown " + getGoAnnotationOutput() );
+        }
+        if ( !for_table ) {
+            sb.append( ">: " );
+        }
+    }
+
+    private void addSpeciesSpecificDomainData( final StringBuffer sb, final Species species, final boolean html ) {
+        if ( getDetaildness() != DomainSimilarityCalculator.Detailedness.BASIC ) {
+            sb.append( "[" );
+        }
+        if ( html ) {
+            sb.append( "<b>" );
+            if ( ( SurfacingConstants.TAXONOMY_LINK != null ) && ( species.getSpeciesId().length() > 2 )
+                    && ( species.getSpeciesId().length() < 6 ) ) {
+                sb.append( "<a href=\"" + SurfacingConstants.TAXONOMY_LINK + species.getSpeciesId()
+                        + "\" target=\"taxonomy_window\">" + species.getSpeciesId() + "</a>" );
+            }
+            else {
+                sb.append( species.getSpeciesId() );
+            }
+            sb.append( "</b>" );
+        }
+        else {
+            sb.append( species.getSpeciesId() );
+        }
+        if ( getDetaildness() != DomainSimilarityCalculator.Detailedness.BASIC ) {
+            sb.append( ":" );
+            sb.append( getSpeciesData().get( species ).toStringBuffer( getDetaildness(), html ) );
+            sb.append( "]" );
+        }
+        if ( html ) {
+            sb.append( "<br>" );
+        }
+        sb.append( PrintableDomainSimilarity.SPECIES_SEPARATOR );
+    }
+
+    private boolean appendGoTerm( final StringBuffer sb, final GoTerm go_term, final boolean first, final boolean html ) {
+        if ( ( getGoNamespaceLimit() == null ) || getGoNamespaceLimit().equals( go_term.getGoNameSpace() ) ) {
+            if ( !first ) {
+                sb.append( ", " );
+            }
+            final GoId go_id = go_term.getGoId();
+            if ( html ) {
+                sb.append( "<a href=\"" + SurfacingConstants.AMIGO_LINK + go_id + "\" target=\"amigo_window\">" + go_id
+                        + "</a>" );
+            }
+            else {
+                sb.append( go_id );
+            }
+            sb.append( ":" );
+            sb.append( go_term.getName() );
+            if ( !html ) {
+                if ( getGoNamespaceLimit() == null ) {
+                    sb.append( ":" );
+                    sb.append( go_term.getGoNameSpace().toString() );
+                }
+                for( final GoXRef xref : go_term.getGoXRefs() ) {
+                    sb.append( ":" );
+                    sb.append( xref.toString() );
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private void boldEndIfSortedBy( final DomainSimilaritySortField sort_field, final StringBuffer sb ) {
+        if ( getSortField() == sort_field ) {
+            sb.append( "</b>" );
+        }
+    }
+
+    private void boldStartIfSortedBy( final DomainSimilaritySortField sort_field, final StringBuffer sb ) {
+        if ( getSortField() == sort_field ) {
+            sb.append( "<b>" );
+        }
+    }
+
+    private int compareByDomainId( final DomainSimilarity other ) {
+        return getDomainId().compareTo( other.getDomainId() );
+    }
+
+    private int compareBySpeciesCount( final DomainSimilarity domain_similarity ) {
+        final int s_this = getSpeciesData().size();
+        final int s_other = domain_similarity.getSpeciesData().size();
+        if ( s_this < s_other ) {
+            return PrintableDomainSimilarity.BEFORE;
+        }
+        else if ( s_this > s_other ) {
+            return PrintableDomainSimilarity.AFTER;
+        }
+        else {
+            return PrintableDomainSimilarity.EQUAL;
         }
     }
 
@@ -295,8 +429,24 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
         return sorted_ids;
     }
 
+    private CombinableDomains getCombinableDomains() {
+        return _combinable_domains;
+    }
+
+    private DomainSimilarityCalculator.Detailedness getDetaildness() {
+        return _detailedness;
+    }
+
     public DomainId getDomainId() {
         return getCombinableDomains().getKeyDomain();
+    }
+
+    private DomainSimilarityCalculator.GoAnnotationOutput getGoAnnotationOutput() {
+        return _go_annotation_output;
+    }
+
+    private Map<GoId, GoTerm> getGoIdToTermMap() {
+        return _go_id_to_term_map;
     }
 
     public GoNameSpace getGoNamespaceLimit() {
@@ -307,6 +457,7 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
         return _max_difference;
     }
 
+    @Override
     public int getMaximalDifferenceInCounts() {
         return _max_difference_in_counts;
     }
@@ -327,6 +478,10 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
         return _n;
     }
 
+    private DomainSimilaritySortField getSortField() {
+        return _sort_field;
+    }
+
     public SortedSet<Species> getSpecies() {
         final SortedSet<Species> species = new TreeSet<Species>();
         for( final Species s : getSpeciesData().keySet() ) {
@@ -343,8 +498,44 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
         return _species_data;
     }
 
+    private StringBuffer getSpeciesDataInAlphabeticalOrder( final boolean html ) {
+        final StringBuffer sb = new StringBuffer();
+        for( final Species species : getSpeciesData().keySet() ) {
+            addSpeciesSpecificDomainData( sb, species, html );
+        }
+        return sb;
+    }
+
+    private StringBuffer getSpeciesDataInCustomOrder( final boolean html ) {
+        final StringBuffer sb = new StringBuffer();
+        for( final Species order_species : getSpeciesCustomOrder() ) {
+            if ( getSpeciesData().keySet().contains( order_species ) ) {
+                addSpeciesSpecificDomainData( sb, order_species, html );
+            }
+            else {
+                sb.append( PrintableDomainSimilarity.NO_SPECIES );
+                sb.append( PrintableDomainSimilarity.SPECIES_SEPARATOR );
+            }
+        }
+        return sb;
+    }
+
     public double getStandardDeviationOfSimilarityScore() {
         return _sd;
+    }
+
+    private void init() {
+        _detailedness = DomainSimilarityCalculator.Detailedness.PUNCTILIOUS;
+        _go_annotation_output = null;
+        _go_id_to_term_map = null;
+    }
+
+    private boolean isSortBySpeciesCountFirst() {
+        return _sort_by_species_count_first;
+    }
+
+    private boolean isTreatAsBinaryComparison() {
+        return _treat_as_binary_comparison;
     }
 
     public void setDetailedness( final Detailedness detailedness ) {
@@ -384,198 +575,6 @@ public class PrintableDomainSimilarity implements DomainSimilarity {
             default:
                 throw new AssertionError( "Unknown print option: " + print_option );
         }
-    }
-
-    private void addGoInformation( final StringBuffer sb, final boolean for_table, final boolean html ) {
-        if ( !for_table ) {
-            sb.append( "<" );
-        }
-        switch ( getGoAnnotationOutput() ) {
-            case ALL: {
-                final int go_ids = getCombinableDomains().getKeyDomain().getNumberOfGoIds();
-                boolean first = true;
-                for( int i = 0; i < go_ids; ++i ) {
-                    final GoId go_id = getCombinableDomains().getKeyDomain().getGoId( i );
-                    if ( getGoIdToTermMap() != null ) {
-                        if ( getGoIdToTermMap().containsKey( go_id ) ) {
-                            first = appendGoTerm( sb, getGoIdToTermMap().get( go_id ), first, html );
-                        }
-                        else {
-                            sb.append( "go id \"" + go_id + "\" not found ["
-                                    + getCombinableDomains().getKeyDomain().getId() + "]" );
-                        }
-                    }
-                    else {
-                        if ( !first ) {
-                            sb.append( ", " );
-                        }
-                        if ( html ) {
-                            sb.append( "<a href=\"" + SurfacingConstants.AMIGO_LINK + go_id
-                                    + "\" target=\"amigo_window\">" + go_id + "</a>" );
-                        }
-                        else {
-                            sb.append( go_id );
-                        }
-                        first = false;
-                    }
-                }
-                break;
-            }
-            case NONE: {
-                break;
-            }
-            default:
-                throw new IllegalStateException( "unknown " + getGoAnnotationOutput() );
-        }
-        if ( !for_table ) {
-            sb.append( ">: " );
-        }
-    }
-
-    private void addSpeciesSpecificDomainData( final StringBuffer sb, final Species species, final boolean html ) {
-        if ( getDetaildness() != DomainSimilarityCalculator.Detailedness.BASIC ) {
-            sb.append( "[" );
-        }
-        if ( html ) {
-            sb.append( "<b>" );
-            if ( ( SurfacingConstants.TAXONOMY_LINK != null ) && ( species.getSpeciesId().length() > 2 )
-                    && ( species.getSpeciesId().length() < 6 ) ) {
-                sb.append( "<a href=\"" + SurfacingConstants.TAXONOMY_LINK + species.getSpeciesId()
-                        + "\" target=\"taxonomy_window\">" + species.getSpeciesId() + "</a>" );
-            }
-            else {
-                sb.append( species.getSpeciesId() );
-            }
-            sb.append( "</b>" );
-        }
-        else {
-            sb.append( species.getSpeciesId() );
-        }
-        if ( getDetaildness() != DomainSimilarityCalculator.Detailedness.BASIC ) {
-            sb.append( ":" );
-            sb.append( getSpeciesData().get( species ).toStringBuffer( getDetaildness(), html ) );
-            sb.append( "]" );
-        }
-        if ( html ) {
-            sb.append( "<br>" );
-        }
-        sb.append( PrintableDomainSimilarity.SPECIES_SEPARATOR );
-    }
-
-    private boolean appendGoTerm( final StringBuffer sb, final GoTerm go_term, final boolean first, final boolean html ) {
-        if ( ( getGoNamespaceLimit() == null ) || getGoNamespaceLimit().equals( go_term.getGoNameSpace() ) ) {
-            if ( !first ) {
-                sb.append( ", " );
-            }
-            final GoId go_id = go_term.getGoId();
-            if ( html ) {
-                sb.append( "<a href=\"" + SurfacingConstants.AMIGO_LINK + go_id + "\" target=\"amigo_window\">" + go_id
-                        + "</a>" );
-            }
-            else {
-                sb.append( go_id );
-            }
-            sb.append( ":" );
-            sb.append( go_term.getName() );
-            if ( !html ) {
-                if ( getGoNamespaceLimit() == null ) {
-                    sb.append( ":" );
-                    sb.append( go_term.getGoNameSpace().toString() );
-                }
-                for( final GoXRef xref : go_term.getGoXRefs() ) {
-                    sb.append( ":" );
-                    sb.append( xref.toString() );
-                }
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private void boldEndIfSortedBy( final DomainSimilaritySortField sort_field, final StringBuffer sb ) {
-        if ( getSortField() == sort_field ) {
-            sb.append( "</b>" );
-        }
-    }
-
-    private void boldStartIfSortedBy( final DomainSimilaritySortField sort_field, final StringBuffer sb ) {
-        if ( getSortField() == sort_field ) {
-            sb.append( "<b>" );
-        }
-    }
-
-    private int compareByDomainId( final DomainSimilarity other ) {
-        return getDomainId().compareTo( other.getDomainId() );
-    }
-
-    private int compareBySpeciesCount( final DomainSimilarity domain_similarity ) {
-        final int s_this = getSpeciesData().size();
-        final int s_other = domain_similarity.getSpeciesData().size();
-        if ( s_this < s_other ) {
-            return PrintableDomainSimilarity.BEFORE;
-        }
-        else if ( s_this > s_other ) {
-            return PrintableDomainSimilarity.AFTER;
-        }
-        else {
-            return PrintableDomainSimilarity.EQUAL;
-        }
-    }
-
-    private CombinableDomains getCombinableDomains() {
-        return _combinable_domains;
-    }
-
-    private DomainSimilarityCalculator.Detailedness getDetaildness() {
-        return _detailedness;
-    }
-
-    private DomainSimilarityCalculator.GoAnnotationOutput getGoAnnotationOutput() {
-        return _go_annotation_output;
-    }
-
-    private Map<GoId, GoTerm> getGoIdToTermMap() {
-        return _go_id_to_term_map;
-    }
-
-    private DomainSimilaritySortField getSortField() {
-        return _sort_field;
-    }
-
-    private StringBuffer getSpeciesDataInAlphabeticalOrder( final boolean html ) {
-        final StringBuffer sb = new StringBuffer();
-        for( final Species species : getSpeciesData().keySet() ) {
-            addSpeciesSpecificDomainData( sb, species, html );
-        }
-        return sb;
-    }
-
-    private StringBuffer getSpeciesDataInCustomOrder( final boolean html ) {
-        final StringBuffer sb = new StringBuffer();
-        for( final Species order_species : getSpeciesCustomOrder() ) {
-            if ( getSpeciesData().keySet().contains( order_species ) ) {
-                addSpeciesSpecificDomainData( sb, order_species, html );
-            }
-            else {
-                sb.append( PrintableDomainSimilarity.NO_SPECIES );
-                sb.append( PrintableDomainSimilarity.SPECIES_SEPARATOR );
-            }
-        }
-        return sb;
-    }
-
-    private void init() {
-        _detailedness = DomainSimilarityCalculator.Detailedness.PUNCTILIOUS;
-        _go_annotation_output = null;
-        _go_id_to_term_map = null;
-    }
-
-    private boolean isSortBySpeciesCountFirst() {
-        return _sort_by_species_count_first;
-    }
-
-    private boolean isTreatAsBinaryComparison() {
-        return _treat_as_binary_comparison;
     }
 
     private StringBuffer toStringBufferDetailedHTML() {

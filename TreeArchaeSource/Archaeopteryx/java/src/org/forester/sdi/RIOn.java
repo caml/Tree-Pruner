@@ -1,4 +1,4 @@
-// $Id: RIOn.java,v 1.4 2008/12/11 00:27:35 cmzmasek Exp $
+// $Id: RIOn.java,v 1.7 2010/09/05 17:56:50 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -45,22 +45,6 @@ public class RIOn {
     GeneralTable<String, Integer> _super_orthologs                = null;
     GeneralTable<String, Integer> _ultra_paralogs                 = null;
 
-    public GeneralTable<String, Integer> getOrthologs() {
-        return _orthologs;
-    }
-
-    public GeneralTable<String, Integer> getParalogs() {
-        return _paralogs;
-    }
-
-    public GeneralTable<String, Integer> getSuperOrthologs() {
-        return _super_orthologs;
-    }
-
-    public GeneralTable<String, Integer> getUltraParalogs() {
-        return _ultra_paralogs;
-    }
-
     private void doInferOrthologs( final Phylogeny gene_tree, final Phylogeny species_tree ) {
         final SDIR sdiunrooted = new SDIR();
         final Phylogeny assigned_tree = sdiunrooted.infer( gene_tree,
@@ -80,10 +64,10 @@ public class RIOn {
                 if ( i != j ) {
                     final PhylogenyNode node_i = external_nodes.get( i );
                     final PhylogenyNode node_j = external_nodes.get( j );
-                    final PhylogenyNode lca = methods.getLCA( node_i, node_j );
+                    final PhylogenyNode lca = methods.obtainLCA( node_i, node_j );
                     final Event event = lca.getNodeData().getEvent();
-                    final String node_i_name = node_i.getNodeName();
-                    final String node_j_name = node_j.getNodeName();
+                    final String node_i_name = node_i.getNodeData().getSequence().getName();
+                    final String node_j_name = node_j.getNodeData().getSequence().getName();
                     if ( event.isDuplication() ) {
                         increaseCounter( getOrthologs(), node_i_name, node_j_name );
                     }
@@ -93,6 +77,22 @@ public class RIOn {
                 }
             }
         }
+    }
+
+    public GeneralTable<String, Integer> getOrthologs() {
+        return _orthologs;
+    }
+
+    public GeneralTable<String, Integer> getParalogs() {
+        return _paralogs;
+    }
+
+    public GeneralTable<String, Integer> getSuperOrthologs() {
+        return _super_orthologs;
+    }
+
+    public GeneralTable<String, Integer> getUltraParalogs() {
+        return _ultra_paralogs;
     }
 
     private void increaseCounter( final GeneralTable<String, Integer> table,

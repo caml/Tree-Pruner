@@ -1,4 +1,4 @@
-// $Id: PhyloXmlHandler.java,v 1.4 2009/01/13 19:49:31 cmzmasek Exp $
+// $Id: PhyloXmlHandler.java,v 1.14 2010/09/29 23:50:17 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -26,20 +26,25 @@
 package org.forester.io.parsers.phyloxml;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.forester.io.parsers.PhylogenyParserException;
-import org.forester.io.parsers.phyloxml.phylogenydata.BinaryCharactersParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.BranchWidthParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.ColorParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.ConfidenceParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.DateParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.EventParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.IdentifierParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.PropertyParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.ReferenceParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.SequenceParser;
-import org.forester.io.parsers.phyloxml.phylogenydata.TaxonomyParser;
+import org.forester.io.parsers.phyloxml.data.BinaryCharactersParser;
+import org.forester.io.parsers.phyloxml.data.BranchWidthParser;
+import org.forester.io.parsers.phyloxml.data.ColorParser;
+import org.forester.io.parsers.phyloxml.data.ConfidenceParser;
+import org.forester.io.parsers.phyloxml.data.DateParser;
+import org.forester.io.parsers.phyloxml.data.DistributionParser;
+import org.forester.io.parsers.phyloxml.data.EventParser;
+import org.forester.io.parsers.phyloxml.data.IdentifierParser;
+import org.forester.io.parsers.phyloxml.data.PropertyParser;
+import org.forester.io.parsers.phyloxml.data.ReferenceParser;
+import org.forester.io.parsers.phyloxml.data.SequenceParser;
+import org.forester.io.parsers.phyloxml.data.SequenceRelationParser;
+import org.forester.io.parsers.phyloxml.data.TaxonomyParser;
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.data.BinaryCharacters;
@@ -47,13 +52,16 @@ import org.forester.phylogeny.data.BranchColor;
 import org.forester.phylogeny.data.BranchWidth;
 import org.forester.phylogeny.data.Confidence;
 import org.forester.phylogeny.data.Date;
+import org.forester.phylogeny.data.Distribution;
 import org.forester.phylogeny.data.Event;
 import org.forester.phylogeny.data.Identifier;
 import org.forester.phylogeny.data.PropertiesMap;
 import org.forester.phylogeny.data.Property;
 import org.forester.phylogeny.data.Reference;
 import org.forester.phylogeny.data.Sequence;
+import org.forester.phylogeny.data.SequenceRelation;
 import org.forester.phylogeny.data.Taxonomy;
+import org.forester.phylogeny.data.SequenceRelation.SEQUENCE_RELATION_TYPE;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 import org.xml.sax.Attributes;
@@ -62,15 +70,22 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public final class PhyloXmlHandler extends DefaultHandler {
 
-    private static final String PHYLOXML = "phyloxml";
-    private String              _current_element_name;
-    private Phylogeny           _current_phylogeny;
-    private List<Phylogeny>     _phylogenies;
-    private XmlElement          _current_xml_element;
-    private PhylogenyNode       _current_node;
+    private static final String                              PHYLOXML               = "phyloxml";
+    private String                                           _current_element_name;
+    private Phylogeny                                        _current_phylogeny;
+    private List<Phylogeny>                                  _phylogenies;
+    private XmlElement                                       _current_xml_element;
+    private PhylogenyNode                                    _current_node;
+    private static Map<Phylogeny, HashMap<String, Sequence>> phylogenySequencesById = new HashMap<Phylogeny, HashMap<String, Sequence>>();
 
     PhyloXmlHandler() {
         // Constructor.
+    }
+
+    private void addNode() {
+        final PhylogenyNode new_node = new PhylogenyNode();
+        getCurrentNode().addAsChild( new_node );
+        setCurrentNode( new_node );
     }
 
     @Override
@@ -93,12 +108,68 @@ public final class PhyloXmlHandler extends DefaultHandler {
         if ( ForesterUtil.isEmpty( namespace_uri ) || namespace_uri.startsWith( ForesterConstants.PHYLO_XML_LOCATION ) ) {
             if ( local_name.equals( PhyloXmlMapping.CLADE ) ) {
                 try {
-                    PhyloXmlHandler.mapElementToPhylogenyNode( getCurrentXmlElement(), getCurrentNode() );
+                    mapElementToPhylogenyNode( getCurrentXmlElement(), getCurrentNode() );
                     if ( !getCurrentNode().isRoot() ) {
                         setCurrentNode( getCurrentNode().getParent() );
                     }
                     getCurrentXmlElement().setValue( null );
                     setCurrentXmlElement( getCurrentXmlElement().getParent() );
+                }
+                catch ( final PhylogenyParserException ex ) {
+                    throw new SAXException( ex.getMessage() );
+                }
+            }
+            else if ( local_name.equals( PhyloXmlMapping.SEQUENCE_RELATION ) ) {
+                try {
+                    if ( getCurrentPhylogeny() != null ) {
+                        final SequenceRelation seqRelation = ( SequenceRelation ) SequenceRelationParser
+                                .getInstance( getCurrentPhylogeny() ).parse( getCurrentXmlElement() );
+                        final Map<String, Sequence> sequencesById = getSequenceMapByIdForPhylogeny( getCurrentPhylogeny() );
+                        final Sequence ref0 = sequencesById.get( seqRelation.getRef0().getSourceId() ), ref1 = sequencesById
+                                .get( seqRelation.getRef1().getSourceId() );
+                        if ( ref0 != null ) {
+                            // check for reverse relation
+                            boolean fFoundReverse = false;
+                            for( final SequenceRelation sr : ref0.getSequenceRelations() ) {
+                                if ( sr.getType().equals( seqRelation.getType() )
+                                        && ( ( sr.getRef0().isEqual( ref1 ) && sr.getRef1().isEqual( ref0 ) ) || ( sr
+                                                .getRef0().isEqual( ref0 ) && sr.getRef1().isEqual( ref1 ) ) ) ) {
+                                    // in this case we don't need to re-add it, but we make sure we don't loose the confidence value
+                                    fFoundReverse = true;
+                                    if ( ( sr.getConfidence() == null ) && ( seqRelation.getConfidence() != null ) ) {
+                                        sr.setConfidence( seqRelation.getConfidence() );
+                                    }
+                                }
+                            }
+                            if ( !fFoundReverse ) {
+                                ref0.addSequenceRelation( seqRelation );
+                            }
+                        }
+                        if ( ref1 != null ) {
+                            // check for reverse relation
+                            boolean fFoundReverse = false;
+                            for( final SequenceRelation sr : ref1.getSequenceRelations() ) {
+                                if ( sr.getType().equals( seqRelation.getType() )
+                                        && ( ( sr.getRef0().isEqual( ref1 ) && sr.getRef1().isEqual( ref0 ) ) || ( sr
+                                                .getRef0().isEqual( ref0 ) && sr.getRef1().isEqual( ref1 ) ) ) ) {
+                                    // in this case we don't need to re-add it, but we make sure we don't loose the confidence value
+                                    fFoundReverse = true;
+                                    if ( ( sr.getConfidence() == null ) && ( seqRelation.getConfidence() != null ) ) {
+                                        sr.setConfidence( seqRelation.getConfidence() );
+                                    }
+                                }
+                            }
+                            if ( !fFoundReverse ) {
+                                ref1.addSequenceRelation( seqRelation );
+                            }
+                        }
+                        // we add the type to the current phylogeny so we can know it needs to be displayed in the combo
+                        final Collection<SEQUENCE_RELATION_TYPE> relationTypesForCurrentPhylogeny = getCurrentPhylogeny()
+                                .getRelevantSequenceRelationTypes();
+                        if ( !relationTypesForCurrentPhylogeny.contains( seqRelation.getType() ) ) {
+                            relationTypesForCurrentPhylogeny.add( seqRelation.getType() );
+                        }
+                    }
                 }
                 catch ( final PhylogenyParserException ex ) {
                     throw new SAXException( ex.getMessage() );
@@ -122,6 +193,168 @@ public final class PhyloXmlHandler extends DefaultHandler {
             }
             setCurrentElementName( null );
         }
+    }
+
+    private void finishPhylogeny() throws SAXException {
+        getCurrentPhylogeny().recalculateNumberOfExternalDescendants( false );
+        getPhylogenies().add( getCurrentPhylogeny() );
+        final HashMap<String, Sequence> phyloSequences = phylogenySequencesById.get( getCurrentPhylogeny() );
+        if ( phyloSequences != null ) {
+            getCurrentPhylogeny().setSequenceRelationQueries( phyloSequences.values() );
+            phylogenySequencesById.remove( getCurrentPhylogeny() );
+        }
+    }
+
+    private String getCurrentElementName() {
+        return _current_element_name;
+    }
+
+    private PhylogenyNode getCurrentNode() {
+        return _current_node;
+    }
+
+    private Phylogeny getCurrentPhylogeny() {
+        return _current_phylogeny;
+    }
+
+    private XmlElement getCurrentXmlElement() {
+        return _current_xml_element;
+    }
+
+    List<Phylogeny> getPhylogenies() {
+        return _phylogenies;
+    }
+
+    private void init() {
+        reset();
+        setPhylogenies( new ArrayList<Phylogeny>() );
+    }
+
+    private void initCurrentNode() {
+        if ( getCurrentNode() != null ) {
+            throw new IllegalStateException( "attempt to create new current node when current node already exists" );
+        }
+        if ( getCurrentPhylogeny() == null ) {
+            throw new IllegalStateException( "attempt to create new current node for non-existing phylogeny" );
+        }
+        final PhylogenyNode node = new PhylogenyNode();
+        getCurrentPhylogeny().setRoot( node );
+        setCurrentNode( getCurrentPhylogeny().getRoot() );
+    }
+
+    private void mapElementToPhylogenyNode( final XmlElement xml_element, final PhylogenyNode node )
+            throws PhylogenyParserException {
+        if ( xml_element.isHasAttribute( PhyloXmlMapping.BRANCH_LENGTH ) ) {
+            double d = 0;
+            try {
+                d = Double.parseDouble( xml_element.getAttribute( PhyloXmlMapping.BRANCH_LENGTH ) );
+            }
+            catch ( final NumberFormatException e ) {
+                throw new PhylogenyParserException( "ill formatted distance in clade attribute ["
+                        + xml_element.getAttribute( PhyloXmlMapping.BRANCH_LENGTH ) + "]: " + e.getMessage() );
+            }
+            node.setDistanceToParent( d );
+        }
+        for( int i = 0; i < xml_element.getNumberOfChildElements(); ++i ) {
+            final XmlElement element = xml_element.getChildElement( i );
+            final String qualified_name = element.getQualifiedName();
+            if ( qualified_name.equals( PhyloXmlMapping.BRANCH_LENGTH ) ) {
+                if ( node.getDistanceToParent() != PhylogenyNode.DISTANCE_DEFAULT ) {
+                    throw new PhylogenyParserException( "ill advised attempt to set distance twice for the same clade (probably via element and via attribute)" );
+                }
+                node.setDistanceToParent( element.getValueAsDouble() );
+            }
+            if ( qualified_name.equals( PhyloXmlMapping.NODE_NAME ) ) {
+                node.setName( element.getValueAsString() );
+            }
+            //  else if ( qualified_name.equals( PhyloXmlMapping.NODE_IDENTIFIER ) ) {
+            //      node.getNodeData().setNodeIdentifier( ( Identifier ) IdentifierParser.getInstance().parse( element ) );
+            //  }
+            else if ( qualified_name.equals( PhyloXmlMapping.TAXONOMY ) ) {
+                node.getNodeData().addTaxonomy( ( Taxonomy ) TaxonomyParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.SEQUENCE ) ) {
+                final Sequence sequence = ( Sequence ) SequenceParser.getInstance().parse( element );
+                node.getNodeData().addSequence( sequence );
+                // we temporarily store all sequences that have a source ID so we can access them easily when we need to attach relations to them
+                final String sourceId = sequence.getSourceId();
+                if ( ( getCurrentPhylogeny() != null ) && !ForesterUtil.isEmpty( sourceId ) ) {
+                    getSequenceMapByIdForPhylogeny( getCurrentPhylogeny() ).put( sourceId, sequence );
+                }
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.DISTRIBUTION ) ) {
+                node.getNodeData().addDistribution( ( Distribution ) DistributionParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.CLADE_DATE ) ) {
+                node.getNodeData().setDate( ( Date ) DateParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.REFERENCE ) ) {
+                node.getNodeData().addReference( ( Reference ) ReferenceParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.BINARY_CHARACTERS ) ) {
+                node.getNodeData().setBinaryCharacters( ( BinaryCharacters ) BinaryCharactersParser.getInstance()
+                        .parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.COLOR ) ) {
+                node.getBranchData().setBranchColor( ( BranchColor ) ColorParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.CONFIDENCE ) ) {
+                node.getBranchData().addConfidence( ( Confidence ) ConfidenceParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.WIDTH ) ) {
+                node.getBranchData().setBranchWidth( ( BranchWidth ) BranchWidthParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.EVENTS ) ) {
+                node.getNodeData().setEvent( ( Event ) EventParser.getInstance().parse( element ) );
+            }
+            else if ( qualified_name.equals( PhyloXmlMapping.PROPERTY ) ) {
+                if ( !node.getNodeData().isHasProperties() ) {
+                    node.getNodeData().setProperties( new PropertiesMap() );
+                }
+                node.getNodeData().getProperties().addProperty( ( Property ) PropertyParser.getInstance()
+                        .parse( element ) );
+            }
+        }
+    }
+
+    private void newClade() {
+        if ( getCurrentNode() == null ) {
+            initCurrentNode();
+        }
+        else {
+            addNode();
+        }
+    }
+
+    private void newPhylogeny() {
+        setCurrentPhylogeny( new Phylogeny() );
+    }
+
+    private void reset() {
+        setCurrentPhylogeny( null );
+        setCurrentNode( null );
+        setCurrentElementName( null );
+        setCurrentXmlElement( null );
+    }
+
+    private void setCurrentElementName( final String element_name ) {
+        _current_element_name = element_name;
+    }
+
+    private void setCurrentNode( final PhylogenyNode current_node ) {
+        _current_node = current_node;
+    }
+
+    private void setCurrentPhylogeny( final Phylogeny phylogeny ) {
+        _current_phylogeny = phylogeny;
+    }
+
+    private void setCurrentXmlElement( final XmlElement element ) {
+        _current_xml_element = element;
+    }
+
+    private void setPhylogenies( final List<Phylogeny> phylogenies ) {
+        _phylogenies = phylogenies;
     }
 
     @Override
@@ -172,94 +405,6 @@ public final class PhyloXmlHandler extends DefaultHandler {
         }
     }
 
-    List<Phylogeny> getPhylogenies() {
-        return _phylogenies;
-    }
-
-    private void addNode() {
-        final PhylogenyNode new_node = new PhylogenyNode();
-        getCurrentNode().addAsChild( new_node );
-        setCurrentNode( new_node );
-    }
-
-    private void finishPhylogeny() throws SAXException {
-        getCurrentPhylogeny().recalculateNumberOfExternalDescendants( false );
-        getPhylogenies().add( getCurrentPhylogeny() );
-    }
-
-    private String getCurrentElementName() {
-        return _current_element_name;
-    }
-
-    private PhylogenyNode getCurrentNode() {
-        return _current_node;
-    }
-
-    private Phylogeny getCurrentPhylogeny() {
-        return _current_phylogeny;
-    }
-
-    private XmlElement getCurrentXmlElement() {
-        return _current_xml_element;
-    }
-
-    private void init() {
-        reset();
-        setPhylogenies( new ArrayList<Phylogeny>() );
-    }
-
-    private void initCurrentNode() {
-        if ( getCurrentNode() != null ) {
-            throw new IllegalStateException( "attempt to create new current node when current node already exists" );
-        }
-        if ( getCurrentPhylogeny() == null ) {
-            throw new IllegalStateException( "attempt to create new current node for non-existing phylogeny" );
-        }
-        final PhylogenyNode node = new PhylogenyNode();
-        getCurrentPhylogeny().setRoot( node );
-        setCurrentNode( getCurrentPhylogeny().getRoot() );
-    }
-
-    private void newClade() {
-        if ( getCurrentNode() == null ) {
-            initCurrentNode();
-        }
-        else {
-            addNode();
-        }
-    }
-
-    private void newPhylogeny() {
-        setCurrentPhylogeny( new Phylogeny() );
-    }
-
-    private void reset() {
-        setCurrentPhylogeny( null );
-        setCurrentNode( null );
-        setCurrentElementName( null );
-        setCurrentXmlElement( null );
-    }
-
-    private void setCurrentElementName( final String element_name ) {
-        _current_element_name = element_name;
-    }
-
-    private void setCurrentNode( final PhylogenyNode current_node ) {
-        _current_node = current_node;
-    }
-
-    private void setCurrentPhylogeny( final Phylogeny phylogeny ) {
-        _current_phylogeny = phylogeny;
-    }
-
-    private void setCurrentXmlElement( final XmlElement element ) {
-        _current_xml_element = element;
-    }
-
-    private void setPhylogenies( final List<Phylogeny> phylogenies ) {
-        _phylogenies = phylogenies;
-    }
-
     public static boolean attributeEqualsValue( final XmlElement element,
                                                 final String attributeName,
                                                 final String attributeValue ) {
@@ -275,6 +420,15 @@ public final class PhyloXmlHandler extends DefaultHandler {
         else {
             return "";
         }
+    }
+
+    static public Map<String, Sequence> getSequenceMapByIdForPhylogeny( final Phylogeny ph ) {
+        HashMap<String, Sequence> seqMap = phylogenySequencesById.get( ph );
+        if ( seqMap == null ) {
+            seqMap = new HashMap<String, Sequence>();
+            phylogenySequencesById.put( ph, seqMap );
+        }
+        return seqMap;
     }
 
     private static void mapElementToPhylogeny( final XmlElement xml_element, final Phylogeny phylogeny )
@@ -293,75 +447,6 @@ public final class PhyloXmlHandler extends DefaultHandler {
             }
             else if ( qualified_name.equals( PhyloXmlMapping.CONFIDENCE ) ) {
                 phylogeny.setConfidence( ( Confidence ) ConfidenceParser.getInstance().parse( element ) );
-            }
-        }
-    }
-
-    private static void mapElementToPhylogenyNode( final XmlElement xml_element, final PhylogenyNode node )
-            throws PhylogenyParserException {
-        if ( xml_element.isHasAttribute( PhyloXmlMapping.BRANCH_LENGTH ) ) {
-            double d = 0;
-            try {
-                d = Double.parseDouble( xml_element.getAttribute( PhyloXmlMapping.BRANCH_LENGTH ) );
-            }
-            catch ( final NumberFormatException e ) {
-                throw new PhylogenyParserException( "ill formatted distance in clade attribute ["
-                        + xml_element.getAttribute( PhyloXmlMapping.BRANCH_LENGTH ) + "]: " + e.getMessage() );
-            }
-            node.setDistanceToParent( d );
-        }
-        for( int i = 0; i < xml_element.getNumberOfChildElements(); ++i ) {
-            final XmlElement element = xml_element.getChildElement( i );
-            final String qualified_name = element.getQualifiedName();
-            if ( qualified_name.equals( PhyloXmlMapping.BRANCH_LENGTH ) ) {
-                if ( node.getDistanceToParent() != PhylogenyNode.DISTANCE_DEFAULT ) {
-                    throw new PhylogenyParserException( "ill advised attempt to set distance twice for the same clade (probably via element and via attribute)" );
-                }
-                node.setDistanceToParent( element.getValueAsDouble() );
-            }
-            if ( qualified_name.equals( PhyloXmlMapping.NODE_NAME ) ) {
-                node.setName( element.getValueAsString() );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.NODE_IDENTIFIER ) ) {
-                node.getNodeData().setNodeIdentifier( ( Identifier ) IdentifierParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.TAXONOMY ) ) {
-                node.getNodeData().setTaxonomy( ( Taxonomy ) TaxonomyParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.SEQUENCE ) ) {
-                node.getNodeData().setSequence( ( Sequence ) SequenceParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.DISTRIBUTION ) ) {
-                //node.getNodeData().setDistribution( ( Distribution ) DistributionParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.CLADE_DATE ) ) {
-                node.getNodeData().setDate( ( Date ) DateParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.REFERENCE ) ) {
-                node.getNodeData().setReference( ( Reference ) ReferenceParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.BINARY_CHARACTERS ) ) {
-                node.getNodeData().setBinaryCharacters( ( BinaryCharacters ) BinaryCharactersParser.getInstance()
-                        .parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.COLOR ) ) {
-                node.getBranchData().setBranchColor( ( BranchColor ) ColorParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.CONFIDENCE ) ) {
-                node.getBranchData().addConfidence( ( Confidence ) ConfidenceParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.WIDTH ) ) {
-                node.getBranchData().setBranchWidth( ( BranchWidth ) BranchWidthParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.EVENTS ) ) {
-                node.getNodeData().setEvent( ( Event ) EventParser.getInstance().parse( element ) );
-            }
-            else if ( qualified_name.equals( PhyloXmlMapping.PROPERTY ) ) {
-                if ( !node.getNodeData().isHasProperties() ) {
-                    node.getNodeData().setProperties( new PropertiesMap() );
-                }
-                node.getNodeData().getProperties().addProperty( ( Property ) PropertyParser.getInstance()
-                        .parse( element ) );
             }
         }
     }

@@ -1,4 +1,4 @@
-// $Id: DevelopmentTools.java,v 1.9 2009/01/13 19:49:30 cmzmasek Exp $
+// $Id: DevelopmentTools.java,v 1.11 2009/10/28 19:11:22 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -84,6 +84,19 @@ public final class DevelopmentTools {
         return p;
     }
 
+    private static void createBalancedPhylogenyRecursion( int current_level,
+                                                          final int children_per_node,
+                                                          final PhylogenyNode current_node ) {
+        if ( current_level > 0 ) {
+            --current_level;
+            for( int i = 0; i < children_per_node; ++i ) {
+                final PhylogenyNode new_node = new PhylogenyNode();
+                current_node.addAsChild( new_node );
+                DevelopmentTools.createBalancedPhylogenyRecursion( current_level, children_per_node, new_node );
+            }
+        }
+    }
+
     /**
      * Sets the species name of the external Nodes of Phylogeny t to 1, 1+i, 2,
      * 2+i, 3, 3+i, .... Examples: i=2: 1, 3, 2, 4 i=4: 1, 5, 2, 6, 3, 7, 4, 8
@@ -98,10 +111,10 @@ public final class DevelopmentTools {
         boolean odd = true;
         while ( n != null ) {
             if ( odd ) {
-                PhylogenyMethods.setTaxonomyCode( n, j + "" );
+                PhylogenyMethods.setScientificName( n, j + "" );
             }
             else {
-                PhylogenyMethods.setTaxonomyCode( n, ( j + i ) + "" );
+                PhylogenyMethods.setScientificName( n, ( j + i ) + "" );
                 j++;
             }
             odd = !odd;
@@ -137,7 +150,7 @@ public final class DevelopmentTools {
         PhylogenyNode n = t.getFirstExternalNode();
         int j = 1;
         while ( n != null ) {
-            PhylogenyMethods.setTaxonomyCode( n, j + "" );
+            PhylogenyMethods.setScientificName( n, j + "" );
             j++;
             n = n.getNextExternalNode();
         }
@@ -166,19 +179,6 @@ public final class DevelopmentTools {
             final String code = ( ( Math.abs( r.nextInt() ) % ( ma - mi + 1 ) ) + mi ) + "";
             PhylogenyMethods.setTaxonomyCode( n, code );
             n = n.getNextExternalNode();
-        }
-    }
-
-    private static void createBalancedPhylogenyRecursion( int current_level,
-                                                          final int children_per_node,
-                                                          final PhylogenyNode current_node ) {
-        if ( current_level > 0 ) {
-            --current_level;
-            for( int i = 0; i < children_per_node; ++i ) {
-                final PhylogenyNode new_node = new PhylogenyNode();
-                current_node.addAsChild( new_node );
-                DevelopmentTools.createBalancedPhylogenyRecursion( current_level, children_per_node, new_node );
-            }
         }
     }
 }

@@ -45,14 +45,17 @@ public class BranchWidth implements PhylogenyData {
         _value = value;
     }
 
+    @Override
     public StringBuffer asSimpleText() {
         return new StringBuffer( getValue() + "" );
     }
 
+    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
+    @Override
     public PhylogenyData copy() {
         return new BranchWidth( getValue() );
     }
@@ -61,10 +64,12 @@ public class BranchWidth implements PhylogenyData {
         return _value;
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         return getValue() == ( ( BranchWidth ) data ).getValue();
     }
 
+    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         sb.append( NHXtags.PARENT_BRANCH_WIDTH );
@@ -72,6 +77,7 @@ public class BranchWidth implements PhylogenyData {
         return sb;
     }
 
+    @Override
     public void toPhyloXML( final Writer w, final int level, final String indentation ) throws IOException {
         w.write( ForesterUtil.LINE_SEPARATOR );
         w.write( indentation );

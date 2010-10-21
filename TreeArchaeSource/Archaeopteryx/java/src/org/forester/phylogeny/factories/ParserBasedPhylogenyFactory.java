@@ -34,14 +34,17 @@ import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 
-/*
- * Singleton.
- * 
- * @author Christian Zmasek
- */
 public class ParserBasedPhylogenyFactory extends BasicPhylogenyFactory {
 
-    private static PhylogenyFactory _instance;
+    private final static PhylogenyFactory _instance;
+    static {
+        try {
+            _instance = new ParserBasedPhylogenyFactory();
+        }
+        catch ( final Throwable e ) {
+            throw new RuntimeException( e.getMessage() );
+        }
+    }
 
     private ParserBasedPhylogenyFactory() {
         // Private constructor.
@@ -52,20 +55,20 @@ public class ParserBasedPhylogenyFactory extends BasicPhylogenyFactory {
         throw new CloneNotSupportedException();
     }
 
-    public Phylogeny[] create( final Object source, final Object parser, final List<Object> parameters )
+    public synchronized Phylogeny[] create( final Object source, final Object parser, final List<Object> parameters )
             throws IOException {
         if ( !( parser instanceof PhylogenyParser ) ) {
-            throw new IllegalArgumentException( "Attempt to use object of type other than PhylogenyParser as creator for ParserBasedPhylogenyFactory." );
+            throw new IllegalArgumentException( "attempt to use object of type other than PhylogenyParser as creator for ParserBasedPhylogenyFactory" );
         }
         final PhylogenyParser my_parser = ( PhylogenyParser ) parser;
         my_parser.setSource( source );
         return my_parser.parse();
     }
 
-    public Phylogeny[] create( final Object source,
-                               final Object parser,
-                               final String schema_location,
-                               final List<Object> parameters ) throws IOException {
+    public synchronized Phylogeny[] create( final Object source,
+                                            final Object parser,
+                                            final String schema_location,
+                                            final List<Object> parameters ) throws IOException {
         if ( !( parser instanceof PhylogenyParser ) ) {
             throw new IllegalArgumentException( "attempt to use object of type other than PhylogenyParser as creator for ParserBasedPhylogenyFactory." );
         }
@@ -80,10 +83,7 @@ public class ParserBasedPhylogenyFactory extends BasicPhylogenyFactory {
         return xml_parser.parse();
     }
 
-    public static synchronized PhylogenyFactory getInstance() {
-        if ( ParserBasedPhylogenyFactory._instance == null ) {
-            ParserBasedPhylogenyFactory._instance = new ParserBasedPhylogenyFactory();
-        }
-        return ParserBasedPhylogenyFactory._instance;
+    public static PhylogenyFactory getInstance() {
+        return _instance;
     }
 }

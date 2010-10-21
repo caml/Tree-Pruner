@@ -106,6 +106,7 @@ public class OntologizerResult implements Comparable<OntologizerResult> {
         }
     }
 
+    @Override
     public int compareTo( final OntologizerResult o ) {
         if ( this == o ) {
             return 0;

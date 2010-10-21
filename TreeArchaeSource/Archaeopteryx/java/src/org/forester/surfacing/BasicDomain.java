@@ -1,4 +1,4 @@
-// $Id: BasicDomain.java,v 1.5 2008/12/13 06:08:59 cmzmasek Exp $
+// $Id: BasicDomain.java,v 1.9 2009/11/17 03:51:34 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -36,11 +36,10 @@ public class BasicDomain implements Domain {
     final private int      _to;
     final private short    _number;
     final private short    _total_count;
-    final private double   _confidence;
-    final private double   _score;
-    final private String   _search_parameter;
-    final private boolean  _complete_target_match;
-    final private boolean  _complete_query_match;
+    final private double   _per_sequence_evalue;
+    final private double   _per_sequence_score;
+    final private double   _per_domain_evalue;
+    final private double   _per_domain_score;
 
     public BasicDomain( final String id_str ) {
         if ( ForesterUtil.isEmpty( id_str ) ) {
@@ -51,11 +50,10 @@ public class BasicDomain implements Domain {
         _to = -1;
         _number = -1;
         _total_count = -1;
-        _confidence = -1;
-        _score = -1;
-        _search_parameter = "?";
-        _complete_target_match = false;
-        _complete_query_match = false;
+        _per_sequence_evalue = -1;
+        _per_sequence_score = -1;
+        _per_domain_evalue = -1;
+        _per_domain_score = -1;
     }
 
     public BasicDomain( final String id_str,
@@ -63,11 +61,8 @@ public class BasicDomain implements Domain {
                         final int to,
                         final short number,
                         final short total_count,
-                        final double confidence,
-                        final double score,
-                        final String search_parameter,
-                        final boolean complete_hmm_match,
-                        final boolean complete_query_match ) {
+                        final double per_sequence_evalue,
+                        final double per_sequence_score ) {
         if ( ( from >= to ) || ( from < 0 ) ) {
             throw new IllegalArgumentException( "attempt to create protein domain from " + from + " to " + to );
         }
@@ -78,19 +73,51 @@ public class BasicDomain implements Domain {
             throw new IllegalArgumentException( "attempt to create protein domain number " + number + " out of "
                     + total_count );
         }
-        if ( confidence < 0.0 ) {
-            throw new IllegalArgumentException( "attempt to create protein domain with negative confidence" );
+        if ( per_sequence_evalue < 0.0 ) {
+            throw new IllegalArgumentException( "attempt to create protein domain with E-value" );
         }
         _id = new DomainId( id_str );
         _from = from;
         _to = to;
         _number = number;
         _total_count = total_count;
-        _confidence = confidence;
-        _score = score;
-        _search_parameter = search_parameter;
-        _complete_target_match = complete_hmm_match;
-        _complete_query_match = complete_query_match;
+        _per_sequence_evalue = per_sequence_evalue;
+        _per_sequence_score = per_sequence_score;
+        _per_domain_evalue = -1;
+        _per_domain_score = -1;
+    }
+
+    public BasicDomain( final String id_str,
+                        final int from,
+                        final int to,
+                        final short number,
+                        final short total_count,
+                        final double per_sequence_evalue,
+                        final double per_sequence_score,
+                        final double per_domain_evalue,
+                        final double per_domain_score ) {
+        if ( ( from >= to ) || ( from < 0 ) ) {
+            throw new IllegalArgumentException( "attempt to create protein domain from " + from + " to " + to );
+        }
+        if ( ForesterUtil.isEmpty( id_str ) ) {
+            throw new IllegalArgumentException( "attempt to create protein domain with null or empty id" );
+        }
+        if ( ( number > total_count ) || ( number < 0 ) ) {
+            throw new IllegalArgumentException( "attempt to create protein domain number " + number + " out of "
+                    + total_count );
+        }
+        if ( ( per_sequence_evalue < 0.0 ) || ( per_domain_evalue < 0.0 ) ) {
+            throw new IllegalArgumentException( "attempt to create protein domain with E-value" );
+        }
+        _id = new DomainId( id_str );
+        _from = from;
+        _to = to;
+        _number = number;
+        _total_count = total_count;
+        _per_sequence_evalue = per_sequence_evalue;
+        _per_sequence_score = per_sequence_score;
+        _per_domain_evalue = per_domain_evalue;
+        _per_domain_score = per_domain_score;
     }
 
     public void addGoId( final GoId go_id ) {
@@ -135,10 +162,6 @@ public class BasicDomain implements Domain {
         }
     }
 
-    public double getConfidence() {
-        return _confidence;
-    }
-
     public DomainId getDomainId() {
         return _id;
     }
@@ -151,20 +174,6 @@ public class BasicDomain implements Domain {
         return getDomainId().getGoIds().get( i );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.forester.surfacing.ProteinDomain#getLength()
-     */
-    public int getLength() {
-        return ( getTo() - getFrom() + 1 );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.forester.surfacing.ProteinDomain#getNumber()
-     */
     public short getNumber() {
         return _number;
     }
@@ -173,33 +182,28 @@ public class BasicDomain implements Domain {
         return getDomainId().getGoIds().size();
     }
 
-    public double getScore() {
-        return _score;
+    @Override
+    public double getPerDomainEvalue() {
+        return _per_domain_evalue;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.forester.surfacing.ProteinDomain#getSearchParameter()
-     */
-    public String getSearchParameter() {
-        return _search_parameter;
+    @Override
+    public double getPerDomainScore() {
+        return _per_domain_score;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.forester.surfacing.ProteinDomain#getTo()
-     */
+    public double getPerSequenceEvalue() {
+        return _per_sequence_evalue;
+    }
+
+    public double getPerSequenceScore() {
+        return _per_sequence_score;
+    }
+
     public int getTo() {
         return _to;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.forester.surfacing.ProteinDomain#getTotalCount()
-     */
     public short getTotalCount() {
         return _total_count;
     }
@@ -207,19 +211,6 @@ public class BasicDomain implements Domain {
     @Override
     public int hashCode() {
         return getDomainId().getId().hashCode();
-    }
-
-    public boolean isCompleteQueryMatch() {
-        return _complete_query_match;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.forester.surfacing.ProteinDomain#isCompleteHmmMatch()
-     */
-    public boolean isCompleteTargetMatch() {
-        return _complete_target_match;
     }
 
     @Override

@@ -33,6 +33,11 @@ public class BasicBinaryDomainCombination implements BinaryDomainCombination {
     DomainId _id_0;
     DomainId _id_1;
 
+    BasicBinaryDomainCombination() {
+        _id_0 = null;
+        _id_1 = null;
+    }
+
     public BasicBinaryDomainCombination( final DomainId id_0, final DomainId id_1 ) {
         if ( ( id_0 == null ) || ( id_1 == null ) ) {
             throw new IllegalArgumentException( "attempt to create binary domain combination using null" );
@@ -51,11 +56,7 @@ public class BasicBinaryDomainCombination implements BinaryDomainCombination {
         this( new DomainId( id_0 ), new DomainId( id_1 ) );
     }
 
-    BasicBinaryDomainCombination() {
-        _id_0 = null;
-        _id_1 = null;
-    }
-
+    @Override
     public int compareTo( final BinaryDomainCombination binary_domain_combination ) {
         if ( binary_domain_combination.getClass() != this.getClass() ) {
             throw new IllegalArgumentException( "attempt to compare [" + binary_domain_combination.getClass() + "] to "

@@ -38,6 +38,18 @@ import org.forester.phylogeny.PhylogenyNode;
  */
 public class BranchCountingBasedScoringMethod implements ScoringMethodForExternalNode {
 
+    double calculateScoreContributionPerExternalNode( final PhylogenyNode external_node,
+                                                      final PhylogenyNode current_node ) {
+        double score_contribution = 0.0;
+        if ( current_node == external_node ) {
+            score_contribution = 1.0;
+        }
+        else {
+            score_contribution = 1.0 / ModelingUtils.calculateBranchSum( external_node, current_node );
+        }
+        return score_contribution;
+    }
+
     public void calculateScoreForExternalNode( final SortedMap<PhylogenyNode, Double> external_node_scores,
                                                final Phylogeny phylogeny,
                                                final PhylogenyNode external_node,
@@ -58,17 +70,5 @@ public class BranchCountingBasedScoringMethod implements ScoringMethodForExterna
 
     public double getNormalizationFactor( final Phylogeny phylogeny ) {
         return ( 1.0 / phylogeny.getNumberOfExternalNodes() );
-    }
-
-    double calculateScoreContributionPerExternalNode( final PhylogenyNode external_node,
-                                                      final PhylogenyNode current_node ) {
-        double score_contribution = 0.0;
-        if ( current_node == external_node ) {
-            score_contribution = 1.0;
-        }
-        else {
-            score_contribution = 1.0 / ModelingUtils.calculateBranchSum( external_node, current_node );
-        }
-        return score_contribution;
     }
 }

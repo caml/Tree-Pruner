@@ -45,14 +45,21 @@ public class BranchColor implements PhylogenyData {
         _color = color;
     }
 
+    @Override
     public StringBuffer asSimpleText() {
         return new StringBuffer( getValue().toString() );
     }
 
+    @Override
     public StringBuffer asText() {
         return new StringBuffer( getValue().toString() );
     }
 
+    @Override
+    /**
+     * Not a deep copy.
+     * 
+     */
     public PhylogenyData copy() {
         final BranchColor bc = new BranchColor();
         bc.setValue( getValue() );
@@ -63,6 +70,7 @@ public class BranchColor implements PhylogenyData {
         return _color;
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         return getValue().equals( ( ( BranchColor ) data ).getValue() );
     }
@@ -71,6 +79,7 @@ public class BranchColor implements PhylogenyData {
         _color = color;
     }
 
+    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         sb.append( NHXtags.COLOR );
@@ -82,6 +91,7 @@ public class BranchColor implements PhylogenyData {
         return sb;
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );

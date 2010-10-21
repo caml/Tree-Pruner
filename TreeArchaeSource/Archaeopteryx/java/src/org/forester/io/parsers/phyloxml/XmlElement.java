@@ -1,4 +1,4 @@
-// $Id: XmlElement.java,v 1.6 2009/02/13 22:55:14 cmzmasek Exp $
+// $Id: XmlElement.java,v 1.9 2010/09/29 23:50:17 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -28,7 +28,7 @@ package org.forester.io.parsers.phyloxml;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.forester.io.parsers.PhylogenyParserException;
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.util.ForesterUtil;
 import org.xml.sax.Attributes;
 
@@ -92,6 +92,18 @@ public class XmlElement {
         return getChildElements().get( i );
     }
 
+    ArrayList<XmlElement> getChildElements() {
+        return _childElements;
+    }
+
+    String getLocalName() {
+        return _localName;
+    }
+
+    String getNamespaceUri() {
+        return _namespaceUri;
+    }
+
     public int getNumberOfChildElements() {
         return getChildElements().size();
     }
@@ -102,6 +114,14 @@ public class XmlElement {
 
     public String getQualifiedName() {
         return _qualifiedName;
+    }
+
+    XmlElement getRoot() {
+        XmlElement e = this;
+        while ( e.getParent() != null ) {
+            e = e.getParent();
+        }
+        return e;
     }
 
     public boolean getValueAsBoolean() throws PhylogenyParserException {
@@ -144,8 +164,7 @@ public class XmlElement {
         if ( _value == null ) {
             return "";
         }
-        _value.replaceAll( "\\s+", " " );
-        return _value.trim();
+        return _value.replaceAll( "\\s+", " " ).trim();
     }
 
     public boolean isHasAttribute( final String attribute_name ) {
@@ -154,6 +173,10 @@ public class XmlElement {
 
     public boolean isHasValue() {
         return !ForesterUtil.isEmpty( _value );
+    }
+
+    void setParent( final XmlElement parent ) {
+        _parent = parent;
     }
 
     /**
@@ -186,29 +209,5 @@ public class XmlElement {
                     + getParent().getQualifiedName() + "\"]";
         }
         return "\"" + getQualifiedName() + "\" [value: " + getValueAsString() + "]";
-    }
-
-    ArrayList<XmlElement> getChildElements() {
-        return _childElements;
-    }
-
-    String getLocalName() {
-        return _localName;
-    }
-
-    String getNamespaceUri() {
-        return _namespaceUri;
-    }
-
-    XmlElement getRoot() {
-        XmlElement e = this;
-        while ( e.getParent() != null ) {
-            e = e.getParent();
-        }
-        return e;
-    }
-
-    void setParent( final XmlElement parent ) {
-        _parent = parent;
     }
 }

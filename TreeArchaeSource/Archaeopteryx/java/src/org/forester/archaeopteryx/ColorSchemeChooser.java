@@ -1,4 +1,4 @@
-// $Id: ColorSchemeChooser.java,v 1.4 2009/04/02 02:09:09 cmzmasek Exp $
+// $Id: ColorSchemeChooser.java,v 1.5 2009/08/03 16:02:17 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -64,7 +64,7 @@ final class ColorSchemeChooser extends JDialog implements ActionListener {
         setName( "Color Scheme Chooser" );
         setModal( true );
         _colorset = colorset;
-        _prev_selected_scheme = _colorset.getColorSchema();
+        _prev_selected_scheme = _colorset.getCurrentColorScheme();
         _main_panel = parent;
         setSize( 400, 350 );
         final Container contentpane = getContentPane();

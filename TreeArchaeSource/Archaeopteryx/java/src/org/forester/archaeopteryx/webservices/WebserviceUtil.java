@@ -1,4 +1,4 @@
-// $Id: WebserviceUtil.java,v 1.1 2009/02/22 01:03:30 cmzmasek Exp $
+// $Id: WebserviceUtil.java,v 1.7 2010/04/17 03:06:40 cmzmasek Exp $
 // forester -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.forester.archaeopteryx.webservices.WebservicesManager.WsPhylogenyFormat;
+import org.forester.io.parsers.phyloxml.PhyloXmlUtil;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.data.Accession;
@@ -46,7 +47,7 @@ public final class WebserviceUtil {
     public static final String TOL_WEBSERVER        = "http://tolweb.org/onlinecontributors/app?service=external&page=xml/TreeStructureService&node_id="
                                                             + PhylogeniesWebserviceClient.QUERY_PLACEHOLDER;
     public static final String TOL_NAME             = "Tree of Life";
-    public static final String TREE_BASE_NAME       = "TreeBase";
+    public static final String TREE_BASE_NAME       = "TreeBASE";
     public static final String TREE_FAM_NAME        = "TreeFam";
     public static final String PFAM_NAME            = "Pfam";
     public static final String PFAM_SERVER          = "http://pfam.janelia.org";
@@ -67,23 +68,23 @@ public final class WebserviceUtil {
                                                             null ) );
         clients
                 .add( new BasicPhylogeniesWebserviceClient( TREE_BASE_NAME,
-                                                            "Read Tree from TreeBase...",
-                                                            "Use TreeBase to obtain a phylogeny",
-                                                            "Please enter a TreeBase tree identifier\n(Examples: 2654, 825, 3306, 2518, 2406)",
-                                                            WsPhylogenyFormat.NH,
+                                                            "Read Tree from TreeBASE...",
+                                                            "Use TreeBASE to obtain a phylogeny",
+                                                            "Please enter a TreeBASE tree identifier\n(Examples: 2654, 825, 4931, 2518, 2406, 4934)",
+                                                            WsPhylogenyFormat.NEXUS,
                                                             PhylogenyNodeField.TAXONOMY_SCIENTIFIC_NAME,
-                                                            "http://130.132.27.194/treebase/TreeBASE.acgi?PickedItems=Tree"
+                                                            "http://purl.org/phylo/treebase/phylows/tree/TB2:Tr"
                                                                     + PhylogeniesWebserviceClient.QUERY_PLACEHOLDER
-                                                                    + "&Button=ATV.nhx",
+                                                                    + "?format=nexus",
                                                             true,
-                                                            "http://www.treebase.org",
-                                                            TAX_CODE_TO_SCI_NAME ) );
+                                                            "http://treebase.nescent.org",
+                                                            null ) );
         clients
                 .add( new BasicPhylogeniesWebserviceClient( PFAM_NAME,
                                                             "Read Gene Tree from Pfam...",
                                                             "Use  Pfam to obtain a (full) gene tree",
                                                             "Please enter a Pfam (PF) accession number\n(Examples: 01849 for NAC, 00452 for Bcl-2, 00046 for Homeobox)",
-                                                            WsPhylogenyFormat.NH_EXTRACT_TAXONOMY,
+                                                            WsPhylogenyFormat.PFAM,
                                                             null,
                                                             PFAM_SERVER + "/family/tree/download?alnType=full&acc=PF"
                                                                     + PhylogeniesWebserviceClient.QUERY_PLACEHOLDER,
@@ -119,20 +120,6 @@ public final class WebserviceUtil {
         return clients;
     }
 
-    public static void processInstructions( final PhylogeniesWebserviceClient client, final Phylogeny phylogeny ) {
-        if ( client.getProcessingInstructions().equals( WebserviceUtil.TAX_CODE_TO_SCI_NAME ) ) {
-            WebserviceUtil.transferTaxonomyCodeToScientificName( phylogeny );
-        }
-        else if ( client.getProcessingInstructions().equals( WebserviceUtil.TREE_FAM_INST ) ) {
-            WebserviceUtil.transferInternalTaxonomyCodeToScientificName( phylogeny );
-            WebserviceUtil.transferSequenceNameToSequenceAccession( phylogeny, "ensembl" );
-            WebserviceUtil.setTaxonomyIdentifierType( phylogeny, "ncbi" );
-        }
-        else if ( client.getProcessingInstructions().equals( WebserviceUtil.PFAM_INST ) ) {
-            WebserviceUtil.extractSpTremblAccFromNodeName( phylogeny, "sptrembl" );
-        }
-    }
-
     static void extractSpTremblAccFromNodeName( final Phylogeny phy, final String source ) {
         final PreorderTreeIterator it = new PreorderTreeIterator( phy );
         while ( it.hasNext() ) {
@@ -153,6 +140,21 @@ public final class WebserviceUtil {
         }
     }
 
+    public static void processInstructions( final PhylogeniesWebserviceClient client, final Phylogeny phylogeny ) {
+        if ( client.getProcessingInstructions().equals( WebserviceUtil.TAX_CODE_TO_SCI_NAME ) ) {
+            WebserviceUtil.transferTaxonomyCodeToScientificName( phylogeny );
+        }
+        else if ( client.getProcessingInstructions().equals( WebserviceUtil.TREE_FAM_INST ) ) {
+            WebserviceUtil.transferInternalTaxonomyCodeToScientificName( phylogeny );
+            WebserviceUtil.transferExternalScientificNameToTaxonomyCode( phylogeny );
+            WebserviceUtil.transferSequenceNameToSequenceAccession( phylogeny, "ensembl" );
+            WebserviceUtil.setTaxonomyIdentifierType( phylogeny, "ncbi" );
+        }
+        else if ( client.getProcessingInstructions().equals( WebserviceUtil.PFAM_INST ) ) {
+            WebserviceUtil.extractSpTremblAccFromNodeName( phylogeny, "sptrembl" );
+        }
+    }
+
     static void setTaxonomyIdentifierType( final Phylogeny phy, final String type ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
@@ -160,6 +162,20 @@ public final class WebserviceUtil {
             if ( n.getNodeData().isHasTaxonomy() && ( n.getNodeData().getTaxonomy().getIdentifier() != null ) ) {
                 n.getNodeData().getTaxonomy().setIdentifier( new Identifier( n.getNodeData().getTaxonomy()
                         .getIdentifier().getValue(), type ) );
+            }
+        }
+    }
+
+    static void transferExternalScientificNameToTaxonomyCode( final Phylogeny phy ) {
+        final PhylogenyNodeIterator it = phy.iteratorPostorder();
+        while ( it.hasNext() ) {
+            final PhylogenyNode n = it.next();
+            if ( n.isExternal() && n.getNodeData().isHasTaxonomy() ) {
+                final String name = n.getNodeData().getTaxonomy().getScientificName();
+                if ( !ForesterUtil.isEmpty( name ) && PhyloXmlUtil.TAXOMONY_CODE_PATTERN.matcher( name ).matches() ) {
+                    n.getNodeData().getTaxonomy().setScientificName( "" );
+                    n.getNodeData().getTaxonomy().setTaxonomyCode( name );
+                }
             }
         }
     }

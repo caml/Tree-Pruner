@@ -1,4 +1,4 @@
-// $Id: GSDI.java,v 1.16 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: GSDI.java,v 1.18 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -98,109 +98,9 @@ public class GSDI extends SDI {
         _most_parsimonious_duplication_model = most_parsimonious_duplication_model;
         _transversal_counts = new HashMap<PhylogenyNode, Integer>();
         _duplications_sum = 0;
-        getSpeciesTree().preorderReID( 0 );
+        getSpeciesTree().preOrderReId( 0 );
         linkNodesOfG();
         geneTreePostOrderTraversal( getGeneTree().getRoot() );
-    }
-
-    public int getSpeciationOrDuplicationEventsSum() {
-        return _speciation_or_duplication_events_sum;
-    }
-
-    public int getSpeciationsSum() {
-        return _speciations_sum;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append( "Most parsimonious duplication model: " + _most_parsimonious_duplication_model );
-        sb.append( ForesterUtil.getLineSeparator() );
-        sb.append( "Speciations sum                    : " + getSpeciationsSum() );
-        sb.append( ForesterUtil.getLineSeparator() );
-        sb.append( "Duplications sum                   : " + getDuplicationsSum() );
-        sb.append( ForesterUtil.getLineSeparator() );
-        if ( !_most_parsimonious_duplication_model ) {
-            sb.append( "Speciation or duplications sum     : " + getSpeciationOrDuplicationEventsSum() );
-            sb.append( ForesterUtil.getLineSeparator() );
-        }
-        sb.append( "mapping cost L                     : " + computeMappingCostL() );
-        return sb.toString();
-    }
-
-    /**
-     * Traverses the subtree of PhylogenyNode g in postorder, calculating the
-     * mapping function M, and determines which nodes represent speciation
-     * events and which ones duplication events.
-     * <p>
-     * Preconditions: Mapping M for external nodes must have been calculated and
-     * the species tree must be labeled in preorder.
-     * <p>
-     * (Last modified: )
-     * 
-     * @param g
-     *            starting node of a gene tree - normally the root
-     */
-    void geneTreePostOrderTraversal( final PhylogenyNode g ) {
-        if ( !g.isExternal() ) {
-            for( final PhylogenyNodeIterator iter = g.iterateChildNodesForward(); iter.hasNext(); ) {
-                geneTreePostOrderTraversal( iter.next() );
-            }
-            final PhylogenyNode[] linked_nodes = new PhylogenyNode[ g.getNumberOfDescendants() ];
-            for( int i = 0; i < linked_nodes.length; ++i ) {
-                linked_nodes[ i ] = g.getChildNode( i ).getLink();
-            }
-            final int[] min_max = obtainMinMaxIdIndices( linked_nodes );
-            int min_i = min_max[ 0 ];
-            int max_i = min_max[ 1 ];
-            // initTransversalCounts();
-            while ( linked_nodes[ min_i ] != linked_nodes[ max_i ] ) {
-                increaseTraversalCount( linked_nodes[ max_i ] );
-                linked_nodes[ max_i ] = linked_nodes[ max_i ].getParent();
-                final int[] min_max_ = obtainMinMaxIdIndices( linked_nodes );
-                min_i = min_max_[ 0 ];
-                max_i = min_max_[ 1 ];
-            }
-            final PhylogenyNode s = linked_nodes[ max_i ];
-            g.setLink( s );
-            // Determines whether dup. or spec.
-            determineEvent( s, g );
-            // _transversal_counts.clear();
-        }
-    }
-
-    /**
-     * This allows for linking of internal nodes of the species tree (as opposed
-     * to just external nodes, as in the method it overrides.
-     * 
-     */
-    @Override
-    void linkNodesOfG() {
-        final HashMap<Taxonomy, PhylogenyNode> speciestree_ext_nodes = new HashMap<Taxonomy, PhylogenyNode>();
-        for( final PhylogenyNodeIterator iter = _species_tree.iteratorLevelOrder(); iter.hasNext(); ) {
-            final PhylogenyNode n = iter.next();
-            if ( n.getNodeData().isHasTaxonomy() ) {
-                if ( speciestree_ext_nodes.containsKey( n.getNodeData().getTaxonomy() ) ) {
-                    throw new IllegalArgumentException( "taxonomy [" + n.getNodeData().getTaxonomy()
-                            + "] is not unique in species phylogeny" );
-                }
-                speciestree_ext_nodes.put( n.getNodeData().getTaxonomy(), n );
-            }
-        }
-        // Retrieve the reference to the PhylogenyNode with a matching species
-        // name.
-        for( final PhylogenyNodeIterator iter = _gene_tree.iteratorExternalForward(); iter.hasNext(); ) {
-            final PhylogenyNode g = iter.next();
-            if ( !g.getNodeData().isHasTaxonomy() ) {
-                throw new IllegalArgumentException( "gene tree node " + g + " has no taxonomic data" );
-            }
-            final PhylogenyNode s = speciestree_ext_nodes.get( g.getNodeData().getTaxonomy() );
-            if ( s == null ) {
-                throw new IllegalArgumentException( "species " + g.getNodeData().getTaxonomy()
-                        + " not present in species tree." );
-            }
-            g.setLink( s );
-        }
     }
 
     private Event createDuplicationEvent() {
@@ -277,6 +177,55 @@ public class GSDI extends SDI {
         g.getNodeData().setEvent( event );
     }
 
+    /**
+     * Traverses the subtree of PhylogenyNode g in postorder, calculating the
+     * mapping function M, and determines which nodes represent speciation
+     * events and which ones duplication events.
+     * <p>
+     * Preconditions: Mapping M for external nodes must have been calculated and
+     * the species tree must be labeled in preorder.
+     * <p>
+     * (Last modified: )
+     * 
+     * @param g
+     *            starting node of a gene tree - normally the root
+     */
+    void geneTreePostOrderTraversal( final PhylogenyNode g ) {
+        if ( !g.isExternal() ) {
+            for( final PhylogenyNodeIterator iter = g.iterateChildNodesForward(); iter.hasNext(); ) {
+                geneTreePostOrderTraversal( iter.next() );
+            }
+            final PhylogenyNode[] linked_nodes = new PhylogenyNode[ g.getNumberOfDescendants() ];
+            for( int i = 0; i < linked_nodes.length; ++i ) {
+                linked_nodes[ i ] = g.getChildNode( i ).getLink();
+            }
+            final int[] min_max = obtainMinMaxIdIndices( linked_nodes );
+            int min_i = min_max[ 0 ];
+            int max_i = min_max[ 1 ];
+            // initTransversalCounts();
+            while ( linked_nodes[ min_i ] != linked_nodes[ max_i ] ) {
+                increaseTraversalCount( linked_nodes[ max_i ] );
+                linked_nodes[ max_i ] = linked_nodes[ max_i ].getParent();
+                final int[] min_max_ = obtainMinMaxIdIndices( linked_nodes );
+                min_i = min_max_[ 0 ];
+                max_i = min_max_[ 1 ];
+            }
+            final PhylogenyNode s = linked_nodes[ max_i ];
+            g.setLink( s );
+            // Determines whether dup. or spec.
+            determineEvent( s, g );
+            // _transversal_counts.clear();
+        }
+    }
+
+    public int getSpeciationOrDuplicationEventsSum() {
+        return _speciation_or_duplication_events_sum;
+    }
+
+    public int getSpeciationsSum() {
+        return _speciations_sum;
+    }
+
     private int getTraversalCount( final PhylogenyNode node ) {
         if ( _transversal_counts.containsKey( node ) ) {
             return _transversal_counts.get( node );
@@ -293,6 +242,57 @@ public class GSDI extends SDI {
         }
         // System.out.println( "count for node " + node.getID() + " is now "
         // + getTraversalCount( node ) );
+    }
+
+    /**
+     * This allows for linking of internal nodes of the species tree (as opposed
+     * to just external nodes, as in the method it overrides.
+     * 
+     */
+    @Override
+    void linkNodesOfG() {
+        final HashMap<Taxonomy, PhylogenyNode> speciestree_ext_nodes = new HashMap<Taxonomy, PhylogenyNode>();
+        for( final PhylogenyNodeIterator iter = _species_tree.iteratorLevelOrder(); iter.hasNext(); ) {
+            final PhylogenyNode n = iter.next();
+            if ( n.getNodeData().isHasTaxonomy() ) {
+                if ( speciestree_ext_nodes.containsKey( n.getNodeData().getTaxonomy() ) ) {
+                    throw new IllegalArgumentException( "taxonomy [" + n.getNodeData().getTaxonomy()
+                            + "] is not unique in species phylogeny" );
+                }
+                speciestree_ext_nodes.put( n.getNodeData().getTaxonomy(), n );
+            }
+        }
+        // Retrieve the reference to the PhylogenyNode with a matching species
+        // name.
+        for( final PhylogenyNodeIterator iter = _gene_tree.iteratorExternalForward(); iter.hasNext(); ) {
+            final PhylogenyNode g = iter.next();
+            if ( !g.getNodeData().isHasTaxonomy() ) {
+                throw new IllegalArgumentException( "gene tree node " + g + " has no taxonomic data" );
+            }
+            final PhylogenyNode s = speciestree_ext_nodes.get( g.getNodeData().getTaxonomy() );
+            if ( s == null ) {
+                throw new IllegalArgumentException( "species " + g.getNodeData().getTaxonomy()
+                        + " not present in species tree." );
+            }
+            g.setLink( s );
+        }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append( "Most parsimonious duplication model: " + _most_parsimonious_duplication_model );
+        sb.append( ForesterUtil.getLineSeparator() );
+        sb.append( "Speciations sum                    : " + getSpeciationsSum() );
+        sb.append( ForesterUtil.getLineSeparator() );
+        sb.append( "Duplications sum                   : " + getDuplicationsSum() );
+        sb.append( ForesterUtil.getLineSeparator() );
+        if ( !_most_parsimonious_duplication_model ) {
+            sb.append( "Speciation or duplications sum     : " + getSpeciationOrDuplicationEventsSum() );
+            sb.append( ForesterUtil.getLineSeparator() );
+        }
+        sb.append( "mapping cost L                     : " + computeMappingCostL() );
+        return sb.toString();
     }
 
     static int[] obtainMinMaxIdIndices( final PhylogenyNode[] linked_nodes ) {

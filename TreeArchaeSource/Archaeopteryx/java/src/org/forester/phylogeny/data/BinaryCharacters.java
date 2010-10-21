@@ -1,4 +1,4 @@
-// $Id: BinaryCharacters.java,v 1.20 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: BinaryCharacters.java,v 1.21 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -85,6 +85,12 @@ public class BinaryCharacters implements PhylogenyData {
         validate();
     }
 
+    private void addCharacters( final String indentation, final Writer w, final String[] present ) throws IOException {
+        for( final String string : present ) {
+            PhylogenyDataUtil.appendElement( w, PhyloXmlMapping.BINARY_CHARACTER, string, indentation );
+        }
+    }
+
     public void addGainedCharacter( final String binary_character ) {
         if ( getLostCharacters().contains( binary_character ) ) {
             throw new IllegalArgumentException( "attempt to add binary character [" + binary_character
@@ -113,10 +119,12 @@ public class BinaryCharacters implements PhylogenyData {
         getPresentCharacters().add( binary_character );
     }
 
+    @Override
     public StringBuffer asSimpleText() {
         return asText();
     }
 
+    @Override
     public StringBuffer asText() {
         validate();
         final StringBuffer sb = new StringBuffer();
@@ -137,6 +145,11 @@ public class BinaryCharacters implements PhylogenyData {
         return sb;
     }
 
+    @Override
+    /**
+     * Not a deep copy.
+     * 
+     */
     public PhylogenyData copy() {
         validate();
         return new BinaryCharacters( getPresentCharacters(),
@@ -200,6 +213,7 @@ public class BinaryCharacters implements PhylogenyData {
         return _type;
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
@@ -208,10 +222,12 @@ public class BinaryCharacters implements PhylogenyData {
         _type = type;
     }
 
+    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         validate();
         writer.write( ForesterUtil.LINE_SEPARATOR );
@@ -262,12 +278,6 @@ public class BinaryCharacters implements PhylogenyData {
     @Override
     public String toString() {
         return asText().toString();
-    }
-
-    private void addCharacters( final String indentation, final Writer w, final String[] present ) throws IOException {
-        for( final String string : present ) {
-            PhylogenyDataUtil.appendElement( w, PhyloXmlMapping.BINARY_CHARACTER, string, indentation );
-        }
     }
 
     private void validate() {

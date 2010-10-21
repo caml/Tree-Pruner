@@ -7,7 +7,7 @@
 #
 # decoration of phylogenies with sequence/species names and domain architectures
 #
-# $Id: phylogenies_decorator.rb,v 1.26 2008/09/02 20:45:33 cmzmasek Exp $
+# $Id: phylogenies_decorator.rb,v 1.33 2009/10/10 02:13:26 cmzmasek Exp $
 #
 # Environment variable FORESTER_HOME needs to point to the appropriate
 # directory (e.g. setenv FORESTER_HOME $HOME/SOFTWARE_DEV/ECLIPSE_WORKSPACE/forester-atv/)
@@ -22,7 +22,9 @@ module Evoruby
 
     class PhylogeniesDecorator
 
-        DECORATOR_OPTIONS_SEQ_NAMES = '-sn -r=1'
+        DECORATOR_OPTIONS_SEQ_NAMES = '-r=1 -mdn'
+        # -mdn is a hidden expert option to rename e.g. "6_ORYLA3" to "6_[3]_ORYLA"
+        #DECORATOR_OPTIONS_SEQ_NAMES = '-sn -r=1'
         DECORATOR_OPTIONS_DOMAINS = '-r=1'
         IDS_MAPFILE_SUFFIX        = '.nim'
         DOMAINS_MAPFILE_SUFFIX    = '.dff'
@@ -64,7 +66,7 @@ module Evoruby
                 exit( -1 )
             end
 
-            if FORESTER_HOME == nil ||  FORESTER_HOME.length < 1
+            if FORESTER_HOME == nil || FORESTER_HOME.length < 1
                 Util.fatal_error( PRG_NAME, "apparently environment variable #{Constants::FORESTER_HOME_ENV_VARIABLE} has not been set" )
             end
             if JAVA_HOME == nil ||  JAVA_HOME.length < 1
@@ -204,9 +206,9 @@ module Evoruby
 
                     if ids_mapfile_name != nil
                         begin
-                            Util.check_file_for_readability( domains_mapfile_name )
+                            Util.check_file_for_readability( ids_mapfile_name )
                         rescue ArgumentError
-                            Util.fatal_error( PRG_NAME, 'failed to read from [#{domains_mapfile_name}]: ' + $! )
+                            Util.fatal_error( PRG_NAME, 'failed to read from [#{ids_mapfile_name}]: ' + $! )
                         end
                     end
 
@@ -269,7 +271,7 @@ module Evoruby
                 if ( !File.directory?( file ) &&
                          file !~ /^\./ &&
                          file !~ /^00/ &&
-                         file =~ /^#{phylogeny_id}_.*#{suffix_pattern}$/ )
+                         file =~ /^#{phylogeny_id}.*#{suffix_pattern}$/ )
                     matching_files << file
                 end
             }

@@ -1,4 +1,4 @@
-// $Id: surf_paup.java,v 1.7 2008/08/20 22:32:56 cmzmasek Exp $
+// $Id: surf_paup.java,v 1.8 2010/09/29 23:50:17 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -31,15 +31,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.forester.evoinference.matrix.character.CharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.BinaryStates;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.Format;
 import org.forester.io.parsers.nexus.NexusCharactersParser;
 import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
 import org.forester.io.parsers.nexus.PaupLogParser;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
-import org.forester.phylogenyinference.CharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix.BinaryStates;
-import org.forester.phylogenyinference.CharacterStateMatrix.Format;
 import org.forester.surfacing.DomainParsimonyCalculator;
 import org.forester.surfacing.SurfacingUtil;
 import org.forester.util.CommandLineArguments;

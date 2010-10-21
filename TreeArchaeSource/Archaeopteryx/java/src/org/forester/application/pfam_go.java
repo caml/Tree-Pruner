@@ -1,4 +1,4 @@
-// $Id: pfam_go.java,v 1.1 2009/04/24 22:54:32 cmzmasek Exp $
+// $Id: pfam_go.java,v 1.3 2010/02/03 00:33:45 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -29,7 +29,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.forester.go.PfamToGoMapping;
 import org.forester.go.PfamToGoParser;
@@ -42,9 +44,52 @@ public class pfam_go {
     final static private String HELP_OPTION_2 = "h";
     final static private String PRG_NAME      = "pfam2go";
     final static private String PRG_VERSION   = "1.00";
-    final static private String PRG_DATE      = "2009.04.21";
+    final static private String PRG_DATE      = "2010.02.02";
     final static private String E_MAIL        = "czmasek@burnham.org";
     final static private String WWW           = "www.phylosoft.org";
+
+    private static void doit( final File pfams_file, final List<PfamToGoMapping> mappings ) throws IOException {
+        final BufferedReader reader = ForesterUtil.obtainReader( pfams_file );
+        String line = "";
+        int found_count = 0;
+        int not_found_count = 0;
+        final Set<String> encountered_domains = new HashSet<String>();
+        while ( ( line = reader.readLine() ) != null ) {
+            line = line.trim();
+            if ( ForesterUtil.isEmpty( line ) || line.startsWith( "##" ) ) {
+                continue;
+            }
+            else if ( line.startsWith( "#" ) ) {
+                encountered_domains.clear();
+                line = line.replace( '#', '>' );
+                System.out.println( line );
+            }
+            else {
+                if ( !encountered_domains.contains( line ) ) {
+                    encountered_domains.add( line );
+                    boolean found = false;
+                    for( final PfamToGoMapping mapping : mappings ) {
+                        if ( mapping.getKey().getId().equals( line ) ) {
+                            System.out.println( mapping.getValue() );
+                            found = true;
+                        }
+                    }
+                    if ( found ) {
+                        found_count++;
+                    }
+                    else {
+                        not_found_count++;
+                    }
+                }
+                else {
+                    System.err.println( "# duplicate domain: " + line );
+                }
+            }
+        }
+        System.out.println( "# pfams with mapping to GO   : " + found_count );
+        System.out.println( "# pfams without mapping to GO: " + not_found_count );
+        reader.close();
+    }
 
     public static void main( final String args[] ) {
         CommandLineArguments cla = null;
@@ -84,41 +129,6 @@ public class pfam_go {
             e.printStackTrace();
         }
         System.out.println();
-    }
-
-    private static void doit( final File pfams_file, final List<PfamToGoMapping> mappings ) throws IOException {
-        final BufferedReader reader = ForesterUtil.obtainReader( pfams_file );
-        String line = "";
-        int found_count = 0;
-        int not_found_count = 0;
-        while ( ( line = reader.readLine() ) != null ) {
-            line = line.trim();
-            if ( ForesterUtil.isEmpty( line ) || line.startsWith( "##" ) ) {
-                continue;
-            }
-            else if ( line.startsWith( "#" ) ) {
-                line = line.replace( '#', '>' );
-                System.out.println( line );
-            }
-            else {
-                boolean found = false;
-                for( final PfamToGoMapping mapping : mappings ) {
-                    if ( mapping.getKey().getId().equals( line ) ) {
-                        System.out.println( mapping.getValue() );
-                        found = true;
-                    }
-                }
-                if ( found ) {
-                    found_count++;
-                }
-                else {
-                    not_found_count++;
-                }
-            }
-        }
-        System.out.println( "# pfams with mapping to GO   : " + found_count );
-        System.out.println( "# pfams without mapping to GO: " + not_found_count );
-        reader.close();
     }
 
     private static void printHelp() {

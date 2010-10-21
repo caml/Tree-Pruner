@@ -1,4 +1,4 @@
-// $Id: Confidence.java,v 1.16 2008/09/24 16:42:49 cmzmasek Exp $
+// $Id: Confidence.java,v 1.22 2009/12/17 02:28:13 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -30,11 +30,12 @@ import java.io.Writer;
 
 import org.forester.io.parsers.nhx.NHXtags;
 import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
+import org.forester.io.parsers.phyloxml.PhyloXmlUtil;
 import org.forester.util.ForesterUtil;
 
-public class Confidence implements PhylogenyData {
+public class Confidence implements PhylogenyData, Comparable<Confidence> {
 
-    public final static double CONFIDENCE_DEFAULT_VALUE = -99.0;
+    public final static double CONFIDENCE_DEFAULT_VALUE = -9999.0;
     private double             _value;
     private String             _type;
 
@@ -48,7 +49,7 @@ public class Confidence implements PhylogenyData {
     }
 
     public StringBuffer asSimpleText() {
-        return new StringBuffer().append( getValue() );
+        return new StringBuffer().append( ForesterUtil.FORMATTER_6.format( getValue() ) );
     }
 
     public StringBuffer asText() {
@@ -58,8 +59,16 @@ public class Confidence implements PhylogenyData {
             sb.append( getType() );
             sb.append( "] " );
         }
-        sb.append( getValue() );
+        sb.append( ForesterUtil.FORMATTER_6.format( getValue() ) );
         return sb;
+    }
+
+    @Override
+    public int compareTo( final Confidence confidence ) {
+        if ( this == confidence ) {
+            return 0;
+        }
+        return getType().compareToIgnoreCase( confidence.getType() );
     }
 
     public PhylogenyData copy() {
@@ -79,14 +88,14 @@ public class Confidence implements PhylogenyData {
         setType( "" );
     }
 
-    public boolean isEqual( final PhylogenyData support ) {
-        if ( support == null ) {
+    public boolean isEqual( final PhylogenyData confidence ) {
+        if ( confidence == null ) {
             return false;
         }
-        if ( !( support instanceof Confidence ) ) {
+        if ( !( confidence instanceof Confidence ) ) {
             return false;
         }
-        final Confidence s = ( Confidence ) support;
+        final Confidence s = ( Confidence ) confidence;
         if ( s.getValue() != getValue() ) {
             return false;
         }
@@ -119,7 +128,9 @@ public class Confidence implements PhylogenyData {
         writer.write( indentation );
         PhylogenyDataUtil.appendElement( writer,
                                          PhyloXmlMapping.CONFIDENCE,
-                                         getValue() + "",
+                                         String.valueOf( ForesterUtil
+                                                 .round( getValue(),
+                                                         PhyloXmlUtil.ROUNDING_DIGITS_FOR_PHYLOXML_DOUBLE_OUTPUT ) ),
                                          PhyloXmlMapping.CONFIDENCE_TYPE_ATTR,
                                          ForesterUtil.isEmpty( getType() ) ? "unknown" : getType() );
     }

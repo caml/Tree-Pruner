@@ -1,4 +1,4 @@
-// $Id: ModelingUtils.java,v 1.4 2009/01/13 19:49:31 cmzmasek Exp $
+// $Id: ModelingUtils.java,v 1.6 2010/09/05 17:56:50 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -39,22 +39,9 @@ import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
 public final class ModelingUtils {
 
     static double calculateBranchLengthSum( final PhylogenyNode n1, final PhylogenyNode n2 ) {
-        final PhylogenyNode lca = PhylogenyMethods.getInstance().getLCA( n1, n2 );
+        final PhylogenyNode lca = PhylogenyMethods.getInstance().obtainLCA( n1, n2 );
         return ModelingUtils.calculateBranchLengthSumHelper( n1, lca )
                 + ModelingUtils.calculateBranchLengthSumHelper( n2, lca );
-    }
-
-    static int calculateBranchSum( final PhylogenyNode n1, final PhylogenyNode n2 ) {
-        final PhylogenyNode lca = PhylogenyMethods.getInstance().getLCA( n1, n2 );
-        return ModelingUtils.calculateBranchSumHelper( n1, lca ) + ModelingUtils.calculateBranchSumHelper( n2, lca );
-    }
-
-    static SortedMap<PhylogenyNode, Double> setUpExternalCoverageHashMap( final Phylogeny phylogeny ) {
-        final SortedMap<PhylogenyNode, Double> external_node_coverage = new TreeMap<PhylogenyNode, Double>();
-        for( final PhylogenyNodeIterator iter = phylogeny.iteratorExternalForward(); iter.hasNext(); ) {
-            external_node_coverage.put( iter.next(), 0.0 );
-        }
-        return external_node_coverage;
     }
 
     private static double calculateBranchLengthSumHelper( final PhylogenyNode outer, final PhylogenyNode inner ) {
@@ -69,6 +56,11 @@ public final class ModelingUtils {
         return l;
     }
 
+    static int calculateBranchSum( final PhylogenyNode n1, final PhylogenyNode n2 ) {
+        final PhylogenyNode lca = PhylogenyMethods.getInstance().obtainLCA( n1, n2 );
+        return ModelingUtils.calculateBranchSumHelper( n1, lca ) + ModelingUtils.calculateBranchSumHelper( n2, lca );
+    }
+
     private static int calculateBranchSumHelper( final PhylogenyNode outer, final PhylogenyNode inner ) {
         PhylogenyNode my_outer = outer;
         int s = 0;
@@ -77,5 +69,13 @@ public final class ModelingUtils {
             my_outer = my_outer.getParent();
         }
         return s;
+    }
+
+    static SortedMap<PhylogenyNode, Double> setUpExternalCoverageHashMap( final Phylogeny phylogeny ) {
+        final SortedMap<PhylogenyNode, Double> external_node_coverage = new TreeMap<PhylogenyNode, Double>();
+        for( final PhylogenyNodeIterator iter = phylogeny.iteratorExternalForward(); iter.hasNext(); ) {
+            external_node_coverage.put( iter.next(), 0.0 );
+        }
+        return external_node_coverage;
     }
 }

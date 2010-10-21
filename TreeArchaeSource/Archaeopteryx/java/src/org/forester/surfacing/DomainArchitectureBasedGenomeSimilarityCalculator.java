@@ -113,6 +113,17 @@ public class DomainArchitectureBasedGenomeSimilarityCalculator {
         setDomainIdsToIgnore( new HashSet<DomainId>() );
     }
 
+    private void forceRecalculation() {
+        _all_domains = null;
+        _shared_domains = null;
+        _domains_specific_to_0 = null;
+        _domains_specific_to_1 = null;
+        _all_binary_domain_combinations = null;
+        _shared_binary_domain_combinations = null;
+        _binary_domain_combinations_specific_to_0 = null;
+        _binary_domain_combinations_specific_to_1 = null;
+    }
+
     /**
      * Does not return binary combinations which contain one or two domains
      * to be ignored -- if ignoring is allowed.
@@ -156,6 +167,30 @@ public class DomainArchitectureBasedGenomeSimilarityCalculator {
         return _all_domains;
     }
 
+    private Set<BinaryDomainCombination> getBinaryDomainCombinationsSpecificToGenome( final boolean specific_to_genome_0 ) {
+        final Set<BinaryDomainCombination> specific = new HashSet<BinaryDomainCombination>();
+        final Set<BinaryDomainCombination> bc0 = getCombinableDomainsGenome0().toBinaryDomainCombinations();
+        final Set<BinaryDomainCombination> bc1 = getCombinableDomainsGenome1().toBinaryDomainCombinations();
+        if ( specific_to_genome_0 ) {
+            for( final BinaryDomainCombination binary_domain_combination0 : bc0 ) {
+                if ( !bc1.contains( binary_domain_combination0 ) ) {
+                    specific.add( binary_domain_combination0 );
+                }
+            }
+        }
+        else {
+            for( final BinaryDomainCombination binary_domain_combination1 : bc1 ) {
+                if ( !bc0.contains( binary_domain_combination1 ) ) {
+                    specific.add( binary_domain_combination1 );
+                }
+            }
+        }
+        if ( isAllowDomainsToBeIgnored() && !getDomainIdsToIgnore().isEmpty() ) {
+            return pruneBinaryCombinations( specific );
+        }
+        return specific;
+    }
+
     public Set<BinaryDomainCombination> getBinaryDomainCombinationsSpecificToGenome0() {
         if ( _binary_domain_combinations_specific_to_0 == null ) {
             _binary_domain_combinations_specific_to_0 = getBinaryDomainCombinationsSpecificToGenome( true );
@@ -168,6 +203,42 @@ public class DomainArchitectureBasedGenomeSimilarityCalculator {
             _binary_domain_combinations_specific_to_1 = getBinaryDomainCombinationsSpecificToGenome( false );
         }
         return _binary_domain_combinations_specific_to_1;
+    }
+
+    private GenomeWideCombinableDomains getCombinableDomainsGenome0() {
+        return _combinable_domains_genome_0;
+    }
+
+    private GenomeWideCombinableDomains getCombinableDomainsGenome1() {
+        return _combinable_domains_genome_1;
+    }
+
+    private Set<DomainId> getDomainIdsToIgnore() {
+        return _domain_ids_to_ignore;
+    }
+
+    private Set<DomainId> getDomainsSpecificToGenome( final boolean specific_to_genome_0 ) {
+        final Set<DomainId> specific = new HashSet<DomainId>();
+        final Set<DomainId> d0 = getCombinableDomainsGenome0().getAllDomainIds();
+        final Set<DomainId> d1 = getCombinableDomainsGenome1().getAllDomainIds();
+        if ( specific_to_genome_0 ) {
+            for( final DomainId domain0 : d0 ) {
+                if ( !d1.contains( domain0 ) ) {
+                    specific.add( domain0 );
+                }
+            }
+        }
+        else {
+            for( final DomainId domain1 : d1 ) {
+                if ( !d0.contains( domain1 ) ) {
+                    specific.add( domain1 );
+                }
+            }
+        }
+        if ( isAllowDomainsToBeIgnored() && !getDomainIdsToIgnore().isEmpty() ) {
+            return pruneDomains( specific );
+        }
+        return specific;
     }
 
     public Set<DomainId> getDomainsSpecificToGenome0() {
@@ -220,87 +291,6 @@ public class DomainArchitectureBasedGenomeSimilarityCalculator {
         return _shared_domains;
     }
 
-    public void setAllowDomainsToBeIgnored( final boolean allow_domains_to_be_ignored ) {
-        forceRecalculation();
-        _allow_domains_to_be_ignored = allow_domains_to_be_ignored;
-    }
-
-    void setDomainIdsToIgnore( final Set<DomainId> domain_ids_to_ignore ) {
-        forceRecalculation();
-        _domain_ids_to_ignore = domain_ids_to_ignore;
-    }
-
-    private void forceRecalculation() {
-        _all_domains = null;
-        _shared_domains = null;
-        _domains_specific_to_0 = null;
-        _domains_specific_to_1 = null;
-        _all_binary_domain_combinations = null;
-        _shared_binary_domain_combinations = null;
-        _binary_domain_combinations_specific_to_0 = null;
-        _binary_domain_combinations_specific_to_1 = null;
-    }
-
-    private Set<BinaryDomainCombination> getBinaryDomainCombinationsSpecificToGenome( final boolean specific_to_genome_0 ) {
-        final Set<BinaryDomainCombination> specific = new HashSet<BinaryDomainCombination>();
-        final Set<BinaryDomainCombination> bc0 = getCombinableDomainsGenome0().toBinaryDomainCombinations();
-        final Set<BinaryDomainCombination> bc1 = getCombinableDomainsGenome1().toBinaryDomainCombinations();
-        if ( specific_to_genome_0 ) {
-            for( final BinaryDomainCombination binary_domain_combination0 : bc0 ) {
-                if ( !bc1.contains( binary_domain_combination0 ) ) {
-                    specific.add( binary_domain_combination0 );
-                }
-            }
-        }
-        else {
-            for( final BinaryDomainCombination binary_domain_combination1 : bc1 ) {
-                if ( !bc0.contains( binary_domain_combination1 ) ) {
-                    specific.add( binary_domain_combination1 );
-                }
-            }
-        }
-        if ( isAllowDomainsToBeIgnored() && !getDomainIdsToIgnore().isEmpty() ) {
-            return pruneBinaryCombinations( specific );
-        }
-        return specific;
-    }
-
-    private GenomeWideCombinableDomains getCombinableDomainsGenome0() {
-        return _combinable_domains_genome_0;
-    }
-
-    private GenomeWideCombinableDomains getCombinableDomainsGenome1() {
-        return _combinable_domains_genome_1;
-    }
-
-    private Set<DomainId> getDomainIdsToIgnore() {
-        return _domain_ids_to_ignore;
-    }
-
-    private Set<DomainId> getDomainsSpecificToGenome( final boolean specific_to_genome_0 ) {
-        final Set<DomainId> specific = new HashSet<DomainId>();
-        final Set<DomainId> d0 = getCombinableDomainsGenome0().getAllDomainIds();
-        final Set<DomainId> d1 = getCombinableDomainsGenome1().getAllDomainIds();
-        if ( specific_to_genome_0 ) {
-            for( final DomainId domain0 : d0 ) {
-                if ( !d1.contains( domain0 ) ) {
-                    specific.add( domain0 );
-                }
-            }
-        }
-        else {
-            for( final DomainId domain1 : d1 ) {
-                if ( !d0.contains( domain1 ) ) {
-                    specific.add( domain1 );
-                }
-            }
-        }
-        if ( isAllowDomainsToBeIgnored() && !getDomainIdsToIgnore().isEmpty() ) {
-            return pruneDomains( specific );
-        }
-        return specific;
-    }
-
     private void init() {
         deleteAllDomainIdsToIgnore();
         setAllowDomainsToBeIgnored( false );
@@ -329,5 +319,15 @@ public class DomainArchitectureBasedGenomeSimilarityCalculator {
             }
         }
         return pruned;
+    }
+
+    public void setAllowDomainsToBeIgnored( final boolean allow_domains_to_be_ignored ) {
+        forceRecalculation();
+        _allow_domains_to_be_ignored = allow_domains_to_be_ignored;
+    }
+
+    void setDomainIdsToIgnore( final Set<DomainId> domain_ids_to_ignore ) {
+        forceRecalculation();
+        _domain_ids_to_ignore = domain_ids_to_ignore;
     }
 }

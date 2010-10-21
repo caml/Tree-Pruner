@@ -1,4 +1,4 @@
-// $Id: PfamToGoMapping.java,v 1.6 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: PfamToGoMapping.java,v 1.7 2010/04/21 21:59:47 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -37,6 +37,7 @@ public class PfamToGoMapping implements Mapping {
         _go_id = go_id;
     }
 
+    @Override
     public int compareTo( final Mapping m ) {
         if ( this == m ) {
             return 0;
@@ -58,7 +59,7 @@ public class PfamToGoMapping implements Mapping {
             throw new IllegalArgumentException( "attempt to check pfam to go mapping equality to null" );
         }
         else if ( o.getClass() != this.getClass() ) {
-            throw new IllegalArgumentException( "attempt to check dpfam to go mapping equality to " + o + " ["
+            throw new IllegalArgumentException( "attempt to check pfam to go mapping equality to " + o + " ["
                     + o.getClass() + "]" );
         }
         else {
@@ -67,10 +68,12 @@ public class PfamToGoMapping implements Mapping {
         }
     }
 
+    @Override
     public DomainId getKey() {
         return _pfam_domain_id;
     }
 
+    @Override
     public GoId getValue() {
         return _go_id;
     }

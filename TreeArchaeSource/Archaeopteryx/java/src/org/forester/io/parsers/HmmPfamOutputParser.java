@@ -1,4 +1,4 @@
-// $Id: HmmPfamOutputParser.java,v 1.14 2009/01/21 20:52:47 cmzmasek Exp $
+// $Id: HmmPfamOutputParser.java,v 1.16 2009/11/10 19:57:08 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -114,6 +114,44 @@ public final class HmmPfamOutputParser {
         init();
     }
 
+    private void actuallyAddProtein( final List<Protein> proteins, final Protein current_protein ) {
+        final List<Domain> l = current_protein.getProteinDomains();
+        for( final Domain d : l ) {
+            getDomainsStoredSet().add( d.getDomainId() );
+        }
+        proteins.add( current_protein );
+        ++_proteins_stored;
+    }
+
+    private void addProtein( final List<Protein> proteins, final Protein current_protein ) {
+        if ( ( getFilterType() == FilterType.POSITIVE_PROTEIN ) || ( getFilterType() == FilterType.NEGATIVE_PROTEIN ) ) {
+            final Set<DomainId> domain_ids_in_protein = new HashSet<DomainId>();
+            for( final Domain d : current_protein.getProteinDomains() ) {
+                domain_ids_in_protein.add( d.getDomainId() );
+            }
+            domain_ids_in_protein.retainAll( getFilter() );
+            if ( getFilterType() == FilterType.POSITIVE_PROTEIN ) {
+                if ( domain_ids_in_protein.size() > 0 ) {
+                    actuallyAddProtein( proteins, current_protein );
+                }
+                else {
+                    ++_proteins_ignored_due_to_filter;
+                }
+            }
+            else {
+                if ( domain_ids_in_protein.size() < 1 ) {
+                    actuallyAddProtein( proteins, current_protein );
+                }
+                else {
+                    ++_proteins_ignored_due_to_filter;
+                }
+            }
+        }
+        else {
+            actuallyAddProtein( proteins, current_protein );
+        }
+    }
+
     public int getDomainsEncountered() {
         return _domains_encountered;
     }
@@ -158,6 +196,34 @@ public final class HmmPfamOutputParser {
         return _domains_stored_set;
     }
 
+    private double getEValueMaximum() {
+        return _e_value_maximum;
+    }
+
+    private Set<DomainId> getFilter() {
+        return _filter;
+    }
+
+    private FilterType getFilterType() {
+        return _filter_type;
+    }
+
+    private Map<String, String> getIndividualDomainScoreCutoffs() {
+        return _individual_domain_score_cutoffs;
+    }
+
+    private File getInputFile() {
+        return _input_file;
+    }
+
+    private int getMaxAllowedOverlap() {
+        return _max_allowed_overlap;
+    }
+
+    private String getModelType() {
+        return _model_type;
+    }
+
     public int getProteinsEncountered() {
         return _proteins_encountered;
     }
@@ -170,8 +236,67 @@ public final class HmmPfamOutputParser {
         return _proteins_stored;
     }
 
+    private ReturnType getReturnType() {
+        return _return_type;
+    }
+
+    private String getSpecies() {
+        return _species;
+    }
+
     public long getTime() {
         return _time;
+    }
+
+    private void init() {
+        _e_value_maximum = HmmPfamOutputParser.E_VALUE_MAXIMUM_DEFAULT;
+        setIgnoreDufs( HmmPfamOutputParser.IGNORE_DUFS_DEFAULT );
+        setReturnType( HmmPfamOutputParser.RETURN_TYPE_DEFAULT );
+        _max_allowed_overlap = HmmPfamOutputParser.MAX_ALLOWED_OVERLAP_DEFAULT;
+        setIndividualDomainScoreCutoffs( null );
+        setIgnoreEngulfedDomains( false );
+        setIgnoreVirusLikeIds( false );
+        setAllowNonUniqueQuery( false );
+        setVerbose( false );
+        intitCounts();
+    }
+
+    private void intitCounts() {
+        setDomainsStoredSet( new TreeSet<DomainId>() );
+        setDomainsEncountered( 0 );
+        setProteinsEncountered( 0 );
+        setProteinsIgnoredDueToFilter( 0 );
+        setDomainsIgnoredDueToNegativeFilter( 0 );
+        setDomainsIgnoredDueToDuf( 0 );
+        setDomainsIgnoredDueToEval( 0 );
+        setDomainsIgnoredDueToIndividualScoreCutoff( 0 );
+        setDomainsIgnoredDueToVirusLikeId( 0 );
+        setDomainsIgnoredDueToOverlap( 0 );
+        setDomainsStored( 0 );
+        setProteinsStored( 0 );
+        setTime( 0 );
+        setDomainsIgnoredDueToVirusLikeIdCountsMap( new TreeMap<String, Integer>() );
+        setDomainsIgnoredDueToNegativeDomainFilterCountsMap( new TreeMap<String, Integer>() );
+    }
+
+    private boolean isAllowNonUniqueQuery() {
+        return _allow_non_unique_query;
+    }
+
+    private boolean isIgnoreDufs() {
+        return _ignore_dufs;
+    }
+
+    private boolean isIgnoreEngulfedDomains() {
+        return _ignore_engulfed_domains;
+    }
+
+    private boolean isIgnoreVirusLikeIds() {
+        return _ignore_virus_like_ids;
+    }
+
+    private boolean isVerbose() {
+        return _verbose;
     }
 
     public List<Protein> parse() throws IOException {
@@ -426,10 +551,7 @@ public final class HmmPfamOutputParser {
                                                             ( short ) number,
                                                             ( short ) total,
                                                             e_value,
-                                                            score,
-                                                            getModelType(),
-                                                            is_complete_hmm_match,
-                                                            is_complete_query_match );
+                                                            score );
                     current_protein.addProteinDomain( pd );
                     ++_domains_stored;
                 }
@@ -446,12 +568,48 @@ public final class HmmPfamOutputParser {
         _allow_non_unique_query = allow_non_unique_query;
     }
 
+    private void setDomainsEncountered( final int domains_encountered ) {
+        _domains_encountered = domains_encountered;
+    }
+
+    private void setDomainsIgnoredDueToDuf( final int domains_ignored_due_to_duf ) {
+        _domains_ignored_due_to_duf = domains_ignored_due_to_duf;
+    }
+
     public void setDomainsIgnoredDueToEval( final int domains_ignored_due_to_e_value ) {
         _domains_ignored_due_to_e_value = domains_ignored_due_to_e_value;
     }
 
     public void setDomainsIgnoredDueToIndividualScoreCutoff( final int domains_ignored_due_to_individual_score_cutoff ) {
         _domains_ignored_due_to_individual_score_cutoff = domains_ignored_due_to_individual_score_cutoff;
+    }
+
+    private void setDomainsIgnoredDueToNegativeDomainFilterCountsMap( final Map<String, Integer> domains_ignored_due_to_negative_domain_filter_counts_map ) {
+        _domains_ignored_due_to_negative_domain_filter_counts_map = domains_ignored_due_to_negative_domain_filter_counts_map;
+    }
+
+    private void setDomainsIgnoredDueToNegativeFilter( final int domains_ignored_due_to_negative_domain_filter ) {
+        _domains_ignored_due_to_negative_domain_filter = domains_ignored_due_to_negative_domain_filter;
+    }
+
+    private void setDomainsIgnoredDueToOverlap( final int domains_ignored_due_to_overlap ) {
+        _domains_ignored_due_to_overlap = domains_ignored_due_to_overlap;
+    }
+
+    private void setDomainsIgnoredDueToVirusLikeId( final int i ) {
+        _domains_ignored_due_to_virus_like_id = i;
+    }
+
+    private void setDomainsIgnoredDueToVirusLikeIdCountsMap( final Map<String, Integer> domains_ignored_due_to_virus_like_id_counts_map ) {
+        _domains_ignored_due_to_virus_like_id_counts_map = domains_ignored_due_to_virus_like_id_counts_map;
+    }
+
+    private void setDomainsStored( final int domains_stored ) {
+        _domains_stored = domains_stored;
+    }
+
+    private void setDomainsStoredSet( final SortedSet<DomainId> _storeddomains_stored ) {
+        _domains_stored_set = _storeddomains_stored;
     }
 
     public void setEValueMaximum( final double e_value_maximum ) {
@@ -497,175 +655,6 @@ public final class HmmPfamOutputParser {
         _max_allowed_overlap = max_allowed_overlap;
     }
 
-    public void setReturnType( final ReturnType return_type ) {
-        _return_type = return_type;
-    }
-
-    public void setVerbose( final boolean verbose ) {
-        _verbose = verbose;
-    }
-
-    private void actuallyAddProtein( final List<Protein> proteins, final Protein current_protein ) {
-        final List<Domain> l = current_protein.getProteinDomains();
-        for( final Domain d : l ) {
-            getDomainsStoredSet().add( d.getDomainId() );
-        }
-        proteins.add( current_protein );
-        ++_proteins_stored;
-    }
-
-    private void addProtein( final List<Protein> proteins, final Protein current_protein ) {
-        if ( ( getFilterType() == FilterType.POSITIVE_PROTEIN ) || ( getFilterType() == FilterType.NEGATIVE_PROTEIN ) ) {
-            final Set<DomainId> domain_ids_in_protein = new HashSet<DomainId>();
-            for( final Domain d : current_protein.getProteinDomains() ) {
-                domain_ids_in_protein.add( d.getDomainId() );
-            }
-            domain_ids_in_protein.retainAll( getFilter() );
-            if ( getFilterType() == FilterType.POSITIVE_PROTEIN ) {
-                if ( domain_ids_in_protein.size() > 0 ) {
-                    actuallyAddProtein( proteins, current_protein );
-                }
-                else {
-                    ++_proteins_ignored_due_to_filter;
-                }
-            }
-            else {
-                if ( domain_ids_in_protein.size() < 1 ) {
-                    actuallyAddProtein( proteins, current_protein );
-                }
-                else {
-                    ++_proteins_ignored_due_to_filter;
-                }
-            }
-        }
-        else {
-            actuallyAddProtein( proteins, current_protein );
-        }
-    }
-
-    private double getEValueMaximum() {
-        return _e_value_maximum;
-    }
-
-    private Set<DomainId> getFilter() {
-        return _filter;
-    }
-
-    private FilterType getFilterType() {
-        return _filter_type;
-    }
-
-    private Map<String, String> getIndividualDomainScoreCutoffs() {
-        return _individual_domain_score_cutoffs;
-    }
-
-    private File getInputFile() {
-        return _input_file;
-    }
-
-    private int getMaxAllowedOverlap() {
-        return _max_allowed_overlap;
-    }
-
-    private String getModelType() {
-        return _model_type;
-    }
-
-    private ReturnType getReturnType() {
-        return _return_type;
-    }
-
-    private String getSpecies() {
-        return _species;
-    }
-
-    private void init() {
-        _e_value_maximum = HmmPfamOutputParser.E_VALUE_MAXIMUM_DEFAULT;
-        setIgnoreDufs( HmmPfamOutputParser.IGNORE_DUFS_DEFAULT );
-        setReturnType( HmmPfamOutputParser.RETURN_TYPE_DEFAULT );
-        _max_allowed_overlap = HmmPfamOutputParser.MAX_ALLOWED_OVERLAP_DEFAULT;
-        setIndividualDomainScoreCutoffs( null );
-        setIgnoreEngulfedDomains( false );
-        setIgnoreVirusLikeIds( false );
-        setAllowNonUniqueQuery( false );
-        setVerbose( false );
-        intitCounts();
-    }
-
-    private void intitCounts() {
-        setDomainsStoredSet( new TreeSet<DomainId>() );
-        setDomainsEncountered( 0 );
-        setProteinsEncountered( 0 );
-        setProteinsIgnoredDueToFilter( 0 );
-        setDomainsIgnoredDueToNegativeFilter( 0 );
-        setDomainsIgnoredDueToDuf( 0 );
-        setDomainsIgnoredDueToEval( 0 );
-        setDomainsIgnoredDueToIndividualScoreCutoff( 0 );
-        setDomainsIgnoredDueToVirusLikeId( 0 );
-        setDomainsIgnoredDueToOverlap( 0 );
-        setDomainsStored( 0 );
-        setProteinsStored( 0 );
-        setTime( 0 );
-        setDomainsIgnoredDueToVirusLikeIdCountsMap( new TreeMap<String, Integer>() );
-        setDomainsIgnoredDueToNegativeDomainFilterCountsMap( new TreeMap<String, Integer>() );
-    }
-
-    private boolean isAllowNonUniqueQuery() {
-        return _allow_non_unique_query;
-    }
-
-    private boolean isIgnoreDufs() {
-        return _ignore_dufs;
-    }
-
-    private boolean isIgnoreEngulfedDomains() {
-        return _ignore_engulfed_domains;
-    }
-
-    private boolean isIgnoreVirusLikeIds() {
-        return _ignore_virus_like_ids;
-    }
-
-    private boolean isVerbose() {
-        return _verbose;
-    }
-
-    private void setDomainsEncountered( final int domains_encountered ) {
-        _domains_encountered = domains_encountered;
-    }
-
-    private void setDomainsIgnoredDueToDuf( final int domains_ignored_due_to_duf ) {
-        _domains_ignored_due_to_duf = domains_ignored_due_to_duf;
-    }
-
-    private void setDomainsIgnoredDueToNegativeDomainFilterCountsMap( final Map<String, Integer> domains_ignored_due_to_negative_domain_filter_counts_map ) {
-        _domains_ignored_due_to_negative_domain_filter_counts_map = domains_ignored_due_to_negative_domain_filter_counts_map;
-    }
-
-    private void setDomainsIgnoredDueToNegativeFilter( final int domains_ignored_due_to_negative_domain_filter ) {
-        _domains_ignored_due_to_negative_domain_filter = domains_ignored_due_to_negative_domain_filter;
-    }
-
-    private void setDomainsIgnoredDueToOverlap( final int domains_ignored_due_to_overlap ) {
-        _domains_ignored_due_to_overlap = domains_ignored_due_to_overlap;
-    }
-
-    private void setDomainsIgnoredDueToVirusLikeId( final int i ) {
-        _domains_ignored_due_to_virus_like_id = i;
-    }
-
-    private void setDomainsIgnoredDueToVirusLikeIdCountsMap( final Map<String, Integer> domains_ignored_due_to_virus_like_id_counts_map ) {
-        _domains_ignored_due_to_virus_like_id_counts_map = domains_ignored_due_to_virus_like_id_counts_map;
-    }
-
-    private void setDomainsStored( final int domains_stored ) {
-        _domains_stored = domains_stored;
-    }
-
-    private void setDomainsStoredSet( final SortedSet<DomainId> _storeddomains_stored ) {
-        _domains_stored_set = _storeddomains_stored;
-    }
-
     private void setProteinsEncountered( final int proteins_encountered ) {
         _proteins_encountered = proteins_encountered;
     }
@@ -678,8 +667,16 @@ public final class HmmPfamOutputParser {
         _proteins_stored = proteins_stored;
     }
 
+    public void setReturnType( final ReturnType return_type ) {
+        _return_type = return_type;
+    }
+
     private void setTime( final long time ) {
         _time = time;
+    }
+
+    public void setVerbose( final boolean verbose ) {
+        _verbose = verbose;
     }
 
     public static enum FilterType {

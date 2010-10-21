@@ -1,4 +1,4 @@
-// $Id: Taxonomy.java,v 1.44 2009/02/13 23:03:31 cmzmasek Exp $
+// $Id: Taxonomy.java,v 1.58 2010/09/23 00:21:24 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,20 +27,25 @@ package org.forester.phylogeny.data;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.forester.io.parsers.nhx.NHXtags;
+import org.forester.io.parsers.phyloxml.PhyloXmlDataFormatException;
 import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
+import org.forester.io.parsers.phyloxml.PhyloXmlUtil;
 import org.forester.util.ForesterUtil;
 
-public class Taxonomy implements PhylogenyData {
+public class Taxonomy implements PhylogenyData, Comparable<Taxonomy> {
 
-    private String     _scientific_name;
-    private String     _common_name;
-    private Identifier _identifier;
-    private String     _taxonomy_code;
-    private String     _rank;
-    private String     _type;
-    private Uri        _uri;
+    private String       _scientific_name;
+    private String       _common_name;
+    private List<String> _synonyms;
+    private String       _authority;
+    private Identifier   _identifier;
+    private String       _taxonomy_code;
+    private String       _rank;
+    private Uri          _uri;
 
     public Taxonomy() {
         init();
@@ -70,6 +75,11 @@ public class Taxonomy implements PhylogenyData {
                 sb.append( " " );
             }
             sb.append( getScientificName() );
+            if ( !ForesterUtil.isEmpty( getAuthority() ) ) {
+                sb.append( " (" );
+                sb.append( getAuthority() );
+                sb.append( ")" );
+            }
         }
         if ( !ForesterUtil.isEmpty( getCommonName() ) ) {
             if ( sb.length() > 0 ) {
@@ -85,6 +95,10 @@ public class Taxonomy implements PhylogenyData {
         t.setTaxonomyCode( new String( getTaxonomyCode() ) );
         t.setScientificName( new String( getScientificName() ) );
         t.setCommonName( new String( getCommonName() ) );
+        t.setAuthority( new String( getAuthority() ) );
+        for( final String syn : getSynonyms() ) {
+            t.getSynonyms().add( new String( syn ) );
+        }
         if ( getIdentifier() != null ) {
             t.setIdentifier( ( Identifier ) getIdentifier().copy() );
         }
@@ -92,7 +106,6 @@ public class Taxonomy implements PhylogenyData {
             t.setIdentifier( null );
         }
         t.setRank( new String( getRank() ) );
-        t.setType( new String( getType() ) );
         if ( getUri() != null ) {
             t.setUri( ( Uri ) getUri().copy() );
         }
@@ -119,6 +132,10 @@ public class Taxonomy implements PhylogenyData {
         }
     }
 
+    public String getAuthority() {
+        return _authority;
+    }
+
     public String getCommonName() {
         return _common_name;
     }
@@ -135,12 +152,12 @@ public class Taxonomy implements PhylogenyData {
         return _scientific_name;
     }
 
-    public String getTaxonomyCode() {
-        return _taxonomy_code;
+    public List<String> getSynonyms() {
+        return _synonyms;
     }
 
-    public String getType() {
-        return _type;
+    public String getTaxonomyCode() {
+        return _taxonomy_code;
     }
 
     public Uri getUri() {
@@ -156,12 +173,14 @@ public class Taxonomy implements PhylogenyData {
             return getTaxonomyCode().hashCode();
         }
         else if ( !ForesterUtil.isEmpty( getScientificName() ) ) {
+            if ( !ForesterUtil.isEmpty( getAuthority() ) ) {
+                return ( getScientificName().toLowerCase() + getAuthority().toLowerCase() ).hashCode();
+            }
             return getScientificName().toLowerCase().hashCode();
         }
-        else if ( !ForesterUtil.isEmpty( getCommonName() ) ) {
+        else {
             return getCommonName().toLowerCase().hashCode();
         }
-        throw new IllegalStateException( "hash code calculation not possible with empty fields" );
     }
 
     public void init() {
@@ -170,14 +189,16 @@ public class Taxonomy implements PhylogenyData {
         setIdentifier( null );
         setRank( "" );
         setTaxonomyCode( "" );
-        setType( "" );
+        setAuthority( "" );
+        setSynonyms( new ArrayList<String>() );
         setUri( null );
     }
 
     public boolean isEmpty() {
         return ( ( getIdentifier() == null ) && ForesterUtil.isEmpty( getTaxonomyCode() )
                 && ForesterUtil.isEmpty( getCommonName() ) && ForesterUtil.isEmpty( getScientificName() )
-                && ForesterUtil.isEmpty( getRank() ) && ( getUri() == null ) && ( ForesterUtil.isEmpty( getType() ) ) );
+                && ForesterUtil.isEmpty( getRank() ) && ( getUri() == null ) && ForesterUtil.isEmpty( getAuthority() ) && ( getSynonyms()
+                .size() < 1 ) );
     }
 
     /**
@@ -192,6 +213,9 @@ public class Taxonomy implements PhylogenyData {
      * 
      */
     public boolean isEqual( final PhylogenyData data ) {
+        if ( this == data ) {
+            return true;
+        }
         final Taxonomy tax = ( Taxonomy ) data;
         if ( ( getIdentifier() != null ) && ( tax.getIdentifier() != null ) ) {
             return getIdentifier().isEqual( tax.getIdentifier() );
@@ -200,6 +224,10 @@ public class Taxonomy implements PhylogenyData {
             return getTaxonomyCode().equals( tax.getTaxonomyCode() );
         }
         else if ( !ForesterUtil.isEmpty( getScientificName() ) && !ForesterUtil.isEmpty( tax.getScientificName() ) ) {
+            if ( !ForesterUtil.isEmpty( getAuthority() ) && !ForesterUtil.isEmpty( tax.getAuthority() ) ) {
+                return ( getScientificName().equalsIgnoreCase( tax.getScientificName() ) )
+                        && ( getAuthority().equalsIgnoreCase( tax.getAuthority() ) );
+            }
             return getScientificName().equalsIgnoreCase( tax.getScientificName() );
         }
         else if ( !ForesterUtil.isEmpty( getCommonName() ) && !ForesterUtil.isEmpty( tax.getCommonName() ) ) {
@@ -214,6 +242,10 @@ public class Taxonomy implements PhylogenyData {
         throw new IllegalStateException( "comparison not possible with empty fields" );
     }
 
+    public void setAuthority( final String authority ) {
+        _authority = authority;
+    }
+
     public void setCommonName( final String common_name ) {
         _common_name = common_name;
     }
@@ -223,6 +255,9 @@ public class Taxonomy implements PhylogenyData {
     }
 
     public void setRank( final String rank ) {
+        if ( !ForesterUtil.isEmpty( rank ) && !PhyloXmlUtil.TAXONOMY_RANKS.contains( rank ) ) {
+            throw new PhyloXmlDataFormatException( "illegal rank: [" + rank + "]" );
+        }
         _rank = rank;
     }
 
@@ -230,12 +265,16 @@ public class Taxonomy implements PhylogenyData {
         _scientific_name = scientific_name;
     }
 
-    public void setTaxonomyCode( final String taxonomy_code ) {
-        _taxonomy_code = taxonomy_code;
+    private void setSynonyms( final List<String> synonyms ) {
+        _synonyms = synonyms;
     }
 
-    public void setType( final String type ) {
-        _type = type;
+    public void setTaxonomyCode( final String taxonomy_code ) {
+        if ( !ForesterUtil.isEmpty( taxonomy_code )
+                && !PhyloXmlUtil.TAXOMONY_CODE_PATTERN.matcher( taxonomy_code ).matches() ) {
+            throw new PhyloXmlDataFormatException( "illegal taxonomy code: [" + taxonomy_code + "]" );
+        }
+        _taxonomy_code = taxonomy_code;
     }
 
     public void setUri( final Uri uri ) {
@@ -273,13 +312,8 @@ public class Taxonomy implements PhylogenyData {
         }
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );
-        if ( !ForesterUtil.isEmpty( getType() ) ) {
-            PhylogenyDataUtil.appendOpen( writer, PhyloXmlMapping.TAXONOMY, PhyloXmlMapping.TAXONOMY_TYPE, getType() );
-        }
-        else {
-            PhylogenyDataUtil.appendOpen( writer, PhyloXmlMapping.TAXONOMY );
-        }
-        if ( getIdentifier() != null ) {
+        PhylogenyDataUtil.appendOpen( writer, PhyloXmlMapping.TAXONOMY );
+        if ( ( getIdentifier() != null ) && !ForesterUtil.isEmpty( getIdentifier().getValue() ) ) {
             getIdentifier().toPhyloXML( writer, level, indentation );
         }
         if ( !ForesterUtil.isEmpty( getTaxonomyCode() ) ) {
@@ -291,9 +325,17 @@ public class Taxonomy implements PhylogenyData {
                                              getScientificName(),
                                              indentation );
         }
+        if ( !ForesterUtil.isEmpty( getAuthority() ) ) {
+            PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.TAXONOMY_AUTHORITY, getAuthority(), indentation );
+        }
         if ( !ForesterUtil.isEmpty( getCommonName() ) ) {
             PhylogenyDataUtil
                     .appendElement( writer, PhyloXmlMapping.TAXONOMY_COMMON_NAME, getCommonName(), indentation );
+        }
+        for( final String syn : getSynonyms() ) {
+            if ( !ForesterUtil.isEmpty( syn ) ) {
+                PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.TAXONOMY_SYNONYM, syn, indentation );
+            }
         }
         if ( !ForesterUtil.isEmpty( getRank() ) ) {
             PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.TAXONOMY_RANK, getRank(), indentation );
@@ -309,5 +351,22 @@ public class Taxonomy implements PhylogenyData {
     @Override
     public String toString() {
         return asText().toString();
+    }
+
+    @Override
+    public int compareTo( final Taxonomy o ) {
+        if ( isEqual( o ) ) {
+            return 0;
+        }
+        else if ( !ForesterUtil.isEmpty( getScientificName() ) && !ForesterUtil.isEmpty( o.getScientificName() ) ) {
+            return getScientificName().compareToIgnoreCase( o.getScientificName() );
+        }
+        else if ( !ForesterUtil.isEmpty( getCommonName() ) && !ForesterUtil.isEmpty( o.getCommonName() ) ) {
+            return getCommonName().compareToIgnoreCase( o.getCommonName() );
+        }
+        else if ( !ForesterUtil.isEmpty( getTaxonomyCode() ) && !ForesterUtil.isEmpty( o.getTaxonomyCode() ) ) {
+            return getTaxonomyCode().compareToIgnoreCase( o.getTaxonomyCode() );
+        }
+        return 0;
     }
 }

@@ -1,4 +1,4 @@
-// $Id: GoXRef.java,v 1.13 2009/04/22 05:14:57 cmzmasek Exp $
+// $Id: GoXRef.java,v 1.14 2009/11/10 19:57:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -33,6 +33,7 @@ public interface GoXRef extends Comparable<GoXRef> {
     public static final String RESID_STR             = "RESID";
     public static final String UM_BBD_ENZYME_ID_STR  = "UM-BBD_enzymeID";
     public static final String UM_BBD_PATHWAY_ID_STR = "UM-BBD_pathwayID";
+    public static final String UM_BBD_REACTIONID_STR = "UM-BBD_reactionID";
     public static final String TC_STR                = "TC";
     public static final String ARACYC_STR            = "AraCyc";
     public static final String XX_STR                = "XX";
@@ -40,12 +41,27 @@ public interface GoXRef extends Comparable<GoXRef> {
     public static final String IMG_STR               = "IMG";
     public static final String GOC_STR               = "GOC";
     public static final String WIKIPEDIA_STR         = "Wikipedia";
+    public static final String KEGG_STR              = "KEGG";
 
     public Type getType();
 
     public String getXRef();
 
     public static enum Type {
-        EC, META_CYC, REACTOME, RESID, UM_BBD_ENZYME_ID, UM_BBD_PATHWAY_ID, TC, ARACYC, XX, PMID, IMG, GOC, WIKIPEDIA;
+        EC,
+        META_CYC,
+        REACTOME,
+        RESID,
+        UM_BBD_ENZYME_ID,
+        UM_BBD_PATHWAY_ID,
+        UM_BBD_REACTIONID,
+        TC,
+        ARACYC,
+        XX,
+        PMID,
+        IMG,
+        GOC,
+        WIKIPEDIA,
+        KEGG;
     }
 }

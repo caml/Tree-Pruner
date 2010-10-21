@@ -1,4 +1,4 @@
-// $Id: SDIse.java,v 1.10 2009/01/13 19:49:30 cmzmasek Exp $
+// $Id: SDIse.java,v 1.12 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -83,10 +83,44 @@ public class SDIse extends SDI {
     public SDIse( final Phylogeny gene_tree, final Phylogeny species_tree ) {
         super( gene_tree, species_tree );
         _duplications_sum = 0;
-        getSpeciesTree().preorderReID( 0 );
+        getSpeciesTree().preOrderReId( 0 );
         linkNodesOfG();
         geneTreePostOrderTraversal( getGeneTree().getRoot() );
     }
+
+    // Helper method for updateM( boolean, PhylogenyNode, PhylogenyNode )
+    // Calculates M for PhylogenyNode n, given that M for the two children
+    // of n has been calculated.
+    // (Last modified: 10/02/01)
+    private void calculateMforNode( final PhylogenyNode n ) {
+        if ( !n.isExternal() ) {
+            final boolean was_duplication = n.isDuplication();
+            PhylogenyNode a = n.getChildNode1().getLink(), b = n.getChildNode2().getLink();
+            while ( a != b ) {
+                if ( a.getNodeId() > b.getNodeId() ) {
+                    a = a.getParent();
+                }
+                else {
+                    b = b.getParent();
+                }
+            }
+            n.setLink( a );
+            Event event = null;
+            if ( ( a == n.getChildNode1().getLink() ) || ( a == n.getChildNode2().getLink() ) ) {
+                event = Event.createSingleDuplicationEvent();
+                if ( !was_duplication ) {
+                    ++_duplications_sum;
+                }
+            }
+            else {
+                event = Event.createSingleSpeciationEvent();
+                if ( was_duplication ) {
+                    --_duplications_sum;
+                }
+            }
+            n.getNodeData().setEvent( event );
+        }
+    } // calculateMforNode( PhylogenyNode )
 
     /**
      * Traverses the subtree of PhylogenyNode g in postorder, calculating the
@@ -166,38 +200,4 @@ public class SDIse extends SDI {
         calculateMforNode( root );
         return getDuplicationsSum();
     } // updateM( boolean, PhylogenyNode, PhylogenyNode )
-
-    // Helper method for updateM( boolean, PhylogenyNode, PhylogenyNode )
-    // Calculates M for PhylogenyNode n, given that M for the two children
-    // of n has been calculated.
-    // (Last modified: 10/02/01)
-    private void calculateMforNode( final PhylogenyNode n ) {
-        if ( !n.isExternal() ) {
-            final boolean was_duplication = n.isDuplication();
-            PhylogenyNode a = n.getChildNode1().getLink(), b = n.getChildNode2().getLink();
-            while ( a != b ) {
-                if ( a.getNodeId() > b.getNodeId() ) {
-                    a = a.getParent();
-                }
-                else {
-                    b = b.getParent();
-                }
-            }
-            n.setLink( a );
-            Event event = null;
-            if ( ( a == n.getChildNode1().getLink() ) || ( a == n.getChildNode2().getLink() ) ) {
-                event = Event.createSingleDuplicationEvent();
-                if ( !was_duplication ) {
-                    ++_duplications_sum;
-                }
-            }
-            else {
-                event = Event.createSingleSpeciationEvent();
-                if ( was_duplication ) {
-                    --_duplications_sum;
-                }
-            }
-            n.getNodeData().setEvent( event );
-        }
-    } // calculateMforNode( PhylogenyNode )
 } // End of class SDIse.

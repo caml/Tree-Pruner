@@ -1,4 +1,4 @@
-// $Id: BasicGoSubset.java,v 1.2 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: BasicGoSubset.java,v 1.3 2009/11/10 19:57:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -51,6 +51,9 @@ public class BasicGoSubset implements GoSubset {
         }
         else if ( my_s.equals( GOSLIM_YEAST_STR ) ) {
             _type = Type.GOSLIM_YEAST;
+        }
+        else if ( my_s.equals( GOSLIM_POMBE_STR ) ) {
+            _type = Type.GOSLIM_POMBE;
         }
         else {
             throw new IllegalArgumentException( "unknown GO subset type: " + my_s );
@@ -110,6 +113,9 @@ public class BasicGoSubset implements GoSubset {
                 break;
             case GOSUBSET_PROK:
                 sb.append( GOSUBSET_PROK_STR );
+                break;
+            case GOSLIM_POMBE:
+                sb.append( GOSLIM_POMBE_STR );
                 break;
             default:
                 new AssertionError( "unknown type: " + getType() );

@@ -1,4 +1,4 @@
-// $Id: BasicGoXRef.java,v 1.10 2009/04/22 05:14:57 cmzmasek Exp $
+// $Id: BasicGoXRef.java,v 1.11 2009/11/10 19:57:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -54,6 +54,9 @@ public class BasicGoXRef implements GoXRef {
         else if ( type.equals( UM_BBD_PATHWAY_ID_STR ) ) {
             _type = Type.UM_BBD_PATHWAY_ID;
         }
+        else if ( type.equals( UM_BBD_REACTIONID_STR ) ) {
+            _type = Type.UM_BBD_REACTIONID;
+        }
         else if ( type.equals( TC_STR ) ) {
             _type = Type.TC;
         }
@@ -71,6 +74,9 @@ public class BasicGoXRef implements GoXRef {
         }
         else if ( type.equals( GOC_STR ) ) {
             _type = Type.GOC;
+        }
+        else if ( type.equals( KEGG_STR ) ) {
+            _type = Type.KEGG;
         }
         else if ( type.equals( WIKIPEDIA_STR ) ) {
             _type = Type.WIKIPEDIA;
@@ -115,6 +121,7 @@ public class BasicGoXRef implements GoXRef {
         return _type;
     }
 
+    @Override
     public String getXRef() {
         return _xref;
     }
@@ -140,6 +147,9 @@ public class BasicGoXRef implements GoXRef {
                 break;
             case UM_BBD_PATHWAY_ID:
                 sb.append( UM_BBD_PATHWAY_ID_STR );
+                break;
+            case UM_BBD_REACTIONID:
+                sb.append( UM_BBD_REACTIONID_STR );
                 break;
             case TC:
                 sb.append( TC_STR );

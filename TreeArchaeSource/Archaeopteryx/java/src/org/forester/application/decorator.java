@@ -1,4 +1,4 @@
-// $Id: decorator.java,v 1.22 2009/02/04 19:26:22 cmzmasek Exp $
+// $Id: decorator.java,v 1.33 2010/09/17 23:36:55 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -34,6 +34,7 @@ import java.util.Map;
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.Phylogeny;
+import org.forester.phylogeny.data.Identifier;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.tools.PhylogenyDecorator;
@@ -53,6 +54,10 @@ public final class decorator {
     private static final String  NODE_NAME_FIELD                        = "n";
     final static private String  PICKY_OPTION                           = "p";
     final static private String  FIELD_OPTION                           = "f";
+    final static private String  MOVE_DOMAIN_NUMBER_OPTION              = "mdn";       // Hidden expert option.
+    final static private String  TREE_NAME_OPTION                       = "pn";
+    final static private String  TREE_ID_OPTION                         = "pi";
+    final static private String  TREE_DESC_OPTION                       = "pd";
     final static private String  EXTRACT_BRACKETED_SCIENTIC_NAME_OPTION = "sn";
     final static private String  PROCESS_NAME_INTELLIGENTLY_OPTION      = "x";
     final static private String  PROCESS_SIMILAR_TO_OPTION              = "xs";
@@ -65,8 +70,50 @@ public final class decorator {
     final static private String  MAPPING_FILE_SEPARATOR_DEFAULT         = ":";
     final static private boolean USE_FIRST_SEPARATOR_ONLY               = true;
     final static private String  PRG_NAME                               = "decorator";
-    final static private String  PRG_VERSION                            = "1.02";
-    final static private String  PRG_DATE                               = "22. Jan. 2009";
+    final static private String  PRG_VERSION                            = "1.10";
+    final static private String  PRG_DATE                               = "2009.10.08";
+
+    private static void argumentsError() {
+        System.out.println();
+        System.out.println( decorator.PRG_NAME + " -" + ADVANCED_TABLE_OPTION + " | -f=<c> <phylogenies infile> "
+                + "[mapping table file] <phylogenies outfile>" );
+        System.out.println();
+        System.out.println( "options:" );
+        System.out.println();
+        System.out.println( " -" + ADVANCED_TABLE_OPTION + " : table instead of one to one map (-f=<c>)" );
+        System.out.println( " -r=<n> : allow to remove up to n characters from the end of the names" );
+        System.out.println( "          in phylogenies infile if not found (in map) otherwise" );
+        System.out.println( " -p     : for picky, fails if node name not found in mapping table, default is off" );
+        System.out.println( " -" + TREE_NAME_OPTION + "=<s>: name for the phylogeny" );
+        System.out.println( " -" + TREE_ID_OPTION + "=<s>: identifier for the phylogeny (in the form provider:value)" );
+        System.out.println( " -" + TREE_DESC_OPTION + "=<s>: description for phylogenies" );
+        System.out.println();
+        System.out.println();
+        System.out.println( "advanced options, only available if -" + ADVANCED_TABLE_OPTION + " is not used:" );
+        System.out.println();
+        System.out.println( " -f=<c> : field to be replaced: " + NODE_NAME_FIELD + " : node name" );
+        System.out.println( "                                " + SEQUENCE_ANNOTATION_DESC
+                + " : sequence annotation description" );
+        System.out.println( "                                " + DS_FILED + " : domain structure" );
+        System.out.println( "                                " + TAXONOMY_CODE_FIELD + " : taxonomy code" );
+        System.out.println( "                                " + TAXONOMY_SCIENTIFIC_NAME_FIELD
+                + ": taxonomy scientific name" );
+        System.out.println( "                                " + SEQUENCE_NAME_FIELD + " : sequence name" );
+        System.out.println( " -k=<n> : key column in mapping table (0 based)," );
+        System.out.println( "          names of the node to be decorated - default is 0" );
+        System.out.println( " -v=<n> : value column in mapping table (0 based)," );
+        System.out.println( "          data which with to decorate - default is 1" );
+        System.out.println( " -" + EXTRACT_BRACKETED_SCIENTIC_NAME_OPTION
+                + "    : to extract bracketed scientific names" );
+        System.out.println( " -s=<c> : column separator in mapping file, default is \""
+                + decorator.MAPPING_FILE_SEPARATOR_DEFAULT + "\"" );
+        System.out.println( " -x     : process name \"intelligently\" (only for -f=n)" );
+        System.out.println( " -" + decorator.PROCESS_SIMILAR_TO_OPTION
+                + "    : process name \"intelligently\" and process information after \"similar to\" (only for -f=n)" );
+        System.out.println( " -c     : cut name after first space (only for -f=n)" );
+        System.out.println();
+        System.exit( -1 );
+    }
 
     public static void main( final String args[] ) {
         ForesterUtil.printProgramInformation( decorator.PRG_NAME, decorator.PRG_VERSION, decorator.PRG_DATE );
@@ -101,6 +148,10 @@ public final class decorator {
         allowed_options.add( decorator.VALUE_COLUMN );
         allowed_options.add( decorator.MAPPING_FILE_SEPARATOR_OPTION );
         allowed_options.add( decorator.EXTRACT_BRACKETED_SCIENTIC_NAME_OPTION );
+        allowed_options.add( decorator.TREE_NAME_OPTION );
+        allowed_options.add( decorator.TREE_ID_OPTION );
+        allowed_options.add( decorator.TREE_DESC_OPTION );
+        allowed_options.add( decorator.MOVE_DOMAIN_NUMBER_OPTION );
         final String dissallowed_options = cla.validateAllowedOptionsAsString( allowed_options );
         if ( dissallowed_options.length() > 0 ) {
             ForesterUtil.fatalError( decorator.PRG_NAME, "unknown option(s): " + dissallowed_options );
@@ -131,7 +182,20 @@ public final class decorator {
         boolean process_name_intelligently = false;
         boolean process_similar_to = false;
         boolean extract_bracketed_scientific_name = false;
+        boolean move_domain_numbers_at_end_to_middle = false;
+        String tree_name = "";
+        String tree_id = "";
+        String tree_desc = "";
         try {
+            if ( cla.isOptionSet( decorator.TREE_NAME_OPTION ) ) {
+                tree_name = cla.getOptionValueAsCleanString( decorator.TREE_NAME_OPTION );
+            }
+            if ( cla.isOptionSet( decorator.TREE_ID_OPTION ) ) {
+                tree_id = cla.getOptionValueAsCleanString( decorator.TREE_ID_OPTION );
+            }
+            if ( cla.isOptionSet( decorator.TREE_DESC_OPTION ) ) {
+                tree_desc = cla.getOptionValueAsCleanString( decorator.TREE_DESC_OPTION );
+            }
             if ( cla.isOptionSet( decorator.EXTRACT_BRACKETED_SCIENTIC_NAME_OPTION ) ) {
                 if ( advanced_table ) {
                     argumentsError();
@@ -171,6 +235,9 @@ public final class decorator {
             if ( cla.isOptionSet( decorator.ALLOW_REMOVAL_OF_CHARS_OPTION ) ) {
                 numbers_of_chars_allowed_to_remove_if_not_found_in_map = cla
                         .getOptionValueAsInt( decorator.ALLOW_REMOVAL_OF_CHARS_OPTION );
+            }
+            if ( cla.isOptionSet( decorator.MOVE_DOMAIN_NUMBER_OPTION ) ) {
+                move_domain_numbers_at_end_to_middle = true;
             }
             if ( cla.isOptionSet( decorator.FIELD_OPTION ) ) {
                 field_str = cla.getOptionValue( decorator.FIELD_OPTION );
@@ -224,7 +291,7 @@ public final class decorator {
         Phylogeny[] phylogenies = null;
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogenies_infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogenies_infile, true );
             phylogenies = factory.create( phylogenies_infile, pp );
         }
         catch ( final Exception e ) {
@@ -248,6 +315,26 @@ public final class decorator {
                 ForesterUtil.fatalError( decorator.PRG_NAME, "illegal value for value column" );
             }
             map = mapping_table.getColumnsAsMap( key_column, value_column );
+        }
+        if ( !ForesterUtil.isEmpty( tree_name ) || !ForesterUtil.isEmpty( tree_id )
+                || !ForesterUtil.isEmpty( tree_desc ) ) {
+            if ( ( phylogenies.length > 1 )
+                    && ( !ForesterUtil.isEmpty( tree_name ) || !ForesterUtil.isEmpty( tree_id ) ) ) {
+                ForesterUtil.fatalError( decorator.PRG_NAME,
+                                         "attempt to set same name or id on more than one phylogeny" );
+            }
+            if ( !ForesterUtil.isEmpty( tree_name ) ) {
+                phylogenies[ 0 ].setName( tree_name );
+            }
+            if ( !ForesterUtil.isEmpty( tree_id ) ) {
+                final String[] s_ary = tree_id.split( ":" );
+                phylogenies[ 0 ].setIdentifier( new Identifier( s_ary[ 1 ], s_ary[ 0 ] ) );
+            }
+            if ( !ForesterUtil.isEmpty( tree_desc ) ) {
+                for( int i = 0; i < phylogenies.length; ++i ) {
+                    phylogenies[ i ].setDescription( tree_desc );
+                }
+            }
         }
         try {
             if ( advanced_table ) {
@@ -273,7 +360,8 @@ public final class decorator {
                                              cut_name_after_space,
                                              process_name_intelligently,
                                              process_similar_to,
-                                             numbers_of_chars_allowed_to_remove_if_not_found_in_map );
+                                             numbers_of_chars_allowed_to_remove_if_not_found_in_map,
+                                             move_domain_numbers_at_end_to_middle );
             }
         }
         catch ( final NullPointerException e ) {
@@ -292,44 +380,5 @@ public final class decorator {
         System.out.println();
         ForesterUtil.programMessage( PRG_NAME, "wrote: " + phylogenies_outfile );
         ForesterUtil.programMessage( PRG_NAME, "OK." );
-    }
-
-    private static void argumentsError() {
-        System.out.println();
-        System.out.println( decorator.PRG_NAME + " -" + ADVANCED_TABLE_OPTION + " | -f=<c> <phylogenies infile> "
-                + "<mapping table file> <phylogenies outfile>" );
-        System.out.println();
-        System.out.println( "options:" );
-        System.out.println();
-        System.out.println( " -" + ADVANCED_TABLE_OPTION + " : table instead of one to one map (-f=<c>)" );
-        System.out.println( " -r=<n> : allow to remove up to n characters from the end of the names" );
-        System.out.println( "          in phylogenies infile if not found (in map) otherwise" );
-        System.out.println( " -p     : for picky, fails if node name not found in mapping table, default is off" );
-        System.out.println();
-        System.out.println();
-        System.out.println( "advanced options, only available if -" + ADVANCED_TABLE_OPTION + " is not used:" );
-        System.out.println();
-        System.out.println( " -f=<c> : field to be replaced: " + NODE_NAME_FIELD + " : node name" );
-        System.out.println( "                                " + SEQUENCE_ANNOTATION_DESC
-                + " : sequence annotation description" );
-        System.out.println( "                                " + DS_FILED + " : domain structure" );
-        System.out.println( "                                " + TAXONOMY_CODE_FIELD + " : taxonomy code" );
-        System.out.println( "                                " + TAXONOMY_SCIENTIFIC_NAME_FIELD
-                + ": taxonomy scientific name" );
-        System.out.println( "                                " + SEQUENCE_NAME_FIELD + " : sequence name" );
-        System.out.println( " -k=<n> : key column in mapping table (0 based)," );
-        System.out.println( "          names of the node to be decorated - default is 0" );
-        System.out.println( " -v=<n> : value column in mapping table (0 based)," );
-        System.out.println( "          data which with to decorate - default is 1" );
-        System.out.println( " -" + EXTRACT_BRACKETED_SCIENTIC_NAME_OPTION
-                + "    : to extract bracketed scientific names" );
-        System.out.println( " -s=<c> : column separator in mapping file, default is \""
-                + decorator.MAPPING_FILE_SEPARATOR_DEFAULT + "\"" );
-        System.out.println( " -x     : process name \"intelligently\" (only for -f=n)" );
-        System.out.println( " -" + decorator.PROCESS_SIMILAR_TO_OPTION
-                + "    : process name \"intelligently\" and process information after \"similar to\" (only for -f=n)" );
-        System.out.println( " -c     : cut name after first space (only for -f=n)" );
-        System.out.println();
-        System.exit( -1 );
     }
 }

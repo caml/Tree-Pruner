@@ -1,4 +1,4 @@
-// $Id: CommandLineArguments.java,v 1.14 2009/01/13 19:49:31 cmzmasek Exp $
+// $Id: CommandLineArguments.java,v 1.16 2009/10/26 23:29:40 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -48,8 +48,19 @@ public final class CommandLineArguments {
         parseCommandLineArguments( args );
     }
 
+    private Map<String, String> getAllOptions() {
+        final Map<String, String> o = new HashMap<String, String>();
+        o.putAll( getOptionsList() );
+        o.putAll( getExtendedOptionsList() );
+        return o;
+    }
+
     public String getCommandLineArgsAsString() {
         return _command_line_str;
+    }
+
+    private Map<String, String> getExtendedOptionsList() {
+        return _extended_options;
     }
 
     public File getFile( final int i ) {
@@ -65,8 +76,16 @@ public final class CommandLineArguments {
         return getNamesList().toArray( a );
     }
 
+    private List<String> getNamesList() {
+        return _names;
+    }
+
     public int getNumberOfNames() {
         return getNames().length;
+    }
+
+    private Map<String, String> getOptionsList() {
+        return _options;
     }
 
     public String getOptionValue( final String option_name ) throws IllegalArgumentException {
@@ -83,6 +102,14 @@ public final class CommandLineArguments {
         else {
             throw new IllegalArgumentException( "option \"" + option_name + "\" is not set" );
         }
+    }
+
+    /**
+     * Removes quotes
+     * 
+     */
+    public String getOptionValueAsCleanString( final String option_name ) throws IllegalArgumentException {
+        return getOptionValue( option_name ).replaceAll( "\"", "" ).replaceAll( "\'", "" );
     }
 
     public double getOptionValueAsDouble( final String option_name ) throws IOException {
@@ -118,6 +145,13 @@ public final class CommandLineArguments {
         return l;
     }
 
+    private void init() {
+        _options = new HashMap<String, String>();
+        _extended_options = new HashMap<String, String>();
+        _names = new ArrayList<String>();
+        _command_line_str = "";
+    }
+
     public boolean isOptionHasAValue( final String option_name ) {
         final Map<String, String> o = getAllOptions();
         if ( o.containsKey( option_name ) ) {
@@ -141,6 +175,54 @@ public final class CommandLineArguments {
         }
         else {
             throw new IllegalArgumentException( "option \"" + option_name + "\" is not set" );
+        }
+    }
+
+    private void parseCommandLineArguments( final String[] args ) throws IOException {
+        for( int i = 0; i < args.length; ++i ) {
+            final String arg = args[ i ].trim();
+            _command_line_str += arg;
+            if ( i < args.length - 1 ) {
+                _command_line_str += " ";
+            }
+            if ( arg.startsWith( CommandLineArguments.EXTENDED_OPTIONS_PREFIX ) ) {
+                parseOption( arg.substring( CommandLineArguments.EXTENDED_OPTIONS_PREFIX.length() ),
+                             getExtendedOptionsList() );
+            }
+            else if ( arg.startsWith( CommandLineArguments.OPTIONS_PREFIX ) ) {
+                parseOption( arg.substring( CommandLineArguments.OPTIONS_PREFIX.length() ), getOptionsList() );
+            }
+            else {
+                getNamesList().add( arg );
+            }
+        }
+    }
+
+    private void parseOption( final String option, final Map<String, String> options_map ) throws IOException {
+        final int sep_index = option.indexOf( CommandLineArguments.OPTIONS_SEPARATOR );
+        if ( sep_index < 1 ) {
+            if ( ForesterUtil.isEmpty( option ) ) {
+                throw new IOException( "attempt to set option with an empty name" );
+            }
+            if ( getAllOptions().containsKey( option ) ) {
+                throw new IOException( "attempt to set option \"" + option + "\" mutiple times" );
+            }
+            options_map.put( option, null );
+        }
+        else {
+            final String key = option.substring( 0, sep_index );
+            final String value = option.substring( sep_index + 1 );
+            if ( ForesterUtil.isEmpty( key ) ) {
+                throw new IllegalArgumentException( "attempt to set option with an empty name" );
+            }
+            //  if ( ForesterUtil.isEmpty( value ) ) {
+            //      throw new IllegalArgumentException( "attempt to set option with an empty value" );
+            //  }
+            if ( getAllOptions().containsKey( key ) ) {
+                throw new IllegalArgumentException( "attempt to set option \"" + key + "\" mutiple times [" + option
+                        + "]" );
+            }
+            options_map.put( key, value );
         }
     }
 
@@ -195,79 +277,5 @@ public final class CommandLineArguments {
             }
         }
         return missing_string;
-    }
-
-    private Map<String, String> getAllOptions() {
-        final Map<String, String> o = new HashMap<String, String>();
-        o.putAll( getOptionsList() );
-        o.putAll( getExtendedOptionsList() );
-        return o;
-    }
-
-    private Map<String, String> getExtendedOptionsList() {
-        return _extended_options;
-    }
-
-    private List<String> getNamesList() {
-        return _names;
-    }
-
-    private Map<String, String> getOptionsList() {
-        return _options;
-    }
-
-    private void init() {
-        _options = new HashMap<String, String>();
-        _extended_options = new HashMap<String, String>();
-        _names = new ArrayList<String>();
-        _command_line_str = "";
-    }
-
-    private void parseCommandLineArguments( final String[] args ) throws IOException {
-        for( int i = 0; i < args.length; ++i ) {
-            final String arg = args[ i ].trim();
-            _command_line_str += arg;
-            if ( i < args.length - 1 ) {
-                _command_line_str += " ";
-            }
-            if ( arg.startsWith( CommandLineArguments.EXTENDED_OPTIONS_PREFIX ) ) {
-                parseOption( arg.substring( CommandLineArguments.EXTENDED_OPTIONS_PREFIX.length() ),
-                             getExtendedOptionsList() );
-            }
-            else if ( arg.startsWith( CommandLineArguments.OPTIONS_PREFIX ) ) {
-                parseOption( arg.substring( CommandLineArguments.OPTIONS_PREFIX.length() ), getOptionsList() );
-            }
-            else {
-                getNamesList().add( arg );
-            }
-        }
-    }
-
-    private void parseOption( final String option, final Map<String, String> options_map ) throws IOException {
-        final int sep_index = option.indexOf( CommandLineArguments.OPTIONS_SEPARATOR );
-        if ( sep_index < 1 ) {
-            if ( ForesterUtil.isEmpty( option ) ) {
-                throw new IOException( "attempt to set option with an empty name" );
-            }
-            if ( getAllOptions().containsKey( option ) ) {
-                throw new IOException( "attempt to set option \"" + option + "\" mutiple times" );
-            }
-            options_map.put( option, null );
-        }
-        else {
-            final String key = option.substring( 0, sep_index );
-            final String value = option.substring( sep_index + 1 );
-            if ( ForesterUtil.isEmpty( key ) ) {
-                throw new IllegalArgumentException( "attempt to set option with an empty name" );
-            }
-            //  if ( ForesterUtil.isEmpty( value ) ) {
-            //      throw new IllegalArgumentException( "attempt to set option with an empty value" );
-            //  }
-            if ( getAllOptions().containsKey( key ) ) {
-                throw new IllegalArgumentException( "attempt to set option \"" + key + "\" mutiple times [" + option
-                        + "]" );
-            }
-            options_map.put( key, value );
-        }
     }
 }

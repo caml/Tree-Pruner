@@ -1,4 +1,4 @@
-// $Id: TextFrame.java,v 1.3 2009/02/23 18:59:17 cmzmasek Exp $
+// $Id: TextFrame.java,v 1.4 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -134,9 +134,6 @@ final class TextFrame extends JFrame implements ActionListener, ClipboardOwner {
         }
     }
 
-    public void lostOwnership( final Clipboard clipboard, final Transferable contents ) {
-    }
-
     void close() {
         setVisible( false );
         dispose();
@@ -150,6 +147,9 @@ final class TextFrame extends JFrame implements ActionListener, ClipboardOwner {
         final Clipboard sys_clipboard = getToolkit().getSystemClipboard();
         final StringSelection contents = new StringSelection( jtextarea.getText() );
         sys_clipboard.setContents( contents, this );
+    }
+
+    public void lostOwnership( final Clipboard clipboard, final Transferable contents ) {
     }
 
     static TextFrame instantiate( final String s ) {

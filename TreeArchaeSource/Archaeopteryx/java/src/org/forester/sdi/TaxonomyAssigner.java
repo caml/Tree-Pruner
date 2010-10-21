@@ -1,4 +1,4 @@
-// $Id: TaxonomyAssigner.java,v 1.3 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: TaxonomyAssigner.java,v 1.4 2009/10/17 02:42:51 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -34,7 +34,7 @@ public class TaxonomyAssigner extends SDI {
 
     public TaxonomyAssigner( final Phylogeny gene_tree, final Phylogeny species_tree ) {
         super( gene_tree, species_tree );
-        getSpeciesTree().preorderReID( 0 );
+        getSpeciesTree().preOrderReId( 0 );
         linkNodesOfG();
         geneTreePostOrderTraversal( getGeneTree().getRoot() );
     }

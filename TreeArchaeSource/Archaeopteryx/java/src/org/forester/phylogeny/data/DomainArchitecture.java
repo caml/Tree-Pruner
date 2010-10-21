@@ -1,4 +1,4 @@
-// $Id: DomainArchitecture.java,v 1.16 2009/01/08 02:14:41 cmzmasek Exp $
+// $Id: DomainArchitecture.java,v 1.18 2010/06/09 19:02:57 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -142,6 +142,11 @@ public class DomainArchitecture implements PhylogenyData {
         return _total_length;
     }
 
+    private void init() {
+        _domains = new TreeMap<Double, ProteinDomain>();
+        _total_length = 0;
+    }
+
     /**
      * Returns true if the names and the order of the domains match (domain and
      * linker lengths are ignored).
@@ -199,8 +204,9 @@ public class DomainArchitecture implements PhylogenyData {
                                       PhyloXmlMapping.SEQUENCE_DOMAIN_ARCHITECTURE_LENGTH,
                                       getTotalLength() + "" );
         if ( getDomains() != null ) {
+            final String ind = indentation + PhylogenyWriter.PHYLO_XML_INTENDATION_BASE;
             for( int i = 0; i < getDomains().size(); ++i ) {
-                getDomain( i ).toPhyloXML( writer, level, indentation + PhylogenyWriter.PHYLO_XML_INTENDATION_BASE );
+                getDomain( i ).toPhyloXML( writer, level, ind );
             }
         }
         writer.write( ForesterUtil.LINE_SEPARATOR );
@@ -211,10 +217,5 @@ public class DomainArchitecture implements PhylogenyData {
     @Override
     public String toString() {
         return asText().toString();
-    }
-
-    private void init() {
-        _domains = new TreeMap<Double, ProteinDomain>();
-        _total_length = 0;
     }
 }

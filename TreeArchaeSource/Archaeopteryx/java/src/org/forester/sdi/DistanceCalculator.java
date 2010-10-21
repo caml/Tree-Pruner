@@ -1,4 +1,4 @@
-// $Id: DistanceCalculator.java,v 1.9 2008/12/10 23:40:45 cmzmasek Exp $
+// $Id: DistanceCalculator.java,v 1.13 2009/11/20 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -46,12 +46,12 @@ import org.forester.util.ForesterUtil;
  */
 public class DistanceCalculator {
 
-    public final static double DEFAULT = -1.0;
-    private Phylogeny          tree_;
-    private ArrayList          nodes_;
-    private int                n_;
-    private double             mean_, variance_, stand_dev_;
-    private PhylogenyNode      lca_;                        // The LCA of the
+    public final static double       DEFAULT = -1.0;
+    private Phylogeny                tree_;
+    private ArrayList<PhylogenyNode> nodes_;
+    private int                      n_;
+    private double                   mean_, variance_, stand_dev_;
+    private PhylogenyNode            lca_;                        // The LCA of the
 
     // Nodes in nodes_
     /**
@@ -92,8 +92,109 @@ public class DistanceCalculator {
      *            common ancestor and its variance and standard deviation are
      *            calculated
      */
-    public DistanceCalculator( final Phylogeny t, final Vector ext_nodes ) {
+    public DistanceCalculator( final Phylogeny t, final Vector<PhylogenyNode> ext_nodes ) {
         setTreeAndExtNodes( t, ext_nodes );
+    }
+
+    // (Last modified: 12/01/00)
+    private PhylogenyNode calculateLCA( final ArrayList<PhylogenyNode> nodes ) {
+        if ( ( nodes == null ) || nodes.isEmpty() ) {
+            return null;
+        }
+        PhylogenyNode node = nodes.get( 0 );
+        int c = node.getNumberOfExternalNodes();
+        final int v = nodes.size();
+        while ( !node.isRoot() && ( c < v ) ) {
+            node = node.getParent();
+            c = node.getNumberOfExternalNodes();
+        }
+        ArrayList<PhylogenyNode> current_nodes = new ArrayList<PhylogenyNode>( node.getAllExternalDescendants() );
+        while ( !node.isRoot() && !current_nodes.containsAll( nodes ) ) {
+            node = node.getParent();
+            current_nodes = new ArrayList<PhylogenyNode>( node.getAllExternalDescendants() );
+        }
+        return node;
+    }
+
+    // (Last modified: 11/31/00)
+    private void calculateMean() {
+        if ( ( nodes_ == null ) || nodes_.isEmpty() || ( tree_ == null ) || tree_.isEmpty() ) {
+            return;
+        }
+        double sum = 0.0;
+        final ListIterator<PhylogenyNode> li = nodes_.listIterator();
+        n_ = 0;
+        try {
+            while ( li.hasNext() ) {
+                n_++;
+                sum += getDistanceToNode( li.next(), lca_ );
+            }
+        }
+        catch ( final Exception e ) {
+            System.err.println( "calculateMean(): " + "Exception: " + e );
+            System.exit( -1 );
+        }
+        setMean( sum / n_ );
+    }
+
+    // (Last modified: 11/30/00)
+    private void calculateMeanDistToRoot() {
+        if ( ( tree_ == null ) || tree_.isEmpty() ) {
+            return;
+        }
+        double sum = 0.0;
+        PhylogenyNode node = tree_.getFirstExternalNode();
+        n_ = 0;
+        while ( node != null ) {
+            n_++;
+            sum += getDistanceToRoot( node );
+            node = node.getNextExternalNode();
+        }
+        setMean( sum / n_ );
+    }
+
+    // (Last modified: 11/31/00)
+    private void calculateStandardDeviation() {
+        if ( ( getVariance() == DistanceCalculator.DEFAULT ) || ( getVariance() < 0.0 ) ) {
+            return;
+        }
+        setStandardDeviation( java.lang.Math.sqrt( getVariance() ) );
+    }
+
+    // (Last modified: 11/31/00)
+    private void calculateVariance() {
+        if ( ( getMean() == DistanceCalculator.DEFAULT ) || ( nodes_ == null ) || nodes_.isEmpty() || ( tree_ == null )
+                || tree_.isEmpty() || ( n_ <= 1.0 ) ) {
+            return;
+        }
+        double x = 0.0, sum = 0.0;
+        final ListIterator<PhylogenyNode> li = nodes_.listIterator();
+        try {
+            while ( li.hasNext() ) {
+                x = getDistanceToNode( li.next(), lca_ ) - getMean();
+                sum += ( x * x );
+            }
+        }
+        catch ( final Exception e ) {
+            System.err.println( "calculateVariance(): " + "Exception: " + e );
+            System.exit( -1 );
+        }
+        setVariance( sum / ( n_ - 1 ) );
+    }
+
+    // (Last modified: 11/31/00)
+    private void calculateVarianceDistToRoot() {
+        if ( ( getMean() == DistanceCalculator.DEFAULT ) || ( tree_ == null ) || tree_.isEmpty() || ( n_ <= 1.0 ) ) {
+            return;
+        }
+        double x = 0.0, sum = 0.0;
+        PhylogenyNode node = tree_.getFirstExternalNode();
+        while ( node != null ) {
+            x = getDistanceToRoot( node ) - getMean();
+            sum += ( x * x );
+            node = node.getNextExternalNode();
+        }
+        setVariance( sum / ( n_ - 1 ) );
     }
 
     /**
@@ -167,7 +268,7 @@ public class DistanceCalculator {
         if ( ( tree_ == null ) || tree_.isEmpty() ) {
             return 0.0;
         }
-        return getDistanceToNode( tree_.getNode( seq_name ), inner );
+        return getDistanceToNode( tree_.getNodeViaSequenceName( seq_name ), inner );
     }
 
     /**
@@ -293,6 +394,16 @@ public class DistanceCalculator {
         return variance_;
     }
 
+    // (Last modified: 11/30/00)
+    private void setMean( final double d ) {
+        mean_ = d;
+    }
+
+    // (Last modified: 11/30/00)
+    private void setStandardDeviation( final double d ) {
+        stand_dev_ = d;
+    }
+
     /**
      * Sets the rooted Phylogeny t for which the mean distance to the root and
      * its variance and standard deviation are calculated. (Last modified:
@@ -327,7 +438,7 @@ public class DistanceCalculator {
      *            common ancestor and its variance and standard deviation are
      *            calculated
      */
-    public void setTreeAndExtNodes( final Phylogeny t, final ArrayList ext_nodes ) {
+    public void setTreeAndExtNodes( final Phylogeny t, final ArrayList<PhylogenyNode> ext_nodes ) {
         tree_ = t;
         nodes_ = ext_nodes;
         n_ = 0;
@@ -352,119 +463,8 @@ public class DistanceCalculator {
      *            common ancestor and its variance and standard deviation are
      *            calculated
      */
-    public void setTreeAndExtNodes( final Phylogeny t, final Vector ext_nodes ) {
-        setTreeAndExtNodes( t, new ArrayList( ext_nodes ) );
-    }
-
-    // (Last modified: 12/01/00)
-    private PhylogenyNode calculateLCA( final ArrayList nodes ) {
-        if ( ( nodes == null ) || nodes.isEmpty() ) {
-            return null;
-        }
-        PhylogenyNode node = ( PhylogenyNode ) nodes.get( 0 );
-        int c = node.getNumberOfExternalNodes();
-        final int v = nodes.size();
-        while ( !node.isRoot() && ( c < v ) ) {
-            node = node.getParent();
-            c = node.getNumberOfExternalNodes();
-        }
-        ArrayList current_nodes = new ArrayList( node.getAllExternalDescendants() );
-        while ( !node.isRoot() && !current_nodes.containsAll( nodes ) ) {
-            node = node.getParent();
-            current_nodes = new ArrayList( node.getAllExternalDescendants() );
-        }
-        return node;
-    }
-
-    // (Last modified: 11/31/00)
-    private void calculateMean() {
-        if ( ( nodes_ == null ) || nodes_.isEmpty() || ( tree_ == null ) || tree_.isEmpty() ) {
-            return;
-        }
-        double sum = 0.0;
-        final ListIterator li = nodes_.listIterator();
-        n_ = 0;
-        try {
-            while ( li.hasNext() ) {
-                n_++;
-                sum += getDistanceToNode( ( PhylogenyNode ) li.next(), lca_ );
-            }
-        }
-        catch ( final Exception e ) {
-            System.err.println( "calculateMean(): " + "Exception: " + e );
-            System.exit( -1 );
-        }
-        setMean( sum / n_ );
-    }
-
-    // (Last modified: 11/30/00)
-    private void calculateMeanDistToRoot() {
-        if ( ( tree_ == null ) || tree_.isEmpty() ) {
-            return;
-        }
-        double sum = 0.0;
-        PhylogenyNode node = tree_.getFirstExternalNode();
-        n_ = 0;
-        while ( node != null ) {
-            n_++;
-            sum += getDistanceToRoot( node );
-            node = node.getNextExternalNode();
-        }
-        setMean( sum / n_ );
-    }
-
-    // (Last modified: 11/31/00)
-    private void calculateStandardDeviation() {
-        if ( ( getVariance() == DistanceCalculator.DEFAULT ) || ( getVariance() < 0.0 ) ) {
-            return;
-        }
-        setStandardDeviation( java.lang.Math.sqrt( getVariance() ) );
-    }
-
-    // (Last modified: 11/31/00)
-    private void calculateVariance() {
-        if ( ( getMean() == DistanceCalculator.DEFAULT ) || ( nodes_ == null ) || nodes_.isEmpty() || ( tree_ == null )
-                || tree_.isEmpty() || ( n_ <= 1.0 ) ) {
-            return;
-        }
-        double x = 0.0, sum = 0.0;
-        final ListIterator li = nodes_.listIterator();
-        try {
-            while ( li.hasNext() ) {
-                x = getDistanceToNode( ( PhylogenyNode ) li.next(), lca_ ) - getMean();
-                sum += ( x * x );
-            }
-        }
-        catch ( final Exception e ) {
-            System.err.println( "calculateVariance(): " + "Exception: " + e );
-            System.exit( -1 );
-        }
-        setVariance( sum / ( n_ - 1 ) );
-    }
-
-    // (Last modified: 11/31/00)
-    private void calculateVarianceDistToRoot() {
-        if ( ( getMean() == DistanceCalculator.DEFAULT ) || ( tree_ == null ) || tree_.isEmpty() || ( n_ <= 1.0 ) ) {
-            return;
-        }
-        double x = 0.0, sum = 0.0;
-        PhylogenyNode node = tree_.getFirstExternalNode();
-        while ( node != null ) {
-            x = getDistanceToRoot( node ) - getMean();
-            sum += ( x * x );
-            node = node.getNextExternalNode();
-        }
-        setVariance( sum / ( n_ - 1 ) );
-    }
-
-    // (Last modified: 11/30/00)
-    private void setMean( final double d ) {
-        mean_ = d;
-    }
-
-    // (Last modified: 11/30/00)
-    private void setStandardDeviation( final double d ) {
-        stand_dev_ = d;
+    public void setTreeAndExtNodes( final Phylogeny t, final Vector<PhylogenyNode> ext_nodes ) {
+        setTreeAndExtNodes( t, new ArrayList<PhylogenyNode>( ext_nodes ) );
     }
 
     // (Last modified: 11/30/00)
@@ -480,7 +480,7 @@ public class DistanceCalculator {
         tree_file = new File( args[ 0 ] );
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( tree_file );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( tree_file, true );
             tree = factory.create( tree_file, pp )[ 0 ];
         }
         catch ( final Exception e ) {

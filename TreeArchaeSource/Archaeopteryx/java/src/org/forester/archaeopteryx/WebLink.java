@@ -1,4 +1,4 @@
-// $Id: WebLink.java,v 1.1 2009/02/22 00:56:05 cmzmasek Exp $
+// $Id: WebLink.java,v 1.2 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -39,17 +39,6 @@ class WebLink {
         _source_identifier = source_identifier;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append( getDesc() );
-        sb.append( " [" );
-        sb.append( getSourceIdentifier() );
-        sb.append( "]: " );
-        sb.append( getUrl().toString() );
-        return sb.toString();
-    }
-
     String getDesc() {
         return _desc;
     }
@@ -60,5 +49,16 @@ class WebLink {
 
     URL getUrl() {
         return _url;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append( getDesc() );
+        sb.append( " [" );
+        sb.append( getSourceIdentifier() );
+        sb.append( "]: " );
+        sb.append( getUrl().toString() );
+        return sb.toString();
     }
 }

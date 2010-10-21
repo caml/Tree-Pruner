@@ -1,4 +1,4 @@
-// $Id: TestGSDI.java,v 1.12 2009/02/23 18:59:18 cmzmasek Exp $
+// $Id: TestGSDI.java,v 1.14 2010/09/05 17:56:50 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -37,6 +37,16 @@ import org.forester.phylogeny.factories.PhylogenyFactory;
 
 public final class TestGSDI {
 
+    private final static Phylogeny createPhylogeny( final String nhx ) throws IOException {
+        final Phylogeny p = ParserBasedPhylogenyFactory.getInstance().create( nhx, new NHXParser() )[ 0 ];
+        p.setRooted( true );
+        return p;
+    }
+
+    private final static Event getEvent( final Phylogeny p, final String n1, final String n2 ) {
+        return PhylogenyMethods.getInstance().obtainLCA( p.getNode( n1 ), p.getNode( n2 ) ).getNodeData().getEvent();
+    }
+
     public static boolean test() {
         if ( !TestGSDI.testGSDI_general() ) {
             return false;
@@ -45,16 +55,6 @@ public final class TestGSDI {
             return false;
         }
         return true;
-    }
-
-    private final static Phylogeny createPhylogeny( final String nhx ) throws IOException {
-        final Phylogeny p = ParserBasedPhylogenyFactory.getInstance().create( nhx, new NHXParser() )[ 0 ];
-        p.setRooted( true );
-        return p;
-    }
-
-    private final static Event getEvent( final Phylogeny p, final String n1, final String n2 ) {
-        return PhylogenyMethods.getInstance().getLCA( p.getNode( n1 ), p.getNode( n2 ) ).getNodeData().getEvent();
     }
 
     private static boolean testGSDI_against_binary_gene_tree() {
@@ -101,17 +101,17 @@ public final class TestGSDI {
             if ( sdi1.getDuplicationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g1.getNode( "B" ), g1.getNode( "A1" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g1.getNode( "B" ), g1.getNode( "A1" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g1.getNode( "C" ), g1.getNode( "A1" ) ).getNodeData().getEvent()
+            if ( !pm.obtainLCA( g1.getNode( "C" ), g1.getNode( "A1" ) ).getNodeData().getEvent()
                     .isSpeciationOrDuplication() ) {
                 return false;
             }
-            if ( !( pm.getLCA( g1.getNode( "A2" ), g1.getNode( "A1" ) ).getNodeData().getEvent().isDuplication() ) ) {
+            if ( !( pm.obtainLCA( g1.getNode( "A2" ), g1.getNode( "A1" ) ).getNodeData().getEvent().isDuplication() ) ) {
                 return false;
             }
-            if ( !pm.getLCA( g1.getNode( "D" ), g1.getNode( "A1" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g1.getNode( "D" ), g1.getNode( "A1" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2 = TestGSDI
@@ -120,17 +120,17 @@ public final class TestGSDI {
             if ( sdi2.getDuplicationsSum() != 0 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2.getNode( "A1" ), g2.getNode( "A2" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2.getNode( "A1" ), g2.getNode( "A2" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2.getNode( "A1" ), g2.getNode( "B" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2.getNode( "A1" ), g2.getNode( "B" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2.getNode( "A1" ), g2.getNode( "C" ) ).getNodeData().getEvent()
+            if ( !pm.obtainLCA( g2.getNode( "A1" ), g2.getNode( "C" ) ).getNodeData().getEvent()
                     .isSpeciationOrDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2.getNode( "A1" ), g2.getNode( "D" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2.getNode( "A1" ), g2.getNode( "D" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g3 = TestGSDI
@@ -139,17 +139,17 @@ public final class TestGSDI {
             if ( sdi3.getDuplicationsSum() != 0 ) {
                 return false;
             }
-            if ( !pm.getLCA( g3.getNode( "A1" ), g3.getNode( "A2" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g3.getNode( "A1" ), g3.getNode( "A2" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g3.getNode( "A1" ), g3.getNode( "C" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g3.getNode( "A1" ), g3.getNode( "C" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g3.getNode( "A1" ), g3.getNode( "B" ) ).getNodeData().getEvent()
+            if ( !pm.obtainLCA( g3.getNode( "A1" ), g3.getNode( "B" ) ).getNodeData().getEvent()
                     .isSpeciationOrDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g3.getNode( "A1" ), g3.getNode( "D" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g3.getNode( "A1" ), g3.getNode( "D" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g4 = TestGSDI
@@ -158,13 +158,13 @@ public final class TestGSDI {
             if ( sdi4.getDuplicationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g4.getNode( "B" ), g4.getNode( "C1" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g4.getNode( "B" ), g4.getNode( "C1" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g4.getNode( "B" ), g4.getNode( "C2" ) ).getNodeData().getEvent().isDuplication() ) {
+            if ( !pm.obtainLCA( g4.getNode( "B" ), g4.getNode( "C2" ) ).getNodeData().getEvent().isDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g4.getNode( "B" ), g4.getNode( "D" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g4.getNode( "B" ), g4.getNode( "D" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g5 = TestGSDI
@@ -173,19 +173,19 @@ public final class TestGSDI {
             if ( sdi5.getDuplicationsSum() != 3 ) {
                 return false;
             }
-            if ( !pm.getLCA( g5.getNode( "D1" ), g5.getNode( "A1" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g5.getNode( "D1" ), g5.getNode( "A1" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g5.getNode( "D1" ), g5.getNode( "B" ) ).getNodeData().getEvent().isDuplication() ) {
+            if ( !pm.obtainLCA( g5.getNode( "D1" ), g5.getNode( "B" ) ).getNodeData().getEvent().isDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g5.getNode( "D1" ), g5.getNode( "D2" ) ).getNodeData().getEvent().isDuplication() ) {
+            if ( !pm.obtainLCA( g5.getNode( "D1" ), g5.getNode( "D2" ) ).getNodeData().getEvent().isDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g5.getNode( "D2" ), g5.getNode( "D3" ) ).getNodeData().getEvent().isDuplication() ) {
+            if ( !pm.obtainLCA( g5.getNode( "D2" ), g5.getNode( "D3" ) ).getNodeData().getEvent().isDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g5.getNode( "C" ), g5.getNode( "D3" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g5.getNode( "C" ), g5.getNode( "D3" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny species7 = TestGSDI.createPhylogeny( "(((((((([&&NHX:S=a1],[&&NHX:S=a2]),"
@@ -257,7 +257,7 @@ public final class TestGSDI {
             if ( sdi2_0.getSpeciationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_0.getNode( "m1" ), g2_0.getNode( "m3" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_0.getNode( "m1" ), g2_0.getNode( "m3" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_1 = TestGSDI.createPhylogeny( "(e2[&&NHX:S=e2],h2[&&NHX:S=h2])" );
@@ -271,7 +271,7 @@ public final class TestGSDI {
             if ( sdi2_1.getSpeciationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_1.getNode( "e2" ), g2_1.getNode( "h2" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_1.getNode( "e2" ), g2_1.getNode( "h2" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_2 = TestGSDI.createPhylogeny( "(e2[&&NHX:S=e2],p4[&&NHX:S=p4])" );
@@ -285,7 +285,7 @@ public final class TestGSDI {
             if ( sdi2_2.getSpeciationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_2.getNode( "e2" ), g2_2.getNode( "p4" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_2.getNode( "e2" ), g2_2.getNode( "p4" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_3 = TestGSDI.createPhylogeny( "(e2a[&&NHX:S=e2],e2b[&&NHX:S=e2])" );
@@ -299,7 +299,7 @@ public final class TestGSDI {
             if ( sdi2_3.getSpeciationsSum() != 0 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_3.getNode( "e2a" ), g2_3.getNode( "e2b" ) ).getNodeData().getEvent().isDuplication() ) {
+            if ( !pm.obtainLCA( g2_3.getNode( "e2a" ), g2_3.getNode( "e2b" ) ).getNodeData().getEvent().isDuplication() ) {
                 return false;
             }
             final Phylogeny g2_4 = TestGSDI.createPhylogeny( "((j1[&&NHX:S=j1],j4[&&NHX:S=j4]),i3[&&NHX:S=i3])" );
@@ -313,10 +313,10 @@ public final class TestGSDI {
             if ( sdi2_4.getSpeciationsSum() != 2 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_4.getNode( "j1" ), g2_4.getNode( "j4" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_4.getNode( "j1" ), g2_4.getNode( "j4" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_4.getNode( "j1" ), g2_4.getNode( "i3" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_4.getNode( "j1" ), g2_4.getNode( "i3" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_5 = TestGSDI.createPhylogeny( "((j1[&&NHX:S=j1],j4[&&NHX:S=j4]),f3[&&NHX:S=f3])" );
@@ -330,10 +330,10 @@ public final class TestGSDI {
             if ( sdi2_5.getSpeciationsSum() != 2 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_5.getNode( "j1" ), g2_5.getNode( "j4" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_5.getNode( "j1" ), g2_5.getNode( "j4" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_5.getNode( "j1" ), g2_5.getNode( "f3" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_5.getNode( "j1" ), g2_5.getNode( "f3" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_6 = TestGSDI.createPhylogeny( "((j3[&&NHX:S=j3],i4[&&NHX:S=i4]),f3[&&NHX:S=f3])" );
@@ -347,10 +347,10 @@ public final class TestGSDI {
             if ( sdi2_6.getSpeciationsSum() != 2 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_6.getNode( "j3" ), g2_6.getNode( "i4" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_6.getNode( "j3" ), g2_6.getNode( "i4" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_6.getNode( "j3" ), g2_6.getNode( "f3" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_6.getNode( "j3" ), g2_6.getNode( "f3" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_7 = TestGSDI.createPhylogeny( "((j1[&&NHX:S=j1],k1[&&NHX:S=k1]),i1[&&NHX:S=i1])" );
@@ -364,10 +364,10 @@ public final class TestGSDI {
             if ( sdi2_7.getSpeciationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_7.getNode( "j1" ), g2_7.getNode( "k1" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_7.getNode( "j1" ), g2_7.getNode( "k1" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_7.getNode( "j1" ), g2_7.getNode( "i1" ) ).getNodeData().getEvent()
+            if ( !pm.obtainLCA( g2_7.getNode( "j1" ), g2_7.getNode( "i1" ) ).getNodeData().getEvent()
                     .isSpeciationOrDuplication() ) {
                 return false;
             }
@@ -382,11 +382,11 @@ public final class TestGSDI {
             if ( sdi2_8.getSpeciationsSum() != 1 ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_8.getNode( "j1" ), g2_8.getNode( "k1" ) ).getNodeData().getEvent()
+            if ( !pm.obtainLCA( g2_8.getNode( "j1" ), g2_8.getNode( "k1" ) ).getNodeData().getEvent()
                     .isSpeciationOrDuplication() ) {
                 return false;
             }
-            if ( !pm.getLCA( g2_8.getNode( "k1" ), g2_8.getNode( "i1" ) ).getNodeData().getEvent().isSpeciation() ) {
+            if ( !pm.obtainLCA( g2_8.getNode( "k1" ), g2_8.getNode( "i1" ) ).getNodeData().getEvent().isSpeciation() ) {
                 return false;
             }
             final Phylogeny g2_9 = TestGSDI.createPhylogeny( "((j1[&&NHX:S=j1],k4[&&NHX:S=k4]),f2[&&NHX:S=f2])" );

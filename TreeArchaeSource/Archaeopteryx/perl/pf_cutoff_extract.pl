@@ -1,9 +1,9 @@
 #!/usr/bin/perl -W
 
-# $Id: pf_cutoff_extract.pl,v 1.3 2008/11/17 23:37:59 cmzmasek Exp $
+# $Id: pf_cutoff_extract.pl,v 1.4 2009/11/11 02:28:19 cmzmasek Exp $
 
-# This extracts GA, TC, or NC domain score cutoff values from
-# Pfam HMM files (GA2, TC2, NC2)
+# This extracts GA, TC, or NC score cutoff values from
+# Pfam HMM files (GA1, TC1, NC1)
 # Copyright (C) 2008-2009 Christian M. Zmasek
 # All rights reserved
 # Created 2007-08-01 in Winterthur, Switzerland by CMZ
@@ -51,7 +51,7 @@ while ( $line = <IN> ) {
         }
         $name = $1;
     }
-    elsif ( $line =~ /^$cutoff_type\s+.+\s+([^;]+)/ ) {
+    elsif ( $line =~ /^$cutoff_type\s+(\S+)\s+[^;]+/ ) {
         if ( length( $name ) < 1 ) {
             die "\n$0: Unexpected line $line at line $line_number: $!\n";
         }
@@ -66,7 +66,7 @@ while ( $line = <IN> ) {
 
 close( OUT ) || die "\n$0: Cannot close file \"$outfile\": $!\n";;
 
-print( "\nExtracted $n $cutoff_type" . "2 values to \"$outfile\"\n" );
+print( "\nExtracted $n $cutoff_type" . "1 values to \"$outfile\"\n" );
 print( "\nOK\n" );
 
 exit( 0 );

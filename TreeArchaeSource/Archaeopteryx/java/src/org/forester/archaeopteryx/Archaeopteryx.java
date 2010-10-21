@@ -1,4 +1,4 @@
-// $Id: Archaeopteryx.java,v 1.22 2009/06/30 01:38:00 cmzmasek Exp $
+// $Id: Archaeopteryx.java,v 1.57 2010/10/02 21:34:07 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,13 +27,23 @@ package org.forester.archaeopteryx;
 
 import java.io.File;
 
+import org.forester.io.parsers.PhylogenyParser;
+import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
+import org.forester.io.parsers.nhx.NHXParser;
+import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.phylogeny.Phylogeny;
+import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.util.ForesterUtil;
 
-/*
- * @author Christian Zmasek
- */
+// 
+// java -javaagent:shiftone-jrat.jar -cp
+// $HOME/SOFTWARE_DEV/ECLIPSE_WORKSPACE/forester-atv/java/forester.jar:.
+// org.forester.archaeopteryx.Archaeopteryx
+// -c $HOME/SOFTWARE_DEV/ECLIPSE_WORKSPACE/forester-atv/_aptx_configuration_file
+//
 public final class Archaeopteryx {
+
+    private final static boolean TEST = false; //TODO remove me!
 
     public static MainFrame createApplication( final Phylogeny phylogeny ) {
         final Phylogeny[] phylogenies = new Phylogeny[ 1 ];
@@ -54,22 +64,70 @@ public final class Archaeopteryx {
     public static void main( final String args[] ) {
         Phylogeny[] phylogenies = null;
         String config_filename = null;
+        Configuration conf = null;
         File f = null;
         try {
             int filename_index = 0;
-            if ( args.length > 0 ) {
+            if ( args.length == 0 ) {
+                conf = new Configuration( null, false, false );
+            }
+            else if ( args.length > 0 ) {
                 // check for a config file
                 if ( args[ 0 ].startsWith( "-c" ) ) {
                     config_filename = args[ 1 ];
                     filename_index += 2;
                 }
+                conf = new Configuration( config_filename, false, false );
                 if ( args.length > filename_index ) {
                     f = new File( args[ filename_index ] );
                     final String err = ForesterUtil.isReadableFile( f );
                     if ( !ForesterUtil.isEmpty( err ) ) {
                         ForesterUtil.fatalError( Constants.PRG_NAME, err );
                     }
-                    phylogenies = Util.readPhylogenies( ForesterUtil.createParserDependingOnFileType( f ), f );
+                    boolean nhx_or_nexus = false;
+                    final PhylogenyParser p = ForesterUtil.createParserDependingOnFileType( f, conf
+                            .isValidatePhyloXmlAgainstSchema() );
+                    if ( p instanceof NHXParser ) {
+                        nhx_or_nexus = true;
+                        final NHXParser nhx = ( NHXParser ) p;
+                        nhx.setReplaceUnderscores( conf.isReplaceUnderscoresInNhParsing() );
+                        nhx.setIgnoreQuotes( false );
+                        ForesterUtil.TAXONOMY_EXTRACTION te = ForesterUtil.TAXONOMY_EXTRACTION.NO;
+                        if ( conf.isExtractPfamTaxonomyCodesInNhParsing() ) {
+                            te = ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY;
+                        }
+                        nhx.setTaxonomyExtraction( te );
+                    }
+                    else if ( p instanceof NexusPhylogeniesParser ) {
+                        nhx_or_nexus = true;
+                        final NexusPhylogeniesParser nex = ( NexusPhylogeniesParser ) p;
+                        nex.setReplaceUnderscores( conf.isReplaceUnderscoresInNhParsing() );
+                        nex.setIgnoreQuotes( false );
+                    }
+                    else if ( p instanceof PhyloXmlParser ) {
+                        MainFrameApplication.warnIfNotPhyloXmlValidation( conf );
+                    }
+                    phylogenies = Util.readPhylogenies( p, f );
+                    if ( nhx_or_nexus && conf.isInternalNumberAreConfidenceForNhParsing() ) {
+                        for( final Phylogeny phy : phylogenies ) {
+                            ForesterUtil.transferInternalNodeNamesToConfidence( phy );
+                        }
+                    }
+                    //
+                    //                                        Phylogeny py = phylogenies[ 0 ];
+                    //                                        for( final PhylogenyNodeIterator iter = py.iteratorExternalForward(); iter.hasNext(); ) {
+                    //                                            final PhylogenyNode node = iter.next();
+                    //                                            System.out.println( node.getNodeData().getTaxonomy().getScientificName() + "\t"
+                    //                                                    + node.getNodeData().getBinaryCharacters().getPresentCount() );
+                    //                                        }
+                    //                                        for( final PhylogenyNodeIterator iter = py.iteratorPreorder(); iter.hasNext(); ) {
+                    //                                            final PhylogenyNode node = iter.next();
+                    //                                            if ( !node.isExternal() ) {
+                    //                                                System.out.println( node.getNodeData().getTaxonomy().getScientificName() + "\t"
+                    //                                                        + node.getNodeData().getBinaryCharacters().getPresentCount() );
+                    //                                            }
+                    //                                        }
+                    //
                 }
             }
         }
@@ -81,18 +139,26 @@ public final class Archaeopteryx {
             title = f.getName();
         }
         try {
-            //~~~~~~~~~~~~~~~<<< remove me TODO 
-            // final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            //final PhyloXmlParser xml_parser = new PhyloXmlParser();
-            //   final String s = "C:\\Documents and Settings\\czmasek\\";
-            // final String s = "/home/czmasek/species_tree_1.xml";
-            // final String s = "C:\\888.xml";
-            //  final Phylogeny[] p = ParserBasedPhylogenyFactory.getInstance().create( s, new PhyloXmlParser() );
-            //  final Phylogeny[] p = factory.create( new File( s + "basics.nh" ), new NHXParser() );
-            //MainFrameApplication.createInstance( ParserBasedPhylogenyFactory.getInstance()
-            //        .create( s, new PhyloXmlParser() ), config_filename, title );
-            //~~~~~~~~~~~~~~~<<< remove me TODO 
-            MainFrameApplication.createInstance( phylogenies, config_filename, title );
+            String s = "";
+            if ( TEST ) {
+                s = "/home/czmasek/888.xml";
+                if ( ForesterUtil.isReadableFile( s ) != null ) {
+                    s = "/Users/zma/888.xml";
+                    if ( ForesterUtil.isReadableFile( s ) != null ) {
+                        s = "C:\\888.xml";
+                        if ( ForesterUtil.isReadableFile( s ) != null ) {
+                            s = "C:\\Documents and Settings\\czmasek\\";
+                        }
+                    }
+                }
+            }
+            if ( !TEST ) {
+                MainFrameApplication.createInstance( phylogenies, conf, title );
+            }
+            else {
+                MainFrameApplication.createInstance( ParserBasedPhylogenyFactory.getInstance()
+                        .create( s, new PhyloXmlParser() ), conf, title );
+            }
         }
         // catch ( final IOException ex ) {
         //     ForesterUtil.fatalError( Constants.PRG_NAME, "failed to start: " + ex.getLocalizedMessage() );

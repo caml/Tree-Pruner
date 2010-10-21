@@ -1,4 +1,4 @@
-// $Id: Date.java,v 1.3 2008/09/24 16:42:48 cmzmasek Exp $
+// $Id: Date.java,v 1.12 2009/11/17 05:46:24 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -36,43 +36,67 @@ import org.forester.util.ForesterUtil;
 
 public class Date implements PhylogenyData {
 
-    private final String     _desc;
-    private final BigDecimal _value;
-    private final BigDecimal _range;
-    private final String     _unit;
+    private String     _desc;
+    private BigDecimal _value;
+    private BigDecimal _min;
+    private BigDecimal _max;
+    private String     _unit;
 
-    public Date( final String desc ) {
-        _desc = desc;
+    public Date() {
+        _desc = "";
         _value = null;
-        _range = null;
+        _min = null;
+        _max = null;
         _unit = "";
     }
 
-    public Date( final String desc, final BigDecimal value, final BigDecimal range, final String unit ) {
+    public Date( final String desc ) {
+        if ( desc == null ) {
+            throw new IllegalArgumentException( "illegaly empty of null fields in constructor" );
+        }
+        _desc = desc;
+        _value = null;
+        _min = null;
+        _max = null;
+        _unit = "";
+    }
+
+    public Date( final String desc,
+                 final BigDecimal value,
+                 final BigDecimal min,
+                 final BigDecimal max,
+                 final String unit ) {
+        if ( ( desc == null ) || ( unit == null ) ) {
+            throw new IllegalArgumentException( "illegaly empty of null fields in constructor" );
+        }
         _desc = desc;
         _value = value;
-        _range = range;
+        _min = min;
+        _max = max;
         _unit = unit;
     }
 
+    @Override
     public StringBuffer asSimpleText() {
         if ( getValue() != null ) {
-            return new StringBuffer( getDesc() + " [" + getValue().toPlainString() + " +- "
-                    + getRange().toPlainString() + " " + getUnit() );
+            return new StringBuffer( getDesc() + " [" + getValue().toPlainString() + " " + getUnit() + "]" );
         }
         else {
             return new StringBuffer( getDesc() );
         }
     }
 
+    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
+    @Override
     public PhylogenyData copy() {
         return new Date( new String( getDesc() ),
-                         new BigDecimal( getValue().toPlainString() ),
-                         new BigDecimal( getRange().toPlainString() ),
+                         getValue() == null ? null : new BigDecimal( getValue().toPlainString() ),
+                         getMin() == null ? null : new BigDecimal( getMin().toPlainString() ),
+                         getMax() == null ? null : new BigDecimal( getMax().toPlainString() ),
                          new String( getUnit() ) );
     }
 
@@ -80,8 +104,12 @@ public class Date implements PhylogenyData {
         return _desc;
     }
 
-    public BigDecimal getRange() {
-        return _range;
+    public BigDecimal getMax() {
+        return _max;
+    }
+
+    public BigDecimal getMin() {
+        return _min;
     }
 
     public String getUnit() {
@@ -92,30 +120,60 @@ public class Date implements PhylogenyData {
         return _value;
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
 
+    public void setDesc( final String desc ) {
+        _desc = desc;
+    }
+
+    public void setMax( final BigDecimal max ) {
+        _max = max;
+    }
+
+    public void setMin( final BigDecimal min ) {
+        _min = min;
+    }
+
+    public void setUnit( final String unit ) {
+        _unit = unit;
+    }
+
+    public void setValue( final BigDecimal value ) {
+        _value = value;
+    }
+
+    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );
-        PhylogenyDataUtil.appendOpen( writer,
-                                      PhyloXmlMapping.CLADE_DATE_DESC,
-                                      PhyloXmlMapping.CLADE_DATE_RANGE,
-                                      getRange().toPlainString(),
-                                      PhyloXmlMapping.CLADE_DATE_UNIT,
-                                      getUnit() );
+        PhylogenyDataUtil.appendOpen( writer, PhyloXmlMapping.CLADE_DATE, PhyloXmlMapping.CLADE_DATE_UNIT, getUnit() );
         if ( !ForesterUtil.isEmpty( getDesc() ) ) {
             PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.CLADE_DATE_DESC, getDesc(), indentation );
         }
         if ( getValue() != null ) {
             PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.CLADE_DATE_DESC,
+                                             PhyloXmlMapping.CLADE_DATE_VALUE,
                                              getValue().toPlainString(),
+                                             indentation );
+        }
+        if ( getMin() != null ) {
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.CLADE_DATE_MIN,
+                                             getMin().toPlainString(),
+                                             indentation );
+        }
+        if ( getMax() != null ) {
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.CLADE_DATE_MAX,
+                                             getMax().toPlainString(),
                                              indentation );
         }
         writer.write( ForesterUtil.LINE_SEPARATOR );

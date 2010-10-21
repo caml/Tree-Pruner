@@ -1,4 +1,4 @@
-// $Id: MetaOntologizer.java,v 1.20 2009/04/29 22:35:52 cmzmasek Exp $
+// $Id: MetaOntologizer.java,v 1.23 2010/07/06 07:06:01 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -66,196 +66,8 @@ public class MetaOntologizer {
     final static private String       PRG_NAME                         = "meta_ontologizer";
     private static final boolean      VERBOSE                          = true;
     //table-a_41_dollo_all_gains_d-Topology-Elim-Bonferroni.txt:
-    private final static Pattern      PATTERN_ONTOLOGIZER_TABLE_OUTPUT = Pattern
-                                                                               .compile( ".*table-(.+?)_(dollo|fitch).*",
-                                                                                         Pattern.CASE_INSENSITIVE );
-
-    public static void reformat( final File ontologizer_outdir,
-                                 final String result_file_prefix,
-                                 final File domain_gain_loss_file,
-                                 final String outfile_base,
-                                 final File obo_file,
-                                 final double p_adjusted_upper_limit,
-                                 final String comment,
-                                 final List<PfamToGoMapping> pfam_to_go ) throws IOException {
-        if ( !ontologizer_outdir.exists() ) {
-            throw new IllegalArgumentException( "[" + ontologizer_outdir + "] does not exist" );
-        }
-        if ( !ontologizer_outdir.isDirectory() ) {
-            throw new IllegalArgumentException( "[" + ontologizer_outdir + "] is not a directory" );
-        }
-        if ( !obo_file.exists() ) {
-            throw new IllegalArgumentException( "[" + obo_file + "] does not exist" );
-        }
-        if ( ( p_adjusted_upper_limit < 0.0 ) || ( p_adjusted_upper_limit > 1.0 ) ) {
-            throw new IllegalArgumentException( "adjusted P values limit [" + p_adjusted_upper_limit
-                    + "] is out of range" );
-        }
-        SortedMap<Species, SortedSet<DomainId>> speciesto_to_domain_id = null;
-        if ( domain_gain_loss_file != null ) {
-            if ( !domain_gain_loss_file.exists() ) {
-                throw new IllegalArgumentException( "[" + domain_gain_loss_file + "] does not exist" );
-            }
-            speciesto_to_domain_id = parseDomainGainLossFile( domain_gain_loss_file );
-            if ( VERBOSE ) {
-                ForesterUtil.programMessage( PRG_NAME, "parsed gain/loss domains for " + speciesto_to_domain_id.size()
-                        + " species from [" + domain_gain_loss_file + "]" );
-            }
-        }
-        final String[] children = ontologizer_outdir.list();
-        final List<File> ontologizer_outfiles = new ArrayList<File>();
-        if ( children == null ) {
-            throw new IllegalArgumentException( "problem with [" + ontologizer_outdir + "]" );
-        }
-        else {
-            for( final String filename : children ) {
-                if ( filename.startsWith( result_file_prefix ) ) {
-                    ontologizer_outfiles.add( new File( filename ) );
-                }
-            }
-        }
-        if ( VERBOSE ) {
-            ForesterUtil.programMessage( PRG_NAME, "need to analyze " + ontologizer_outfiles.size()
-                    + " Ontologizer outfiles from [" + ontologizer_outdir + "]" );
-        }
-        final OBOparser parser = new OBOparser( obo_file, OBOparser.ReturnType.BASIC_GO_TERM );
-        final List<GoTerm> go_terms = parser.parse();
-        if ( VERBOSE ) {
-            ForesterUtil.programMessage( PRG_NAME, "parsed " + go_terms.size() + " GO terms from [" + obo_file + "]" );
-        }
-        final Map<GoId, GoTerm> go_id_to_terms = GoUtils.createGoIdToGoTermMap( go_terms );
-        if ( go_id_to_terms.size() != go_terms.size() ) {
-            throw new IllegalArgumentException( "GO terms with non-unique ids found" );
-        }
-        final String b_file_html = outfile_base + "_B.html";
-        final String b_file_txt = outfile_base + "_B.txt";
-        final String m_file_html = outfile_base + "_C.html";
-        final String m_file_txt = outfile_base + "_C.txt";
-        final String c_file_html = outfile_base + "_M.html";
-        final String c_file_txt = outfile_base + "_M.txt";
-        final Writer b_html_writer = ForesterUtil.createBufferedWriter( b_file_html );
-        final Writer b_tab_writer = ForesterUtil.createBufferedWriter( b_file_txt );
-        final Writer c_html_writer = ForesterUtil.createBufferedWriter( m_file_html );
-        final Writer c_tab_writer = ForesterUtil.createBufferedWriter( m_file_txt );
-        final Writer m_html_writer = ForesterUtil.createBufferedWriter( c_file_html );
-        final Writer m_tab_writer = ForesterUtil.createBufferedWriter( c_file_txt );
-        final SortedMap<String, SortedSet<OntologizerResult>> species_to_results_map = new TreeMap<String, SortedSet<OntologizerResult>>();
-        for( final File ontologizer_outfile : ontologizer_outfiles ) {
-            final String species = obtainSpecies( ontologizer_outfile );
-            final List<OntologizerResult> ontologizer_results = OntologizerResult.parse( new File( ontologizer_outdir
-                    + ForesterUtil.FILE_SEPARATOR + ontologizer_outfile ) );
-            final SortedSet<OntologizerResult> filtered_ontologizer_results = new TreeSet<OntologizerResult>();
-            for( final OntologizerResult ontologizer_result : ontologizer_results ) {
-                if ( ontologizer_result.getPAdjusted() <= p_adjusted_upper_limit ) {
-                    filtered_ontologizer_results.add( ontologizer_result );
-                }
-            }
-            species_to_results_map.put( species, filtered_ontologizer_results );
-        }
-        writeLabelsToTabWriter( b_tab_writer );
-        writeLabelsToTabWriter( c_tab_writer );
-        writeLabelsToTabWriter( m_tab_writer );
-        String domain_gain_loss_file_full_path_str = null;
-        if ( domain_gain_loss_file != null ) {
-            domain_gain_loss_file_full_path_str = domain_gain_loss_file.getAbsolutePath();
-        }
-        writeHtmlHeader( b_html_writer,
-                         GoNameSpace.GoNamespaceType.BIOLOGICAL_PROCESS.toString() + " | Pmax = "
-                                 + p_adjusted_upper_limit + " | " + comment,
-                         ontologizer_outdir.getAbsolutePath(),
-                         domain_gain_loss_file_full_path_str );
-        writeHtmlHeader( c_html_writer,
-                         GoNameSpace.GoNamespaceType.CELLULAR_COMPONENT.toString() + " | Pmax = "
-                                 + p_adjusted_upper_limit + " | " + comment,
-                         ontologizer_outdir.getAbsolutePath(),
-                         domain_gain_loss_file_full_path_str );
-        writeHtmlHeader( m_html_writer,
-                         GoNameSpace.GoNamespaceType.MOLECULAR_FUNCTION.toString() + " | Pmax = "
-                                 + p_adjusted_upper_limit + " | " + comment,
-                         ontologizer_outdir.getAbsolutePath(),
-                         domain_gain_loss_file_full_path_str );
-        for( final String species : species_to_results_map.keySet() ) {
-            if ( hasResultsForSpecies( go_id_to_terms,
-                                       species_to_results_map,
-                                       species,
-                                       GoNameSpace.GoNamespaceType.BIOLOGICAL_PROCESS ) ) {
-                writeHtmlSpecies( b_html_writer, species );
-            }
-            if ( hasResultsForSpecies( go_id_to_terms,
-                                       species_to_results_map,
-                                       species,
-                                       GoNameSpace.GoNamespaceType.CELLULAR_COMPONENT ) ) {
-                writeHtmlSpecies( c_html_writer, species );
-            }
-            if ( hasResultsForSpecies( go_id_to_terms,
-                                       species_to_results_map,
-                                       species,
-                                       GoNameSpace.GoNamespaceType.MOLECULAR_FUNCTION ) ) {
-                writeHtmlSpecies( m_html_writer, species );
-            }
-            SortedSet<DomainId> domains_per_species = null;
-            if ( ( speciesto_to_domain_id != null ) && ( speciesto_to_domain_id.size() > 0 ) ) {
-                domains_per_species = speciesto_to_domain_id.get( new BasicSpecies( species ) );
-            }
-            final Set<DomainId> domain_ids_with_go_annot = new HashSet<DomainId>();
-            processOneSpecies( go_id_to_terms,
-                               b_html_writer,
-                               b_tab_writer,
-                               c_html_writer,
-                               c_tab_writer,
-                               m_html_writer,
-                               m_tab_writer,
-                               species_to_results_map,
-                               species,
-                               p_adjusted_upper_limit,
-                               domains_per_species,
-                               pfam_to_go,
-                               domain_ids_with_go_annot );
-            if ( ( speciesto_to_domain_id != null ) && ( speciesto_to_domain_id.size() > 0 ) ) {
-                if ( hasResultsForSpecies( go_id_to_terms,
-                                           species_to_results_map,
-                                           species,
-                                           GoNameSpace.GoNamespaceType.BIOLOGICAL_PROCESS ) ) {
-                    writeHtmlDomains( b_html_writer, domains_per_species, domain_ids_with_go_annot );
-                }
-                if ( hasResultsForSpecies( go_id_to_terms,
-                                           species_to_results_map,
-                                           species,
-                                           GoNameSpace.GoNamespaceType.CELLULAR_COMPONENT ) ) {
-                    writeHtmlDomains( c_html_writer, domains_per_species, domain_ids_with_go_annot );
-                }
-                if ( hasResultsForSpecies( go_id_to_terms,
-                                           species_to_results_map,
-                                           species,
-                                           GoNameSpace.GoNamespaceType.MOLECULAR_FUNCTION ) ) {
-                    writeHtmlDomains( m_html_writer, domains_per_species, domain_ids_with_go_annot );
-                }
-            }
-        }
-        writeHtmlEnd( b_html_writer );
-        writeHtmlEnd( c_html_writer );
-        writeHtmlEnd( m_html_writer );
-        b_html_writer.close();
-        b_tab_writer.close();
-        c_html_writer.close();
-        c_tab_writer.close();
-        m_html_writer.close();
-        m_tab_writer.close();
-        if ( VERBOSE ) {
-            ForesterUtil.programMessage( PRG_NAME, "successfully wrote biological process summary to [" + b_file_html
-                    + "]" );
-            ForesterUtil.programMessage( PRG_NAME, "successfully wrote biological process summary to [" + b_file_txt
-                    + "]" );
-            ForesterUtil.programMessage( PRG_NAME, "successfully wrote molecular function summary to [" + m_file_html
-                    + "]" );
-            ForesterUtil.programMessage( PRG_NAME, "successfully wrote molecular function summary to [" + m_file_txt
-                    + "]" );
-            ForesterUtil.programMessage( PRG_NAME, "successfully wrote cellular component summary to [" + c_file_html
-                    + "]" );
-            ForesterUtil.programMessage( PRG_NAME, "successfully wrote cellular component summary to [" + c_file_txt
-                    + "]" );
-        }
-    }
+    private final static Pattern      PATTERN_ONTOLOGIZER_TABLE_OUTPUT = Pattern.compile( ".*table-(.+?)_.*",
+                                                                                          Pattern.CASE_INSENSITIVE );
 
     private static boolean hasResultsForSpecies( final Map<GoId, GoTerm> go_id_to_terms,
                                                  final SortedMap<String, SortedSet<OntologizerResult>> species_to_results_map,
@@ -388,6 +200,194 @@ public class MetaOntologizer {
                                      domains_per_species,
                                      pfam_to_go,
                                      domain_ids_with_go_annot );
+        }
+    }
+
+    public static void reformat( final File ontologizer_outdir,
+                                 final String result_file_prefix,
+                                 final File domain_gain_loss_file,
+                                 final String outfile_base,
+                                 final File obo_file,
+                                 final double p_adjusted_upper_limit,
+                                 final String comment,
+                                 final List<PfamToGoMapping> pfam_to_go ) throws IOException {
+        if ( !ontologizer_outdir.exists() ) {
+            throw new IllegalArgumentException( "[" + ontologizer_outdir + "] does not exist" );
+        }
+        if ( !ontologizer_outdir.isDirectory() ) {
+            throw new IllegalArgumentException( "[" + ontologizer_outdir + "] is not a directory" );
+        }
+        if ( !obo_file.exists() ) {
+            throw new IllegalArgumentException( "[" + obo_file + "] does not exist" );
+        }
+        if ( ( p_adjusted_upper_limit < 0.0 ) || ( p_adjusted_upper_limit > 1.0 ) ) {
+            throw new IllegalArgumentException( "adjusted P values limit [" + p_adjusted_upper_limit
+                    + "] is out of range" );
+        }
+        SortedMap<Species, SortedSet<DomainId>> speciesto_to_domain_id = null;
+        if ( domain_gain_loss_file != null ) {
+            if ( !domain_gain_loss_file.exists() ) {
+                throw new IllegalArgumentException( "[" + domain_gain_loss_file + "] does not exist" );
+            }
+            speciesto_to_domain_id = parseDomainGainLossFile( domain_gain_loss_file );
+            if ( VERBOSE ) {
+                ForesterUtil.programMessage( PRG_NAME, "parsed gain/loss domains for " + speciesto_to_domain_id.size()
+                        + " species from [" + domain_gain_loss_file + "]" );
+            }
+        }
+        final String[] children = ontologizer_outdir.list();
+        final List<File> ontologizer_outfiles = new ArrayList<File>();
+        if ( children == null ) {
+            throw new IllegalArgumentException( "problem with [" + ontologizer_outdir + "]" );
+        }
+        else {
+            for( final String filename : children ) {
+                if ( filename.startsWith( result_file_prefix ) ) {
+                    ontologizer_outfiles.add( new File( filename ) );
+                }
+            }
+        }
+        if ( VERBOSE ) {
+            ForesterUtil.programMessage( PRG_NAME, "need to analyze " + ontologizer_outfiles.size()
+                    + " Ontologizer outfiles from [" + ontologizer_outdir + "]" );
+        }
+        final OBOparser parser = new OBOparser( obo_file, OBOparser.ReturnType.BASIC_GO_TERM );
+        final List<GoTerm> go_terms = parser.parse();
+        if ( VERBOSE ) {
+            ForesterUtil.programMessage( PRG_NAME, "parsed " + go_terms.size() + " GO terms from [" + obo_file + "]" );
+        }
+        final Map<GoId, GoTerm> go_id_to_terms = GoUtils.createGoIdToGoTermMap( go_terms );
+        //FIXME not needed? when doe sthis error arise?
+        //   if ( go_id_to_terms.size() != go_terms.size() ) {
+        //       throw new IllegalArgumentException( "GO terms with non-unique ids found" );
+        //   }
+        final String b_file_html = outfile_base + "_B.html";
+        final String b_file_txt = outfile_base + "_B.txt";
+        final String m_file_html = outfile_base + "_C.html";
+        final String m_file_txt = outfile_base + "_C.txt";
+        final String c_file_html = outfile_base + "_M.html";
+        final String c_file_txt = outfile_base + "_M.txt";
+        final Writer b_html_writer = ForesterUtil.createBufferedWriter( b_file_html );
+        final Writer b_tab_writer = ForesterUtil.createBufferedWriter( b_file_txt );
+        final Writer c_html_writer = ForesterUtil.createBufferedWriter( m_file_html );
+        final Writer c_tab_writer = ForesterUtil.createBufferedWriter( m_file_txt );
+        final Writer m_html_writer = ForesterUtil.createBufferedWriter( c_file_html );
+        final Writer m_tab_writer = ForesterUtil.createBufferedWriter( c_file_txt );
+        final SortedMap<String, SortedSet<OntologizerResult>> species_to_results_map = new TreeMap<String, SortedSet<OntologizerResult>>();
+        for( final File ontologizer_outfile : ontologizer_outfiles ) {
+            final String species = obtainSpecies( ontologizer_outfile );
+            final List<OntologizerResult> ontologizer_results = OntologizerResult.parse( new File( ontologizer_outdir
+                    + ForesterUtil.FILE_SEPARATOR + ontologizer_outfile ) );
+            final SortedSet<OntologizerResult> filtered_ontologizer_results = new TreeSet<OntologizerResult>();
+            for( final OntologizerResult ontologizer_result : ontologizer_results ) {
+                if ( ontologizer_result.getPAdjusted() <= p_adjusted_upper_limit ) {
+                    filtered_ontologizer_results.add( ontologizer_result );
+                }
+            }
+            species_to_results_map.put( species, filtered_ontologizer_results );
+        }
+        writeLabelsToTabWriter( b_tab_writer );
+        writeLabelsToTabWriter( c_tab_writer );
+        writeLabelsToTabWriter( m_tab_writer );
+        String domain_gain_loss_file_full_path_str = null;
+        if ( domain_gain_loss_file != null ) {
+            domain_gain_loss_file_full_path_str = domain_gain_loss_file.getAbsolutePath();
+        }
+        writeHtmlHeader( b_html_writer,
+                         GoNameSpace.GoNamespaceType.BIOLOGICAL_PROCESS.toString() + " | Pmax = "
+                                 + p_adjusted_upper_limit + " | " + comment,
+                         ontologizer_outdir.getAbsolutePath(),
+                         domain_gain_loss_file_full_path_str );
+        writeHtmlHeader( c_html_writer,
+                         GoNameSpace.GoNamespaceType.CELLULAR_COMPONENT.toString() + " | Pmax = "
+                                 + p_adjusted_upper_limit + " | " + comment,
+                         ontologizer_outdir.getAbsolutePath(),
+                         domain_gain_loss_file_full_path_str );
+        writeHtmlHeader( m_html_writer,
+                         GoNameSpace.GoNamespaceType.MOLECULAR_FUNCTION.toString() + " | Pmax = "
+                                 + p_adjusted_upper_limit + " | " + comment,
+                         ontologizer_outdir.getAbsolutePath(),
+                         domain_gain_loss_file_full_path_str );
+        for( final String species : species_to_results_map.keySet() ) {
+            if ( hasResultsForSpecies( go_id_to_terms,
+                                       species_to_results_map,
+                                       species,
+                                       GoNameSpace.GoNamespaceType.BIOLOGICAL_PROCESS ) ) {
+                writeHtmlSpecies( b_html_writer, species );
+            }
+            if ( hasResultsForSpecies( go_id_to_terms,
+                                       species_to_results_map,
+                                       species,
+                                       GoNameSpace.GoNamespaceType.CELLULAR_COMPONENT ) ) {
+                writeHtmlSpecies( c_html_writer, species );
+            }
+            if ( hasResultsForSpecies( go_id_to_terms,
+                                       species_to_results_map,
+                                       species,
+                                       GoNameSpace.GoNamespaceType.MOLECULAR_FUNCTION ) ) {
+                writeHtmlSpecies( m_html_writer, species );
+            }
+            SortedSet<DomainId> domains_per_species = null;
+            if ( ( speciesto_to_domain_id != null ) && ( speciesto_to_domain_id.size() > 0 ) ) {
+                domains_per_species = speciesto_to_domain_id.get( new BasicSpecies( species ) );
+            }
+            final Set<DomainId> domain_ids_with_go_annot = new HashSet<DomainId>();
+            processOneSpecies( go_id_to_terms,
+                               b_html_writer,
+                               b_tab_writer,
+                               c_html_writer,
+                               c_tab_writer,
+                               m_html_writer,
+                               m_tab_writer,
+                               species_to_results_map,
+                               species,
+                               p_adjusted_upper_limit,
+                               domains_per_species,
+                               pfam_to_go,
+                               domain_ids_with_go_annot );
+            if ( ( speciesto_to_domain_id != null ) && ( speciesto_to_domain_id.size() > 0 ) ) {
+                if ( hasResultsForSpecies( go_id_to_terms,
+                                           species_to_results_map,
+                                           species,
+                                           GoNameSpace.GoNamespaceType.BIOLOGICAL_PROCESS ) ) {
+                    writeHtmlDomains( b_html_writer, domains_per_species, domain_ids_with_go_annot );
+                }
+                if ( hasResultsForSpecies( go_id_to_terms,
+                                           species_to_results_map,
+                                           species,
+                                           GoNameSpace.GoNamespaceType.CELLULAR_COMPONENT ) ) {
+                    writeHtmlDomains( c_html_writer, domains_per_species, domain_ids_with_go_annot );
+                }
+                if ( hasResultsForSpecies( go_id_to_terms,
+                                           species_to_results_map,
+                                           species,
+                                           GoNameSpace.GoNamespaceType.MOLECULAR_FUNCTION ) ) {
+                    writeHtmlDomains( m_html_writer, domains_per_species, domain_ids_with_go_annot );
+                }
+            }
+        }
+        writeHtmlEnd( b_html_writer );
+        writeHtmlEnd( c_html_writer );
+        writeHtmlEnd( m_html_writer );
+        b_html_writer.close();
+        b_tab_writer.close();
+        c_html_writer.close();
+        c_tab_writer.close();
+        m_html_writer.close();
+        m_tab_writer.close();
+        if ( VERBOSE ) {
+            ForesterUtil.programMessage( PRG_NAME, "successfully wrote biological process summary to [" + b_file_html
+                    + "]" );
+            ForesterUtil.programMessage( PRG_NAME, "successfully wrote biological process summary to [" + b_file_txt
+                    + "]" );
+            ForesterUtil.programMessage( PRG_NAME, "successfully wrote molecular function summary to [" + m_file_html
+                    + "]" );
+            ForesterUtil.programMessage( PRG_NAME, "successfully wrote molecular function summary to [" + m_file_txt
+                    + "]" );
+            ForesterUtil.programMessage( PRG_NAME, "successfully wrote cellular component summary to [" + c_file_html
+                    + "]" );
+            ForesterUtil.programMessage( PRG_NAME, "successfully wrote cellular component summary to [" + c_file_txt
+                    + "]" );
         }
     }
 

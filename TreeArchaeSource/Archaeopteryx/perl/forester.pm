@@ -1,4 +1,4 @@
-# $Id: forester.pm,v 1.24 2008/12/31 23:44:33 cmzmasek Exp $
+# $Id: forester.pm,v 1.25 2009/10/07 20:58:27 cmzmasek Exp $
 #
 # FORESTER -- software libraries and applications
 # for evolutionary biology research and applications.
@@ -1168,7 +1168,7 @@ sub executePuzzleBootstrapped {
     }
     
     my $k="";
-    if (  $number_of_seqs <= 255 ) {
+    if (  $number_of_seqs <= 257 ) {
         $k = "k";
     }
 
@@ -1228,7 +1228,7 @@ sub executePuzzle {
     }
     
     my $k="";
-    if (  $number_of_seqs <= 255 ) {
+    if (  $number_of_seqs <= 257 ) {
         $k = "k";
     }
 

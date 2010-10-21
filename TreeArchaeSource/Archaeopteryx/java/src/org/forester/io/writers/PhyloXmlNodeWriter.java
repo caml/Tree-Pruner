@@ -1,4 +1,4 @@
-// $Id: PhyloXmlNodeWriter.java,v 1.20 2009/01/13 19:49:31 cmzmasek Exp $
+// $Id: PhyloXmlNodeWriter.java,v 1.21 2009/12/12 00:14:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
+import org.forester.io.parsers.phyloxml.PhyloXmlUtil;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.data.PhylogenyDataUtil;
 import org.forester.util.ForesterUtil;
@@ -45,10 +46,8 @@ public class PhyloXmlNodeWriter {
             PhylogenyDataUtil.appendElement( w, PhyloXmlMapping.NODE_NAME, node.getNodeName(), indentation );
         }
         if ( node.getDistanceToParent() != PhylogenyNode.DISTANCE_DEFAULT ) {
-            PhylogenyDataUtil.appendElement( w,
-                                             PhyloXmlMapping.BRANCH_LENGTH,
-                                             node.getDistanceToParent() + "",
-                                             indentation );
+            PhylogenyDataUtil.appendElement( w, PhyloXmlMapping.BRANCH_LENGTH, String.valueOf( ForesterUtil.round( node
+                    .getDistanceToParent(), PhyloXmlUtil.ROUNDING_DIGITS_FOR_PHYLOXML_DOUBLE_OUTPUT ) ), indentation );
         }
         if ( node.getBranchData() != null ) {
             node.getBranchData().toPhyloXML( w, level, ind );

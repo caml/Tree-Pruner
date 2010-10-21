@@ -4,7 +4,7 @@
 # Copyright::  Copyright (C) 2006-2008 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: hmmsearch_domain_extractor.rb,v 1.18 2008/01/04 07:45:11 cmzmasek Exp $
+# $Id: hmmsearch_domain_extractor.rb,v 1.24 2009/11/25 06:30:24 cmzmasek Exp $
 
 
 require 'lib/evo/util/constants'
@@ -17,7 +17,7 @@ require 'lib/evo/io/parser/fasta_parser'
 module Evoruby
 
     class HmmsearchDomainExtractor
-        
+
         TRIM_BY = 2
 
         def initialize
@@ -59,8 +59,6 @@ module Evoruby
 
             ld = Constants::LINE_DELIMITER
 
-            saw_model_sequence_line = false
-            saw_minus_line          = false
             domain_pass_counter     = 0
             domain_fail_counter     = 0
             proteins_with_passing_domains = 0
@@ -72,93 +70,84 @@ module Evoruby
 
             File.open( hmmsearch_output ) do | file |
                 while line = file.gets
-                    if is_ignorable?( line )
-                    elsif ( line =~ /^\s*Sequence\s+Domain\s+seq.f\s+seq.t/i )
-                        saw_model_sequence_line = true
-                    elsif ( saw_model_sequence_line && line =~ /^\s*\-+/ )
-                        saw_minus_line = true
-                        saw_model_sequence_line = false
-                    elsif ( line =~ /^\s*Alignments of/i )
-                        break
-                    elsif ( saw_minus_line )
-                        if ( line =~ /^\s*\S+\s+\d/ )
-                            line =~ /^\s*(\S+)\s+(\d+)\D(\d+)\s+(\d+)\s+(\d+).+\s+(\S+)\s*$/
-                            sequence = $1
-                            number   = $2.to_i
-                            out_of   = $3.to_i
-                            seq_from = $4.to_i
-                            seq_to   = $5.to_i
-                            e_value  = $6.to_f
-                            if ( number > max_domain_copy_number_per_protein )
-                                max_domain_copy_number_sequence    = sequence
-                                max_domain_copy_number_per_protein = number
-                            end     
-                            if ( ( ( e_value_threshold.to_f < 0.0 ) || ( e_value.to_f <= e_value_threshold ) ) &&
-                                     ( ( length_threshold.to_f <= 0 )   || ( seq_to - seq_from + 1 ) >= length_threshold.to_f )  )
-                                HmmsearchDomainExtractor.extract_domain( sequence,
-                                    number,
-                                    out_of,
-                                    seq_from,
-                                    seq_to,
-                                    in_msa,
-                                    out_msa,
-                                    add_position,
-                                    add_domain_number,
-                                    add_domain_number_as_digit,
-                                    add_domain_number_as_letter,
-                                    trim_name )
-                                domain_pass_counter += 1
-                                count_species( sequence, passed_species_counts )
-                                if !passed_seqs.has?( sequence, true, false )
-                                    HmmsearchDomainExtractor.add_sequence( sequence, in_msa, passed_seqs )
-                                    proteins_with_passing_domains += 1
-                                end
-                            else
-                                print( domain_fail_counter.to_s + ": " + sequence.to_s + " did not meet threshold(s)" )
-                                log << domain_fail_counter.to_s + ": " + sequence.to_s + " did not meet threshold(s)"
-                                if ( ( e_value_threshold.to_f >= 0.0 ) && ( e_value.to_f > e_value_threshold ) )
-                                    print( " E=" + e_value.to_s )
-                                    log << " E=" + e_value.to_s
-                                end
-                                if ( ( length_threshold.to_f > 0 ) && ( seq_to - seq_from + 1 ) < length_threshold.to_f )
-                                    le = seq_to - seq_from + 1
-                                    print( " l=" + le.to_s )
-                                    log << " l=" + le.to_s
-                                end
-                                print( Constants::LINE_DELIMITER )
-                                log << Constants::LINE_DELIMITER
-                                domain_fail_counter  += 1
-                                count_species( sequence, failed_species_counts )
-                                if !failed_seqs.has?( sequence, true, false )
-                                    HmmsearchDomainExtractor.add_sequence( sequence, in_msa, failed_seqs )
-                                    proteins_with_failing_domains += 1
-                                end
+                    if !is_ignorable?( line ) && line =~ /^\S+\s+/
+
+                        #         tn      acc     tlen    query   acc     qlen    Evalue  score   bias    #       of      c-E     i-E     score   bias    hf      ht      af      at      ef      et      acc     desc
+                        #         1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23
+                        line =~ /^(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(.*)/
+
+                        # line =~ /^(\S+)\s+(\d+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)/
+                        sequence = $1
+                        number   = $10.to_i
+                        out_of   = $11.to_i
+                        env_from = $20.to_i
+                        env_to   = $21.to_i
+                        i_e_value  = $13.to_f
+                        if ( number > max_domain_copy_number_per_protein )
+                            max_domain_copy_number_sequence    = sequence
+                            max_domain_copy_number_per_protein = number
+                        end
+                        if ( ( ( e_value_threshold.to_f < 0.0 ) || ( i_e_value <= e_value_threshold ) ) &&
+                                 ( ( length_threshold.to_f <= 0 )   || ( env_to - env_from + 1 ) >= length_threshold.to_f )  )
+                            HmmsearchDomainExtractor.extract_domain( sequence,
+                                number,
+                                out_of,
+                                env_from,
+                                env_to,
+                                in_msa,
+                                out_msa,
+                                add_position,
+                                add_domain_number,
+                                add_domain_number_as_digit,
+                                add_domain_number_as_letter,
+                                trim_name )
+                            domain_pass_counter += 1
+                            count_species( sequence, passed_species_counts )
+                            if !passed_seqs.has?( sequence, true, false )
+                                HmmsearchDomainExtractor.add_sequence( sequence, in_msa, passed_seqs )
+                                proteins_with_passing_domains += 1
                             end
-                        elsif ( line =~ /no\s+hits\s+above\s+threshold/i )
                         else
-                            error_msg = "unexpected line: " + line
-                            raise IOError, error_msg
+                            print( domain_fail_counter.to_s + ": " + sequence.to_s + " did not meet threshold(s)" )
+                            log << domain_fail_counter.to_s + ": " + sequence.to_s + " did not meet threshold(s)"
+                            if ( ( e_value_threshold.to_f >= 0.0 ) && ( i_e_value > e_value_threshold ) )
+                                print( " iE=" + i_e_value.to_s )
+                                log << " iE=" + i_e_value.to_s
+                            end
+                            if ( ( length_threshold.to_f > 0 ) && ( env_to - env_from + 1 ) < length_threshold.to_f )
+                                le = env_to - env_from + 1
+                                print( " l=" + le.to_s )
+                                log << " l=" + le.to_s
+                            end
+                            print( Constants::LINE_DELIMITER )
+                            log << Constants::LINE_DELIMITER
+                            domain_fail_counter  += 1
+                            count_species( sequence, failed_species_counts )
+                            if !failed_seqs.has?( sequence, true, false )
+                                HmmsearchDomainExtractor.add_sequence( sequence, in_msa, failed_seqs )
+                                proteins_with_failing_domains += 1
+                            end
                         end
                     end
                 end
             end
-            
+
             if domain_pass_counter < 1
                 error_msg = "no domain sequences were extracted"
                 raise StandardError, error_msg
-            end                 
-            
+            end
+
             log << Constants::LINE_DELIMITER
             puts( "Max domain copy number per protein : " + max_domain_copy_number_per_protein.to_s )
-            log << "Max domain copy number per protein : " + max_domain_copy_number_per_protein.to_s             
+            log << "Max domain copy number per protein : " + max_domain_copy_number_per_protein.to_s
             log << Constants::LINE_DELIMITER
-            
+
             if ( max_domain_copy_number_per_protein > 1 )
                 puts( "First protein with this copy number: " + max_domain_copy_number_sequence )
                 log << "First protein with this copy number: " + max_domain_copy_number_sequence
                 log << Constants::LINE_DELIMITER
             end
-            
+
             io = MsaIO.new()
             w = FastaWriter.new()
             w.set_line_width( 60 )
@@ -271,12 +260,12 @@ module Evoruby
                     seq.set_name( seq.get_name + "~" + number.to_s + "-" + out_of.to_s )
                 end
             end
-            
+
             if ( seq.get_name.length > 10 )
                 error_msg = "sequence name [" + seq.get_name + "] is longer than 10 characters"
-                raise StandardError, error_msg               
+                raise StandardError, error_msg
             end
-            
+
             out_msa.add_sequence( seq )
         end
 
@@ -300,7 +289,7 @@ module Evoruby
         end
 
         def is_ignorable?( line )
-            return ( line !~ /[A-Za-z0-9-]/ )
+            return ( line !~ /[A-Za-z0-9-]/ || line =~/^#/ )
         end
 
     end # class HmmsearchDomainExtractor

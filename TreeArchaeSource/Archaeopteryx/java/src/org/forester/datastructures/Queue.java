@@ -1,4 +1,4 @@
-// $Id: Queue.java,v 1.7 2009/01/13 19:49:32 cmzmasek Exp $
+// $Id: Queue.java,v 1.8 2009/10/26 23:29:41 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -84,15 +84,6 @@ public class Queue {
         getData().add( element );
     }
 
-    /**
-     * Returns whether or not this queue is empty.
-     * 
-     * @return true if this queue is empty, false otherwise
-     */
-    public boolean isEmpty() {
-        return getData().isEmpty();
-    }
-
     // Private methods
     // ---------------
     /**
@@ -102,5 +93,14 @@ public class Queue {
      */
     private LinkedList<Object> getData() {
         return _data;
+    }
+
+    /**
+     * Returns whether or not this queue is empty.
+     * 
+     * @return true if this queue is empty, false otherwise
+     */
+    public boolean isEmpty() {
+        return getData().isEmpty();
     }
 } // end of class Queue.

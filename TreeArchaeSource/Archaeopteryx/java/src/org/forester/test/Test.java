@@ -1,4 +1,4 @@
-// $Id: Test.java,v 1.227 2009/06/19 05:32:24 cmzmasek Exp $
+// $Id: Test.java,v 1.276 2010/10/13 21:12:18 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -25,25 +25,38 @@
 
 package org.forester.test;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.forester.application.support_transfer;
-import org.forester.development.SupportCount;
+import org.forester.development.DevelopmentTools;
+import org.forester.evoinference.TestPhylogenyReconstruction;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.BinaryStates;
 import org.forester.go.TestGo;
+import org.forester.io.parsers.FastaParser;
+import org.forester.io.parsers.GeneralMsaParser;
+import org.forester.io.parsers.HmmscanPerDomainTableParser;
+import org.forester.io.parsers.HmmscanPerDomainTableParser.INDIVIDUAL_SCORE_CUTOFF;
 import org.forester.io.parsers.nexus.NexusBinaryStatesMatrixParser;
 import org.forester.io.parsers.nexus.NexusCharactersParser;
 import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
 import org.forester.io.parsers.nhx.NHXParser;
-import org.forester.io.parsers.nhx.NHXParser.TAXONOMY_EXTRACTION;
 import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.io.parsers.tol.TolParser;
 import org.forester.io.writers.PhylogenyWriter;
+import org.forester.msa.MafftOLD;
+import org.forester.msa.Msa;
+import org.forester.msa.MsaInferrer;
 import org.forester.pccx.TestPccx;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyBranch;
@@ -53,10 +66,13 @@ import org.forester.phylogeny.data.Annotation;
 import org.forester.phylogeny.data.BinaryCharacters;
 import org.forester.phylogeny.data.BranchWidth;
 import org.forester.phylogeny.data.Confidence;
+import org.forester.phylogeny.data.Distribution;
 import org.forester.phylogeny.data.DomainArchitecture;
 import org.forester.phylogeny.data.Event;
 import org.forester.phylogeny.data.Identifier;
 import org.forester.phylogeny.data.PhylogenyData;
+import org.forester.phylogeny.data.Polygon;
+import org.forester.phylogeny.data.PropertiesMap;
 import org.forester.phylogeny.data.Property;
 import org.forester.phylogeny.data.ProteinDomain;
 import org.forester.phylogeny.data.Taxonomy;
@@ -64,23 +80,33 @@ import org.forester.phylogeny.data.Property.AppliesTo;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
-import org.forester.phylogenyinference.CharacterStateMatrix;
-import org.forester.phylogenyinference.TestPhylogenyReconstruction;
-import org.forester.phylogenyinference.CharacterStateMatrix.BinaryStates;
 import org.forester.sdi.SDI;
 import org.forester.sdi.SDIR;
 import org.forester.sdi.SDIse;
 import org.forester.sdi.TaxonomyAssigner;
 import org.forester.sdi.TestGSDI;
+import org.forester.sequence.BasicSequence;
+import org.forester.sequence.Sequence;
+import org.forester.surfacing.Protein;
 import org.forester.surfacing.TestSurfacing;
+import org.forester.tools.ConfidenceAssessor;
+import org.forester.tools.SupportCount;
+import org.forester.tools.TreeSplitMatrix;
 import org.forester.util.AsciiHistogram;
 import org.forester.util.BasicDescriptiveStatistics;
 import org.forester.util.BasicTable;
 import org.forester.util.BasicTableParser;
 import org.forester.util.DescriptiveStatistics;
+import org.forester.util.ExternalProgram;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 import org.forester.util.GeneralTable;
+import org.forester.ws.uniprot.UniProtTaxonomy;
+import org.forester.ws.uniprot.UniProtWsTools;
+import org.forester.ws.wabi.TxSearch;
+import org.forester.ws.wabi.TxSearch.RANKS;
+import org.forester.ws.wabi.TxSearch.TAX_NAME_CLASS;
+import org.forester.ws.wabi.TxSearch.TAX_RANK;
 
 @SuppressWarnings( "unused")
 public final class Test {
@@ -99,6 +125,16 @@ public final class Test {
     private static final String  PHYLOXML_LOCAL_XSD        = PATH_TO_RESOURCES + "phyloxml_schema/"
                                                                    + ForesterConstants.PHYLO_XML_VERSION + "/"
                                                                    + ForesterConstants.PHYLO_XML_XSD;
+
+    private final static Phylogeny createPhylogeny( final String nhx ) throws IOException {
+        final Phylogeny p = ParserBasedPhylogenyFactory.getInstance().create( nhx, new NHXParser() )[ 0 ];
+        return p;
+    }
+
+    private final static Event getEvent( final Phylogeny p, final String n1, final String n2 ) {
+        final PhylogenyMethods pm = PhylogenyMethods.getInstance();
+        return pm.obtainLCA( p.getNode( n1 ), p.getNode( n2 ) ).getNodeData().getEvent();
+    }
 
     public static boolean isEqual( final double a, final double b ) {
         return ( ( Math.abs( a - b ) ) < Test.ZERO_DIFF );
@@ -131,6 +167,15 @@ public final class Test {
             System.exit( -1 );
         }
         final long start_time = new Date().getTime();
+        System.out.print( "Hmmscan output parser: " );
+        if ( testHmmscanOutputParser() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
         System.out.print( "Basic node methods: " );
         if ( Test.testBasicNodeMethods() ) {
             System.out.println( "OK." );
@@ -169,6 +214,15 @@ public final class Test {
         }
         System.out.print( "NHX parsing: " );
         if ( Test.testNHXParsing() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "NHX parsing with quotes: " );
+        if ( Test.testNHXParsingQuotes() ) {
             System.out.println( "OK." );
             succeeded++;
         }
@@ -222,7 +276,7 @@ public final class Test {
             failed++;
         }
         System.out.print( "Basic phyloXML parsing (validating against schema): " );
-        if ( Test.testBasicPhyloXMLparsingValidating() ) {
+        if ( testBasicPhyloXMLparsingValidating() ) {
             System.out.println( "OK." );
             succeeded++;
         }
@@ -232,6 +286,15 @@ public final class Test {
         }
         System.out.print( "Roundtrip phyloXML parsing (validating against schema): " );
         if ( Test.testBasicPhyloXMLparsingRoundtrip() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "phyloXML Distribution Element: " );
+        if ( Test.testPhyloXMLparsingOfDistributionElement() ) {
             System.out.println( "OK." );
             succeeded++;
         }
@@ -455,6 +518,15 @@ public final class Test {
             System.out.println( "failed." );
             failed++;
         }
+        System.out.print( "Properties map: " );
+        if ( Test.testPropertiesMap() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
         System.out.print( "Phylogeny reconstruction:" );
         System.out.println();
         if ( TestPhylogenyReconstruction.test( new File( PATH_TO_TEST_DATA ) ) ) {
@@ -494,6 +566,33 @@ public final class Test {
             System.out.println( "failed." );
             failed++;
         }
+        System.out.print( "Split Matrix strict: " );
+        if ( Test.testSplitStrict() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "Split Matrix: " );
+        if ( Test.testSplit() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "Confidence Assessor: " );
+        if ( Test.testConfidenceAssessor() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
         System.out.print( "Basic table: " );
         if ( Test.testBasicTable() ) {
             System.out.println( "OK." );
@@ -512,6 +611,72 @@ public final class Test {
             System.out.println( "failed." );
             failed++;
         }
+        System.out.print( "Amino acid sequence: " );
+        if ( Test.testAminoAcidSequence() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "General MSA parser: " );
+        if ( Test.testGeneralMsaParser() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "Fasta parser for msa: " );
+        if ( Test.testFastaParser() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "Creation of balanced phylogeny: " );
+        if ( Test.testCreateBalancedPhylogeny() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out.println( "failed." );
+            failed++;
+        }
+        System.out.print( "Uniprot Taxonomy Search: " );
+        if ( Test.testUniprotTaxonomySearch() ) {
+            System.out.println( "OK." );
+            succeeded++;
+        }
+        else {
+            System.out
+                    .println( "failed [will not count towards failed tests since it might be due to absence internet connection]" );
+        }
+        if ( ExternalProgram.isExecuteableFile( new File( "/usr/local/bin/mafft" ) ) ) {
+            System.out.print( "MAFFT (external program): " );
+            if ( Test.testMafft() ) {
+                System.out.println( "OK." );
+                succeeded++;
+            }
+            else {
+                System.out
+                        .println( "failed [will not count towards failed tests]" );
+            }
+        }
+        
+        //        System.out.print( "WABI TxSearch: " );
+        //        if ( Test.testWabiTxSearch() ) {
+        //            System.out.println( "OK." );
+        //            succeeded++;
+        //        }
+        //        else {
+        //            System.out
+        //                    .println( "failed [will not count towards failed tests since it might be due to absence internet connection]" );
+        //        }
         System.out.println();
         final Runtime rt = java.lang.Runtime.getRuntime();
         final long free_memory = rt.freeMemory() / 1000000;
@@ -597,25 +762,15 @@ public final class Test {
         // }
     }
 
-    private final static Phylogeny createPhylogeny( final String nhx ) throws IOException {
-        final Phylogeny p = ParserBasedPhylogenyFactory.getInstance().create( nhx, new NHXParser() )[ 0 ];
-        return p;
-    }
-
-    private final static Event getEvent( final Phylogeny p, final String n1, final String n2 ) {
-        final PhylogenyMethods pm = PhylogenyMethods.getInstance();
-        return pm.getLCA( p.getNode( n1 ), p.getNode( n2 ) ).getNodeData().getEvent();
-    }
-
     private static boolean testBasicNodeMethods() {
         try {
             if ( PhylogenyNode.getNodeCount() != 0 ) {
                 return false;
             }
             final PhylogenyNode n1 = new PhylogenyNode();
-            final PhylogenyNode n2 = new PhylogenyNode( "", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
-            final PhylogenyNode n3 = new PhylogenyNode( "n3", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
-            final PhylogenyNode n4 = new PhylogenyNode( "n4:0.01", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n2 = new PhylogenyNode( "", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n3 = new PhylogenyNode( "n3", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n4 = new PhylogenyNode( "n4:0.01", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( n1.isHasAssignedEvent() ) {
                 return false;
             }
@@ -683,6 +838,26 @@ public final class Test {
             if ( !isEqual( t2.getNode( "node b" ).getDistanceToParent(), 2.0 ) ) {
                 return false;
             }
+            if ( t2.getNode( "node a" ).getNodeData().getTaxonomies().size() != 2 ) {
+                return false;
+            }
+            if ( !t2.getNode( "node a" ).getNodeData().getTaxonomy( 0 ).getCommonName().equals( "some parasite" ) ) {
+                return false;
+            }
+            if ( !t2.getNode( "node a" ).getNodeData().getTaxonomy( 1 ).getCommonName().equals( "the host" ) ) {
+                return false;
+            }
+            if ( t2.getNode( "node a" ).getNodeData().getSequences().size() != 2 ) {
+                return false;
+            }
+            if ( !t2.getNode( "node a" ).getNodeData().getSequence( 0 ).getMolecularSequence()
+                    .startsWith( "actgtgggggt" ) ) {
+                return false;
+            }
+            if ( !t2.getNode( "node a" ).getNodeData().getSequence( 1 ).getMolecularSequence()
+                    .startsWith( "ctgtgatgcat" ) ) {
+                return false;
+            }
             if ( t3.getNumberOfExternalNodes() != 4 ) {
                 return false;
             }
@@ -701,10 +876,10 @@ public final class Test {
             if ( !t3.getIdentifier().getValue().equals( "1-1" ) ) {
                 return false;
             }
-            if ( !t3.getIdentifier().getType().equals( "treebank" ) ) {
+            if ( !t3.getIdentifier().getProvider().equals( "treebank" ) ) {
                 return false;
             }
-            if ( !t3.getNode( "root node" ).getNodeData().getSequence().getType().equals( "aa" ) ) {
+            if ( !t3.getNode( "root node" ).getNodeData().getSequence().getType().equals( "protein" ) ) {
                 return false;
             }
             if ( !t3.getNode( "root node" ).getNodeData().getSequence().getName()
@@ -947,6 +1122,29 @@ public final class Test {
             if ( !t1_rt.getType().equals( "gene_tree" ) ) {
                 return false;
             }
+            final StringBuffer t2_sb = new StringBuffer( phylogenies_0[ 1 ].toPhyloXML( 0 ) );
+            final Phylogeny[] phylogenies_t2 = factory.create( t2_sb, xml_parser );
+            final Phylogeny t2_rt = phylogenies_t2[ 0 ];
+            if ( t2_rt.getNode( "node a" ).getNodeData().getTaxonomies().size() != 2 ) {
+                return false;
+            }
+            if ( !t2_rt.getNode( "node a" ).getNodeData().getTaxonomy( 0 ).getCommonName().equals( "some parasite" ) ) {
+                return false;
+            }
+            if ( !t2_rt.getNode( "node a" ).getNodeData().getTaxonomy( 1 ).getCommonName().equals( "the host" ) ) {
+                return false;
+            }
+            if ( t2_rt.getNode( "node a" ).getNodeData().getSequences().size() != 2 ) {
+                return false;
+            }
+            if ( !t2_rt.getNode( "node a" ).getNodeData().getSequence( 0 ).getMolecularSequence()
+                    .startsWith( "actgtgggggt" ) ) {
+                return false;
+            }
+            if ( !t2_rt.getNode( "node a" ).getNodeData().getSequence( 1 ).getMolecularSequence()
+                    .startsWith( "ctgtgatgcat" ) ) {
+                return false;
+            }
             final StringBuffer t3_sb_0 = new StringBuffer( phylogenies_0[ 2 ].toPhyloXML( 0 ) );
             final Phylogeny[] phylogenies_1_0 = factory.create( t3_sb_0, xml_parser );
             final StringBuffer t3_sb = new StringBuffer( phylogenies_1_0[ 0 ].toPhyloXML( 0 ) );
@@ -964,10 +1162,10 @@ public final class Test {
             if ( !t3_rt.getIdentifier().getValue().equals( "1-1" ) ) {
                 return false;
             }
-            if ( !t3_rt.getIdentifier().getType().equals( "treebank" ) ) {
+            if ( !t3_rt.getIdentifier().getProvider().equals( "treebank" ) ) {
                 return false;
             }
-            if ( !t3_rt.getNode( "root node" ).getNodeData().getSequence().getType().equals( "aa" ) ) {
+            if ( !t3_rt.getNode( "root node" ).getNodeData().getSequence().getType().equals( "protein" ) ) {
                 return false;
             }
             if ( !t3_rt.getNode( "root node" ).getNodeData().getSequence().getName()
@@ -1065,9 +1263,6 @@ public final class Test {
                     .equals( "10.1074/jbc.M005889200" ) ) ) {
                 return false;
             }
-            if ( !t3_rt.getNode( "root node" ).getNodeData().getTaxonomy().getType().equals( "host" ) ) {
-                return false;
-            }
             if ( !t3_rt.getNode( "root node" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ECDYS" ) ) {
                 return false;
             }
@@ -1080,7 +1275,8 @@ public final class Test {
             if ( !t3_rt.getNode( "root node" ).getNodeData().getTaxonomy().getIdentifier().getValue().equals( "1" ) ) {
                 return false;
             }
-            if ( !t3_rt.getNode( "root node" ).getNodeData().getTaxonomy().getIdentifier().getType().equals( "ncbi" ) ) {
+            if ( !t3_rt.getNode( "root node" ).getNodeData().getTaxonomy().getIdentifier().getProvider()
+                    .equals( "ncbi" ) ) {
                 return false;
             }
             if ( t3_rt.getNode( "node bc" ).getNodeData().getSequence().getDomainArchitecture().getTotalLength() != 124 ) {
@@ -1121,6 +1317,43 @@ public final class Test {
             if ( !t3_rt.getNode( "node bb" ).getNodeData().getBinaryCharacters().getType().equals( "domains" ) ) {
                 return false;
             }
+            final Taxonomy taxbb = t3_rt.getNode( "node bb" ).getNodeData().getTaxonomy();
+            if ( !taxbb.getAuthority().equals( "Stephenson, 1935" ) ) {
+                return false;
+            }
+            if ( !taxbb.getCommonName().equals( "starlet sea anemone" ) ) {
+                return false;
+            }
+            if ( !taxbb.getIdentifier().getProvider().equals( "EOL" ) ) {
+                return false;
+            }
+            if ( !taxbb.getIdentifier().getValue().equals( "704294" ) ) {
+                return false;
+            }
+            if ( !taxbb.getTaxonomyCode().equals( "NEMVE" ) ) {
+                return false;
+            }
+            if ( !taxbb.getScientificName().equals( "Nematostella vectensis" ) ) {
+                return false;
+            }
+            if ( taxbb.getSynonyms().size() != 2 ) {
+                return false;
+            }
+            if ( !taxbb.getSynonyms().contains( "Nematostella vectensis Stephenson1935" ) ) {
+                return false;
+            }
+            if ( !taxbb.getSynonyms().contains( "See Anemone" ) ) {
+                return false;
+            }
+            if ( !taxbb.getUri().getDescription().equals( "EOL" ) ) {
+                return false;
+            }
+            if ( !taxbb.getUri().getType().equals( "linkout" ) ) {
+                return false;
+            }
+            if ( !taxbb.getUri().getValue().toString().equals( "http://www.eol.org/pages/704294" ) ) {
+                return false;
+            }
             if ( ( ( BinaryCharacters ) t3_rt.getNode( "node bb" ).getNodeData().getBinaryCharacters().copy() )
                     .getLostCount() != BinaryCharacters.COUNT_DEFAULT ) {
                 ;
@@ -1147,6 +1380,31 @@ public final class Test {
             if ( !t3_rt.getNode( "node b" ).getNodeData().getBinaryCharacters().getType().equals( "characters" ) ) {
                 return false;
             }
+            //
+            if ( !t3_rt.getNode( "node ba" ).getNodeData().getDate().getDesc().equals( "Silurian" ) ) {
+                return false;
+            }
+            if ( !t3_rt.getNode( "node ba" ).getNodeData().getDate().getValue().toPlainString()
+                    .equalsIgnoreCase( "435" ) ) {
+                return false;
+            }
+            if ( !t3_rt.getNode( "node ba" ).getNodeData().getDate().getMin().toPlainString().equalsIgnoreCase( "416" ) ) {
+                return false;
+            }
+            if ( !t3_rt.getNode( "node ba" ).getNodeData().getDate().getMax().toPlainString()
+                    .equalsIgnoreCase( "443.7" ) ) {
+                return false;
+            }
+            if ( !t3_rt.getNode( "node ba" ).getNodeData().getDate().getUnit().equals( "mya" ) ) {
+                return false;
+            }
+            if ( !t3_rt.getNode( "node bb" ).getNodeData().getDate().getDesc().equals( "Triassic" ) ) {
+                return false;
+            }
+            if ( !t3_rt.getNode( "node bc" ).getNodeData().getDate().getValue().toPlainString()
+                    .equalsIgnoreCase( "433" ) ) {
+                return false;
+            }
         }
         catch ( final Exception e ) {
             e.printStackTrace( System.out );
@@ -1158,12 +1416,21 @@ public final class Test {
     private static boolean testBasicPhyloXMLparsingValidating() {
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhyloXmlParser xml_parser = new PhyloXmlParser();
-            if ( USE_LOCAL_PHYLOXML_SCHEMA ) {
-                xml_parser.setValidateAgainstSchema( PHYLOXML_LOCAL_XSD );
+            PhyloXmlParser xml_parser = null;
+            try {
+                xml_parser = PhyloXmlParser.createPhyloXmlParserXsdValidating();
             }
-            else {
-                xml_parser.setValidateAgainstSchema( PHYLOXML_REMOTE_XSD );
+            catch ( final Exception e ) {
+                // Do nothing -- means were not running from jar.
+            }
+            if ( xml_parser == null ) {
+                xml_parser = new PhyloXmlParser();
+                if ( USE_LOCAL_PHYLOXML_SCHEMA ) {
+                    xml_parser.setValidateAgainstSchema( PHYLOXML_LOCAL_XSD );
+                }
+                else {
+                    xml_parser.setValidateAgainstSchema( PHYLOXML_REMOTE_XSD );
+                }
             }
             final Phylogeny[] phylogenies_0 = factory.create( Test.PATH_TO_TEST_DATA + "phyloxml_test_t1.xml",
                                                               xml_parser );
@@ -1671,6 +1938,98 @@ public final class Test {
         return true;
     }
 
+    private static boolean testConfidenceAssessor() {
+        try {
+            final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
+            final Phylogeny t0 = factory.create( "((((A,B)ab,C)abc,D)abcd,E)abcde", new NHXParser() )[ 0 ];
+            final Phylogeny[] ev0 = factory
+                    .create( "((((A,B),C),D),E);((((A,B),C),D),E);((((A,B),C),D),E);((((A,B),C),D),E);",
+                             new NHXParser() );
+            ConfidenceAssessor.evaluate( "bootstrap", ev0, t0, false, 1, 0, 2 );
+            if ( !isEqual( t0.getNode( "ab" ).getBranchData().getConfidence( 0 ).getValue(), 3 ) ) {
+                return false;
+            }
+            if ( !isEqual( t0.getNode( "abc" ).getBranchData().getConfidence( 0 ).getValue(), 3 ) ) {
+                return false;
+            }
+            final Phylogeny t1 = factory.create( "((((A,B)ab[&&NHX:B=50],C)abc,D)abcd,E)abcde", new NHXParser() )[ 0 ];
+            final Phylogeny[] ev1 = factory
+                    .create( "((((A,B),C),D),E);((A,B),((E,D),C));(((A,B),C),(E,D));(A,(((E,D),C),B));(B,(A,((E,D),C)));(C,((E,D),(A,B)));(D,(E,((A,B),C)));",
+                             new NHXParser() );
+            ConfidenceAssessor.evaluate( "bootstrap", ev1, t1, false, 1 );
+            if ( !isEqual( t1.getNode( "ab" ).getBranchData().getConfidence( 1 ).getValue(), 7 ) ) {
+                return false;
+            }
+            if ( !isEqual( t1.getNode( "abc" ).getBranchData().getConfidence( 0 ).getValue(), 7 ) ) {
+                return false;
+            }
+            final Phylogeny t_b = factory.create( "((((A,C)ac,D)acd,E)acde,B)abcde", new NHXParser() )[ 0 ];
+            final Phylogeny[] ev_b = factory
+                    .create( "((A,C),X);((A,X),C);(A,C);((((A,B),C),D),E);((A,B),((E,D),C));(((A,B),C),(E,D));(A,(((E,D),C),B));(B,(A,((E,D),C)));(C,((E,D),(A,B)));(D,(E,((A,B),C)));((((A,C)ac,D)acd,E)acde,B)abcd",
+                             new NHXParser() );
+            ConfidenceAssessor.evaluate( "bootstrap", ev_b, t_b, false, 1 );
+            // Archaeopteryx.createApplication( t_b ); //TODO use me again me working here...
+            if ( !isEqual( t_b.getNode( "ac" ).getBranchData().getConfidence( 0 ).getValue(), 4 ) ) {
+                return false;
+            }
+            if ( !isEqual( t_b.getNode( "acd" ).getBranchData().getConfidence( 0 ).getValue(), 1 ) ) {
+                return false;
+            }
+            //
+            final Phylogeny t1x = factory.create( "((((A,B)ab,C)abc,D)abcd,E)abcde", new NHXParser() )[ 0 ];
+            final Phylogeny[] ev1x = factory
+                    .create( "((((A,B),C),D),E);((A,B),((E,D),C));(((A,B),C),(E,D));(A,(((E,D),C),B));(B,(A,((E,D),C)));(C,((E,D),(A,B)));(D,(E,((A,B),C)));",
+                             new NHXParser() );
+            ConfidenceAssessor.evaluate( "bootstrap", ev1x, t1x, true, 1 );
+            if ( !isEqual( t1x.getNode( "ab" ).getBranchData().getConfidence( 0 ).getValue(), 7 ) ) {
+                return false;
+            }
+            if ( !isEqual( t1x.getNode( "abc" ).getBranchData().getConfidence( 0 ).getValue(), 7 ) ) {
+                return false;
+            }
+            final Phylogeny t_bx = factory.create( "((((A,C)ac,D)acd,E)acde,B)abcde", new NHXParser() )[ 0 ];
+            final Phylogeny[] ev_bx = factory
+                    .create( "((((A,B),C),D),E);((A,B),((E,D),C));(((A,B),C),(E,D));(A,(((E,D),C),B));(B,(A,((E,D),C)));(C,((E,D),(A,B)));(D,(E,((A,B),C)));((((A,C)ac,D)acd,E)acde,B)abcd",
+                             new NHXParser() );
+            ConfidenceAssessor.evaluate( "bootstrap", ev_bx, t_bx, true, 1 );
+            if ( !isEqual( t_bx.getNode( "ac" ).getBranchData().getConfidence( 0 ).getValue(), 1 ) ) {
+                return false;
+            }
+            if ( !isEqual( t_bx.getNode( "acd" ).getBranchData().getConfidence( 0 ).getValue(), 1 ) ) {
+                return false;
+            }
+            //
+            final Phylogeny[] t2 = factory
+                    .create( "((((a,b),c),d),e);(((a,b),c),(d,e));(((((a,b),c),d),e),f);((((a,b),c),(d,e)),f);(((a,b),c),d,e);((a,b,c),d,e);",
+                             new NHXParser() );
+            final Phylogeny[] ev2 = factory
+                    .create( "((((a,b),c),d),e);((((a,b),c),d),e);((((a,b),e),d),c);((((a,b),e),d),c);(((a,b),(c,d)),e);((a,b),x);((a,b),(x,y));(a,b);(a,e);(a,b,c);",
+                             new NHXParser() );
+            for( final Phylogeny target : t2 ) {
+                ConfidenceAssessor.evaluate( "bootstrap", ev2, target, false, 1 );
+            }
+            //
+            final Phylogeny t4 = factory.create( "((((((A,B)ab,C)abc,D)abcd,E)abcde,F)abcdef,G)abcdefg",
+                                                 new NHXParser() )[ 0 ];
+            final Phylogeny[] ev4 = factory.create( "(((A,B),C),(X,Y));((F,G),((A,B,C),(D,E)))", new NHXParser() );
+            ConfidenceAssessor.evaluate( "bootstrap", ev4, t4, false, 1 );
+            if ( !isEqual( t4.getNode( "ab" ).getBranchData().getConfidence( 0 ).getValue(), 1 ) ) {
+                return false;
+            }
+            if ( !isEqual( t4.getNode( "abc" ).getBranchData().getConfidence( 0 ).getValue(), 2 ) ) {
+                return false;
+            }
+            if ( !isEqual( t4.getNode( "abcde" ).getBranchData().getConfidence( 0 ).getValue(), 1 ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
     private static boolean testCopyOfNodeData() {
         try {
             final PhylogenyNode n1 = new PhylogenyNode( "n5:0.1[&&NHX:S=Ecoli:E=1.1.1.1:D=Y:Co=Y:B=56:T=1:O=22:SO=33:SN=44:W=2:C=10.20.30:XN=S=tag1=value1=unit1]" );
@@ -1982,7 +2341,7 @@ public final class Test {
             if ( t0.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
-            t0.deleteSubtree( t0.getNode( "A" ) );
+            t0.deleteSubtree( t0.getNode( "A" ), false );
             if ( t0.getNumberOfExternalNodes() != 0 ) {
                 return false;
             }
@@ -1993,18 +2352,18 @@ public final class Test {
             if ( t1.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "A" ) );
+            t1.deleteSubtree( t1.getNode( "A" ), false );
             if ( t1.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
             if ( !t1.getNode( "B" ).getNodeName().equals( "B" ) ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "B" ) );
+            t1.deleteSubtree( t1.getNode( "B" ), false );
             if ( t1.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "r" ) );
+            t1.deleteSubtree( t1.getNode( "r" ), false );
             if ( !t1.isEmpty() ) {
                 return false;
             }
@@ -2012,7 +2371,7 @@ public final class Test {
             if ( t2.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
-            t2.deleteSubtree( t2.getNode( "B" ) );
+            t2.deleteSubtree( t2.getNode( "B" ), false );
             if ( t2.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
@@ -2021,11 +2380,11 @@ public final class Test {
             if ( !n.getNextExternalNode().getNodeName().equals( "C" ) ) {
                 return false;
             }
-            t2.deleteSubtree( t2.getNode( "A" ) );
+            t2.deleteSubtree( t2.getNode( "A" ), false );
             if ( t2.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
-            t2.deleteExternalNode( t2.getNode( "C" ) );
+            t2.deleteSubtree( t2.getNode( "C" ), true );
             if ( t2.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
@@ -2033,7 +2392,7 @@ public final class Test {
             if ( t3.getNumberOfExternalNodes() != 4 ) {
                 return false;
             }
-            t3.deleteExternalNode( t3.getNode( "B" ) );
+            t3.deleteSubtree( t3.getNode( "B" ), true );
             if ( t3.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
@@ -2045,7 +2404,7 @@ public final class Test {
             if ( !n.getNextExternalNode().getNodeName().equals( "D" ) ) {
                 return false;
             }
-            t3.deleteExternalNode( t3.getNode( "A" ) );
+            t3.deleteSubtree( t3.getNode( "A" ), true );
             if ( t3.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
@@ -2053,11 +2412,11 @@ public final class Test {
             if ( !n.getNextExternalNode().getNodeName().equals( "D" ) ) {
                 return false;
             }
-            t3.deleteExternalNode( t3.getNode( "C" ) );
+            t3.deleteSubtree( t3.getNode( "C" ), true );
             if ( t3.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
-            t3.deleteExternalNode( t3.getNode( "D" ) );
+            t3.deleteSubtree( t3.getNode( "D" ), true );
             if ( t3.getNumberOfExternalNodes() != 0 ) {
                 return false;
             }
@@ -2065,19 +2424,19 @@ public final class Test {
             if ( t4.getNumberOfExternalNodes() != 6 ) {
                 return false;
             }
-            t4.deleteExternalNode( t4.getNode( "B2" ) );
+            t4.deleteSubtree( t4.getNode( "B2" ), true );
             if ( t4.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             String s = w.toNewHampshire( t4, false, true ).toString();
-            if ( !s.equals( "((A,(B11,B12)),(C,D))" ) ) {
+            if ( !s.equals( "((A,(B11,B12)),(C,D));" ) ) {
                 return false;
             }
-            t4.deleteExternalNode( t4.getNode( "B11" ) );
+            t4.deleteSubtree( t4.getNode( "B11" ), true );
             if ( t4.getNumberOfExternalNodes() != 4 ) {
                 return false;
             }
-            t4.deleteExternalNode( t4.getNode( "C" ) );
+            t4.deleteSubtree( t4.getNode( "C" ), true );
             if ( t4.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
@@ -2091,177 +2450,177 @@ public final class Test {
                 return false;
             }
             s = w.toNewHampshire( t4, false, true ).toString();
-            if ( !s.equals( "((A,B12),D)" ) ) {
+            if ( !s.equals( "((A,B12),D);" ) ) {
                 return false;
             }
             final Phylogeny t5 = factory.create( "((A,((B11,B12),B2)),(C,D))", new NHXParser() )[ 0 ];
-            t5.deleteExternalNode( t5.getNode( "A" ) );
+            t5.deleteSubtree( t5.getNode( "A" ), true );
             if ( t5.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t5, false, true ).toString();
-            if ( !s.equals( "(((B11,B12),B2),(C,D))" ) ) {
+            if ( !s.equals( "(((B11,B12),B2),(C,D));" ) ) {
                 return false;
             }
             final Phylogeny t6 = factory.create( "((A,((B11,B12),B2)),(C,D))", new NHXParser() )[ 0 ];
-            t6.deleteExternalNode( t6.getNode( "B11" ) );
+            t6.deleteSubtree( t6.getNode( "B11" ), true );
             if ( t6.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t6, false, false ).toString();
-            if ( !s.equals( "((A,(B12,B2)),(C,D))" ) ) {
+            if ( !s.equals( "((A,(B12,B2)),(C,D));" ) ) {
                 return false;
             }
             final Phylogeny t7 = factory.create( "((A,((B11,B12),B2)),(C,D))", new NHXParser() )[ 0 ];
-            t7.deleteExternalNode( t7.getNode( "B12" ) );
+            t7.deleteSubtree( t7.getNode( "B12" ), true );
             if ( t7.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t7, false, true ).toString();
-            if ( !s.equals( "((A,(B11,B2)),(C,D))" ) ) {
+            if ( !s.equals( "((A,(B11,B2)),(C,D));" ) ) {
                 return false;
             }
             final Phylogeny t8 = factory.create( "((A,((B11,B12),B2)),(C,D))", new NHXParser() )[ 0 ];
-            t8.deleteExternalNode( t8.getNode( "B2" ) );
+            t8.deleteSubtree( t8.getNode( "B2" ), true );
             if ( t8.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t8, false, false ).toString();
-            if ( !s.equals( "((A,(B11,B12)),(C,D))" ) ) {
+            if ( !s.equals( "((A,(B11,B12)),(C,D));" ) ) {
                 return false;
             }
             final Phylogeny t9 = factory.create( "((A,((B11,B12),B2)),(C,D))", new NHXParser() )[ 0 ];
-            t9.deleteExternalNode( t9.getNode( "C" ) );
+            t9.deleteSubtree( t9.getNode( "C" ), true );
             if ( t9.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t9, false, true ).toString();
-            if ( !s.equals( "((A,((B11,B12),B2)),D)" ) ) {
+            if ( !s.equals( "((A,((B11,B12),B2)),D);" ) ) {
                 return false;
             }
             final Phylogeny t10 = factory.create( "((A,((B11,B12),B2)),(C,D))", new NHXParser() )[ 0 ];
-            t10.deleteExternalNode( t10.getNode( "D" ) );
+            t10.deleteSubtree( t10.getNode( "D" ), true );
             if ( t10.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t10, false, true ).toString();
-            if ( !s.equals( "((A,((B11,B12),B2)),C)" ) ) {
+            if ( !s.equals( "((A,((B11,B12),B2)),C);" ) ) {
                 return false;
             }
             final Phylogeny t11 = factory.create( "(A,B,C)", new NHXParser() )[ 0 ];
-            t11.deleteExternalNode( t11.getNode( "A" ) );
+            t11.deleteSubtree( t11.getNode( "A" ), true );
             if ( t11.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
             s = w.toNewHampshire( t11, false, true ).toString();
-            if ( !s.equals( "(B,C)" ) ) {
+            if ( !s.equals( "(B,C);" ) ) {
                 return false;
             }
-            t11.deleteExternalNode( t11.getNode( "C" ) );
+            t11.deleteSubtree( t11.getNode( "C" ), true );
             if ( t11.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
             s = w.toNewHampshire( t11, false, false ).toString();
-            if ( !s.equals( "B" ) ) {
+            if ( !s.equals( "B;" ) ) {
                 return false;
             }
             final Phylogeny t12 = factory.create( "((A1,A2,A3),(B1,B2,B3),(C1,C2,C3))", new NHXParser() )[ 0 ];
-            t12.deleteExternalNode( t12.getNode( "B2" ) );
+            t12.deleteSubtree( t12.getNode( "B2" ), true );
             if ( t12.getNumberOfExternalNodes() != 8 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "((A1,A2,A3),(B1,B3),(C1,C2,C3))" ) ) {
+            if ( !s.equals( "((A1,A2,A3),(B1,B3),(C1,C2,C3));" ) ) {
                 return false;
             }
-            t12.deleteExternalNode( t12.getNode( "B3" ) );
+            t12.deleteSubtree( t12.getNode( "B3" ), true );
             if ( t12.getNumberOfExternalNodes() != 7 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "((A1,A2,A3),B1,(C1,C2,C3))" ) ) {
+            if ( !s.equals( "((A1,A2,A3),B1,(C1,C2,C3));" ) ) {
                 return false;
             }
-            t12.deleteExternalNode( t12.getNode( "C3" ) );
+            t12.deleteSubtree( t12.getNode( "C3" ), true );
             if ( t12.getNumberOfExternalNodes() != 6 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "((A1,A2,A3),B1,(C1,C2))" ) ) {
+            if ( !s.equals( "((A1,A2,A3),B1,(C1,C2));" ) ) {
                 return false;
             }
-            t12.deleteExternalNode( t12.getNode( "A1" ) );
+            t12.deleteSubtree( t12.getNode( "A1" ), true );
             if ( t12.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "((A2,A3),B1,(C1,C2))" ) ) {
+            if ( !s.equals( "((A2,A3),B1,(C1,C2));" ) ) {
                 return false;
             }
-            t12.deleteExternalNode( t12.getNode( "B1" ) );
+            t12.deleteSubtree( t12.getNode( "B1" ), true );
             if ( t12.getNumberOfExternalNodes() != 4 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "((A2,A3),(C1,C2))" ) ) {
+            if ( !s.equals( "((A2,A3),(C1,C2));" ) ) {
                 return false;
             }
-            t12.deleteExternalNode( t12.getNode( "A3" ) );
+            t12.deleteSubtree( t12.getNode( "A3" ), true );
             if ( t12.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "(A2,(C1,C2))" ) ) {
+            if ( !s.equals( "(A2,(C1,C2));" ) ) {
                 return false;
             }
-            t12.deleteExternalNode( t12.getNode( "A2" ) );
+            t12.deleteSubtree( t12.getNode( "A2" ), true );
             if ( t12.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
             s = w.toNewHampshire( t12, false, true ).toString();
-            if ( !s.equals( "(C1,C2)" ) ) {
+            if ( !s.equals( "(C1,C2);" ) ) {
                 return false;
             }
             final Phylogeny t13 = factory.create( "(A,B,C,(D:1.0,E:2.0):3.0)", new NHXParser() )[ 0 ];
-            t13.deleteExternalNode( t13.getNode( "D" ) );
+            t13.deleteSubtree( t13.getNode( "D" ), true );
             if ( t13.getNumberOfExternalNodes() != 4 ) {
                 return false;
             }
             s = w.toNewHampshire( t13, false, true ).toString();
-            if ( !s.equals( "(A,B,C,E:5.0)" ) ) {
+            if ( !s.equals( "(A,B,C,E:5.0);" ) ) {
                 return false;
             }
             final Phylogeny t14 = factory.create( "((A,B,C,(D:0.1,E:0.4):1.0),F)", new NHXParser() )[ 0 ];
-            t14.deleteExternalNode( t14.getNode( "E" ) );
+            t14.deleteSubtree( t14.getNode( "E" ), true );
             if ( t14.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             s = w.toNewHampshire( t14, false, true ).toString();
-            if ( !s.equals( "((A,B,C,D:1.1),F)" ) ) {
+            if ( !s.equals( "((A,B,C,D:1.1),F);" ) ) {
                 return false;
             }
             final Phylogeny t15 = factory.create( "((A1,A2,A3,A4),(B1,B2,B3,B4),(C1,C2,C3,C4))", new NHXParser() )[ 0 ];
-            t15.deleteExternalNode( t15.getNode( "B2" ) );
+            t15.deleteSubtree( t15.getNode( "B2" ), true );
             if ( t15.getNumberOfExternalNodes() != 11 ) {
                 return false;
             }
-            t15.deleteExternalNode( t15.getNode( "B1" ) );
+            t15.deleteSubtree( t15.getNode( "B1" ), true );
             if ( t15.getNumberOfExternalNodes() != 10 ) {
                 return false;
             }
-            t15.deleteExternalNode( t15.getNode( "B3" ) );
+            t15.deleteSubtree( t15.getNode( "B3" ), true );
             if ( t15.getNumberOfExternalNodes() != 9 ) {
                 return false;
             }
-            t15.deleteExternalNode( t15.getNode( "B4" ) );
+            t15.deleteSubtree( t15.getNode( "B4" ), true );
             if ( t15.getNumberOfExternalNodes() != 8 ) {
                 return false;
             }
-            t15.deleteExternalNode( t15.getNode( "A1" ) );
+            t15.deleteSubtree( t15.getNode( "A1" ), true );
             if ( t15.getNumberOfExternalNodes() != 7 ) {
                 return false;
             }
-            t15.deleteExternalNode( t15.getNode( "C4" ) );
+            t15.deleteSubtree( t15.getNode( "C4" ), true );
             if ( t15.getNumberOfExternalNodes() != 6 ) {
                 return false;
             }
@@ -2802,180 +3161,267 @@ public final class Test {
             final Phylogeny p1 = factory.create( "((((((A,B)ab,C)abc,D)abcd,E)abcde,F)abcdef,(G,H)gh)abcdefgh",
                                                  new NHXParser() )[ 0 ];
             final PhylogenyMethods pm = PhylogenyMethods.getInstance();
-            final PhylogenyNode A = pm.getLCA( p1.getNode( "A" ), p1.getNode( "A" ) );
+            final PhylogenyNode A = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "A" ) );
             if ( !A.getNodeName().equals( "A" ) ) {
                 return false;
             }
-            final PhylogenyNode gh = pm.getLCA( p1.getNode( "gh" ), p1.getNode( "gh" ) );
+            final PhylogenyNode gh = pm.obtainLCA( p1.getNode( "gh" ), p1.getNode( "gh" ) );
             if ( !gh.getNodeName().equals( "gh" ) ) {
                 return false;
             }
-            final PhylogenyNode ab = pm.getLCA( p1.getNode( "A" ), p1.getNode( "B" ) );
+            final PhylogenyNode ab = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "B" ) );
             if ( !ab.getNodeName().equals( "ab" ) ) {
                 return false;
             }
-            final PhylogenyNode ab2 = pm.getLCA( p1.getNode( "B" ), p1.getNode( "A" ) );
+            final PhylogenyNode ab2 = pm.obtainLCA( p1.getNode( "B" ), p1.getNode( "A" ) );
             if ( !ab2.getNodeName().equals( "ab" ) ) {
                 return false;
             }
-            final PhylogenyNode gh2 = pm.getLCA( p1.getNode( "H" ), p1.getNode( "G" ) );
+            final PhylogenyNode gh2 = pm.obtainLCA( p1.getNode( "H" ), p1.getNode( "G" ) );
             if ( !gh2.getNodeName().equals( "gh" ) ) {
                 return false;
             }
-            final PhylogenyNode gh3 = pm.getLCA( p1.getNode( "G" ), p1.getNode( "H" ) );
+            final PhylogenyNode gh3 = pm.obtainLCA( p1.getNode( "G" ), p1.getNode( "H" ) );
             if ( !gh3.getNodeName().equals( "gh" ) ) {
                 return false;
             }
-            final PhylogenyNode abc = pm.getLCA( p1.getNode( "C" ), p1.getNode( "A" ) );
+            final PhylogenyNode abc = pm.obtainLCA( p1.getNode( "C" ), p1.getNode( "A" ) );
             if ( !abc.getNodeName().equals( "abc" ) ) {
                 return false;
             }
-            final PhylogenyNode abc2 = pm.getLCA( p1.getNode( "A" ), p1.getNode( "C" ) );
+            final PhylogenyNode abc2 = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "C" ) );
             if ( !abc2.getNodeName().equals( "abc" ) ) {
                 return false;
             }
-            final PhylogenyNode abcd = pm.getLCA( p1.getNode( "A" ), p1.getNode( "D" ) );
+            final PhylogenyNode abcd = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "D" ) );
             if ( !abcd.getNodeName().equals( "abcd" ) ) {
                 return false;
             }
-            final PhylogenyNode abcd2 = pm.getLCA( p1.getNode( "D" ), p1.getNode( "A" ) );
+            final PhylogenyNode abcd2 = pm.obtainLCA( p1.getNode( "D" ), p1.getNode( "A" ) );
             if ( !abcd2.getNodeName().equals( "abcd" ) ) {
                 return false;
             }
-            final PhylogenyNode abcdef = pm.getLCA( p1.getNode( "A" ), p1.getNode( "F" ) );
+            final PhylogenyNode abcdef = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "F" ) );
             if ( !abcdef.getNodeName().equals( "abcdef" ) ) {
                 return false;
             }
-            final PhylogenyNode abcdef2 = pm.getLCA( p1.getNode( "F" ), p1.getNode( "A" ) );
+            final PhylogenyNode abcdef2 = pm.obtainLCA( p1.getNode( "F" ), p1.getNode( "A" ) );
             if ( !abcdef2.getNodeName().equals( "abcdef" ) ) {
                 return false;
             }
-            final PhylogenyNode abcdef3 = pm.getLCA( p1.getNode( "ab" ), p1.getNode( "F" ) );
+            final PhylogenyNode abcdef3 = pm.obtainLCA( p1.getNode( "ab" ), p1.getNode( "F" ) );
             if ( !abcdef3.getNodeName().equals( "abcdef" ) ) {
                 return false;
             }
-            final PhylogenyNode abcdef4 = pm.getLCA( p1.getNode( "F" ), p1.getNode( "ab" ) );
+            final PhylogenyNode abcdef4 = pm.obtainLCA( p1.getNode( "F" ), p1.getNode( "ab" ) );
             if ( !abcdef4.getNodeName().equals( "abcdef" ) ) {
                 return false;
             }
-            final PhylogenyNode abcde = pm.getLCA( p1.getNode( "A" ), p1.getNode( "E" ) );
+            final PhylogenyNode abcde = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "E" ) );
             if ( !abcde.getNodeName().equals( "abcde" ) ) {
                 return false;
             }
-            final PhylogenyNode abcde2 = pm.getLCA( p1.getNode( "E" ), p1.getNode( "A" ) );
+            final PhylogenyNode abcde2 = pm.obtainLCA( p1.getNode( "E" ), p1.getNode( "A" ) );
             if ( !abcde2.getNodeName().equals( "abcde" ) ) {
                 return false;
             }
-            final PhylogenyNode r = pm.getLCA( p1.getNode( "abcdefgh" ), p1.getNode( "abcdefgh" ) );
+            final PhylogenyNode r = pm.obtainLCA( p1.getNode( "abcdefgh" ), p1.getNode( "abcdefgh" ) );
             if ( !r.getNodeName().equals( "abcdefgh" ) ) {
                 return false;
             }
-            final PhylogenyNode r2 = pm.getLCA( p1.getNode( "A" ), p1.getNode( "H" ) );
+            final PhylogenyNode r2 = pm.obtainLCA( p1.getNode( "A" ), p1.getNode( "H" ) );
             if ( !r2.getNodeName().equals( "abcdefgh" ) ) {
                 return false;
             }
-            final PhylogenyNode r3 = pm.getLCA( p1.getNode( "H" ), p1.getNode( "A" ) );
+            final PhylogenyNode r3 = pm.obtainLCA( p1.getNode( "H" ), p1.getNode( "A" ) );
             if ( !r3.getNodeName().equals( "abcdefgh" ) ) {
                 return false;
             }
-            final PhylogenyNode abcde3 = pm.getLCA( p1.getNode( "E" ), p1.getNode( "abcde" ) );
+            final PhylogenyNode abcde3 = pm.obtainLCA( p1.getNode( "E" ), p1.getNode( "abcde" ) );
             if ( !abcde3.getNodeName().equals( "abcde" ) ) {
                 return false;
             }
-            final PhylogenyNode abcde4 = pm.getLCA( p1.getNode( "abcde" ), p1.getNode( "E" ) );
+            final PhylogenyNode abcde4 = pm.obtainLCA( p1.getNode( "abcde" ), p1.getNode( "E" ) );
             if ( !abcde4.getNodeName().equals( "abcde" ) ) {
                 return false;
             }
-            final PhylogenyNode ab3 = pm.getLCA( p1.getNode( "ab" ), p1.getNode( "B" ) );
+            final PhylogenyNode ab3 = pm.obtainLCA( p1.getNode( "ab" ), p1.getNode( "B" ) );
             if ( !ab3.getNodeName().equals( "ab" ) ) {
                 return false;
             }
-            final PhylogenyNode ab4 = pm.getLCA( p1.getNode( "B" ), p1.getNode( "ab" ) );
+            final PhylogenyNode ab4 = pm.obtainLCA( p1.getNode( "B" ), p1.getNode( "ab" ) );
             if ( !ab4.getNodeName().equals( "ab" ) ) {
                 return false;
             }
             final Phylogeny p2 = factory.create( "(a,b,(((c,d)cd,e)cde,f)cdef)r", new NHXParser() )[ 0 ];
-            final PhylogenyNode cd = pm.getLCA( p2.getNode( "c" ), p2.getNode( "d" ) );
+            final PhylogenyNode cd = pm.obtainLCA( p2.getNode( "c" ), p2.getNode( "d" ) );
             if ( !cd.getNodeName().equals( "cd" ) ) {
                 return false;
             }
-            final PhylogenyNode cd2 = pm.getLCA( p2.getNode( "d" ), p2.getNode( "c" ) );
+            final PhylogenyNode cd2 = pm.obtainLCA( p2.getNode( "d" ), p2.getNode( "c" ) );
             if ( !cd2.getNodeName().equals( "cd" ) ) {
                 return false;
             }
-            final PhylogenyNode cde = pm.getLCA( p2.getNode( "c" ), p2.getNode( "e" ) );
+            final PhylogenyNode cde = pm.obtainLCA( p2.getNode( "c" ), p2.getNode( "e" ) );
             if ( !cde.getNodeName().equals( "cde" ) ) {
                 return false;
             }
-            final PhylogenyNode cde2 = pm.getLCA( p2.getNode( "e" ), p2.getNode( "c" ) );
+            final PhylogenyNode cde2 = pm.obtainLCA( p2.getNode( "e" ), p2.getNode( "c" ) );
             if ( !cde2.getNodeName().equals( "cde" ) ) {
                 return false;
             }
-            final PhylogenyNode cdef = pm.getLCA( p2.getNode( "c" ), p2.getNode( "f" ) );
+            final PhylogenyNode cdef = pm.obtainLCA( p2.getNode( "c" ), p2.getNode( "f" ) );
             if ( !cdef.getNodeName().equals( "cdef" ) ) {
                 return false;
             }
-            final PhylogenyNode cdef2 = pm.getLCA( p2.getNode( "d" ), p2.getNode( "f" ) );
+            final PhylogenyNode cdef2 = pm.obtainLCA( p2.getNode( "d" ), p2.getNode( "f" ) );
             if ( !cdef2.getNodeName().equals( "cdef" ) ) {
                 return false;
             }
-            final PhylogenyNode cdef3 = pm.getLCA( p2.getNode( "f" ), p2.getNode( "d" ) );
+            final PhylogenyNode cdef3 = pm.obtainLCA( p2.getNode( "f" ), p2.getNode( "d" ) );
             if ( !cdef3.getNodeName().equals( "cdef" ) ) {
                 return false;
             }
-            final PhylogenyNode rt = pm.getLCA( p2.getNode( "c" ), p2.getNode( "a" ) );
+            final PhylogenyNode rt = pm.obtainLCA( p2.getNode( "c" ), p2.getNode( "a" ) );
             if ( !rt.getNodeName().equals( "r" ) ) {
                 return false;
             }
             final Phylogeny p3 = factory
                     .create( "((((a,(b,c)bc)abc,(d,e)de)abcde,f)abcdef,(((g,h)gh,(i,j)ij)ghij,k)ghijk,l)",
                              new NHXParser() )[ 0 ];
-            final PhylogenyNode bc_3 = pm.getLCA( p3.getNode( "b" ), p3.getNode( "c" ) );
+            final PhylogenyNode bc_3 = pm.obtainLCA( p3.getNode( "b" ), p3.getNode( "c" ) );
             if ( !bc_3.getNodeName().equals( "bc" ) ) {
                 return false;
             }
-            final PhylogenyNode ac_3 = pm.getLCA( p3.getNode( "a" ), p3.getNode( "c" ) );
+            final PhylogenyNode ac_3 = pm.obtainLCA( p3.getNode( "a" ), p3.getNode( "c" ) );
             if ( !ac_3.getNodeName().equals( "abc" ) ) {
                 return false;
             }
-            final PhylogenyNode ad_3 = pm.getLCA( p3.getNode( "a" ), p3.getNode( "d" ) );
+            final PhylogenyNode ad_3 = pm.obtainLCA( p3.getNode( "a" ), p3.getNode( "d" ) );
             if ( !ad_3.getNodeName().equals( "abcde" ) ) {
                 return false;
             }
-            final PhylogenyNode af_3 = pm.getLCA( p3.getNode( "a" ), p3.getNode( "f" ) );
+            final PhylogenyNode af_3 = pm.obtainLCA( p3.getNode( "a" ), p3.getNode( "f" ) );
             if ( !af_3.getNodeName().equals( "abcdef" ) ) {
                 return false;
             }
-            final PhylogenyNode ag_3 = pm.getLCA( p3.getNode( "a" ), p3.getNode( "g" ) );
+            final PhylogenyNode ag_3 = pm.obtainLCA( p3.getNode( "a" ), p3.getNode( "g" ) );
             if ( !ag_3.getNodeName().equals( "" ) ) {
                 return false;
             }
             if ( !ag_3.isRoot() ) {
                 return false;
             }
-            final PhylogenyNode al_3 = pm.getLCA( p3.getNode( "a" ), p3.getNode( "l" ) );
+            final PhylogenyNode al_3 = pm.obtainLCA( p3.getNode( "a" ), p3.getNode( "l" ) );
             if ( !al_3.getNodeName().equals( "" ) ) {
                 return false;
             }
             if ( !al_3.isRoot() ) {
                 return false;
             }
-            final PhylogenyNode kl_3 = pm.getLCA( p3.getNode( "k" ), p3.getNode( "l" ) );
+            final PhylogenyNode kl_3 = pm.obtainLCA( p3.getNode( "k" ), p3.getNode( "l" ) );
             if ( !kl_3.getNodeName().equals( "" ) ) {
                 return false;
             }
             if ( !kl_3.isRoot() ) {
                 return false;
             }
-            final PhylogenyNode fl_3 = pm.getLCA( p3.getNode( "f" ), p3.getNode( "l" ) );
+            final PhylogenyNode fl_3 = pm.obtainLCA( p3.getNode( "f" ), p3.getNode( "l" ) );
             if ( !fl_3.getNodeName().equals( "" ) ) {
                 return false;
             }
             if ( !fl_3.isRoot() ) {
                 return false;
             }
-            final PhylogenyNode gk_3 = pm.getLCA( p3.getNode( "g" ), p3.getNode( "k" ) );
+            final PhylogenyNode gk_3 = pm.obtainLCA( p3.getNode( "g" ), p3.getNode( "k" ) );
             if ( !gk_3.getNodeName().equals( "ghijk" ) ) {
+                return false;
+            }
+            final Phylogeny p4 = factory.create( "(a,b,c)r", new NHXParser() )[ 0 ];
+            final PhylogenyNode r_4 = pm.obtainLCA( p4.getNode( "b" ), p4.getNode( "c" ) );
+            if ( !r_4.getNodeName().equals( "r" ) ) {
+                return false;
+            }
+            final Phylogeny p5 = factory.create( "((a,b),c,d)root", new NHXParser() )[ 0 ];
+            final PhylogenyNode r_5 = pm.obtainLCA( p5.getNode( "a" ), p5.getNode( "c" ) );
+            if ( !r_5.getNodeName().equals( "root" ) ) {
+                return false;
+            }
+            final Phylogeny p6 = factory.create( "((a,b),c,d)rot", new NHXParser() )[ 0 ];
+            final PhylogenyNode r_6 = pm.obtainLCA( p6.getNode( "c" ), p6.getNode( "a" ) );
+            if ( !r_6.getNodeName().equals( "rot" ) ) {
+                return false;
+            }
+            final Phylogeny p7 = factory.create( "(((a,b)x,c)x,d,e)rott", new NHXParser() )[ 0 ];
+            final PhylogenyNode r_7 = pm.obtainLCA( p7.getNode( "a" ), p7.getNode( "e" ) );
+            if ( !r_7.getNodeName().equals( "rott" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testHmmscanOutputParser() {
+        final String test_dir = Test.PATH_TO_TEST_DATA;
+        try {
+            final HmmscanPerDomainTableParser parser1 = new HmmscanPerDomainTableParser( new File( test_dir
+                    + ForesterUtil.getFileSeparator() + "hmmscan30b3_output_1" ), "MONBR", INDIVIDUAL_SCORE_CUTOFF.NONE );
+            parser1.parse();
+            final HmmscanPerDomainTableParser parser2 = new HmmscanPerDomainTableParser( new File( test_dir
+                    + ForesterUtil.getFileSeparator() + "hmmscan30b3_output_2" ), "MONBR", INDIVIDUAL_SCORE_CUTOFF.NONE );
+            final List<Protein> domain_collections = parser2.parse();
+            if ( parser2.getProteinsEncountered() != 4 ) {
+                return false;
+            }
+            if ( domain_collections.size() != 4 ) {
+                return false;
+            }
+            if ( parser2.getDomainsEncountered() != 69 ) {
+                return false;
+            }
+            if ( parser2.getDomainsIgnoredDueToDuf() != 0 ) {
+                return false;
+            }
+            if ( parser2.getDomainsIgnoredDueToEval() != 0 ) {
+                return false;
+            }
+            final Protein p1 = domain_collections.get( 0 );
+            if ( p1.getNumberOfProteinDomains() != 15 ) {
+                return false;
+            }
+            final Protein p4 = domain_collections.get( 3 );
+            if ( p4.getNumberOfProteinDomains() != 1 ) {
+                return false;
+            }
+            if ( !p4.getProteinDomain( 0 ).getDomainId().toString().equals( "DNA_pol_B_new" ) ) {
+                return false;
+            }
+            if ( p4.getProteinDomain( 0 ).getFrom() != 51 ) {
+                return false;
+            }
+            if ( p4.getProteinDomain( 0 ).getTo() != 395 ) {
+                return false;
+            }
+            if ( !Test.isEqual( p4.getProteinDomain( 0 ).getPerDomainEvalue(), 1.2e-39 ) ) {
+                return false;
+            }
+            if ( !Test.isEqual( p4.getProteinDomain( 0 ).getPerDomainScore(), 135.7 ) ) {
+                return false;
+            }
+            if ( !Test.isEqual( p4.getProteinDomain( 0 ).getPerSequenceEvalue(), 8.3e-40 ) ) {
+                return false;
+            }
+            if ( !Test.isEqual( p4.getProteinDomain( 0 ).getPerSequenceScore(), 136.3 ) ) {
+                return false;
+            }
+            if ( !Test.isEqual( p4.getProteinDomain( 0 ).getNumber(), 1 ) ) {
+                return false;
+            }
+            if ( !Test.isEqual( p4.getProteinDomain( 0 ).getTotalCount(), 1 ) ) {
                 return false;
             }
         }
@@ -3734,7 +4180,7 @@ public final class Test {
                 return false;
             }
             final NHXParser nhxp = new NHXParser();
-            nhxp.setTaxonomyExtraction( TAXONOMY_EXTRACTION.NO );
+            nhxp.setTaxonomyExtraction( ForesterUtil.TAXONOMY_EXTRACTION.NO );
             nhxp.setReplaceUnderscores( true );
             final Phylogeny uc0 = factory.create( "(A__A_,_B_B)", nhxp )[ 0 ];
             if ( !uc0.getRoot().getChildNode( 0 ).getNodeName().equals( "A A " ) ) {
@@ -3746,7 +4192,10 @@ public final class Test {
             final Phylogeny p1b = factory
                     .create( "   \n  \t  \b   \r \f   ; (  \n  \t  \b   \r \f; A ;  \n  \t  \b   \r \f,  \n  \t  \b   \r \f; B ;   \n  \t  \b   \r \f 1  \n  \t  \b   \r \f ;  \n  \t  \b   \r \f );;;;; \n  \t  \b   \r \f;;;  \n  \t  \b   \r \f ",
                              new NHXParser() )[ 0 ];
-            if ( !p1b.toNewHampshireX().equals( "(_A_,_B_1_)" ) ) {
+            if ( !p1b.toNewHampshireX().equals( "(';A;',';B;1;')" ) ) {
+                return false;
+            }
+            if ( !p1b.toNewHampshire().equals( "(';A;',';B;1;');" ) ) {
                 return false;
             }
             final Phylogeny p2 = factory.create( new StringBuffer( "(A,B2)" ), new NHXParser() )[ 0 ];
@@ -3763,16 +4212,16 @@ public final class Test {
                                                             + " C ; ,; D;13;);;;;;;(;E;,;F;13 ;) ; "
                                                             + "; ; ( \t\n\r\b; G ;, ;H ;1 3; )  ;  ;   ;",
                                                     new NHXParser() );
-            if ( !p13[ 0 ].toNewHampshireX().equals( "(_A_,_B_13_)" ) ) {
+            if ( !p13[ 0 ].toNewHampshireX().equals( "(';A;',';B;13;')" ) ) {
                 return false;
             }
-            if ( !p13[ 1 ].toNewHampshireX().equals( "(_C_,_D_13_)" ) ) {
+            if ( !p13[ 1 ].toNewHampshireX().equals( "(';C;',';D;13;')" ) ) {
                 return false;
             }
-            if ( !p13[ 2 ].toNewHampshireX().equals( "(_E_,_F_13_)" ) ) {
+            if ( !p13[ 2 ].toNewHampshireX().equals( "(';E;',';F;13;')" ) ) {
                 return false;
             }
-            if ( !p13[ 3 ].toNewHampshireX().equals( "(_G_,_H_13_)" ) ) {
+            if ( !p13[ 3 ].toNewHampshireX().equals( "(';G;',';H;13;')" ) ) {
                 return false;
             }
             final Phylogeny[] p14 = factory.create( "(A,B14)ab", new NHXParser() );
@@ -3869,7 +4318,7 @@ public final class Test {
             if ( !p28[ 2 ].toNewHampshireX().equals( p28_S3 ) ) {
                 return false;
             }
-            if ( !p28[ 3 ].toNewHampshireX().equals( "((((A,B),C),D),_E_)" ) ) {
+            if ( !p28[ 3 ].toNewHampshireX().equals( "((((A,B),C),D),';E;')" ) ) {
                 return false;
             }
             final String p29_S = "((((A:0.01,B:0.684)ab:0.345,C:0.3451)abc:0.3451,D:1.5)abcd:0.134,E:0.32)abcde:0.1345";
@@ -4053,81 +4502,87 @@ public final class Test {
             if ( n5.getNodeData().getProperties().getPropertyRefs().length != 2 ) {
                 return false;
             }
-            final PhylogenyNode n8 = new PhylogenyNode( "n8_ECOLI/12:0.01", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n8 = new PhylogenyNode( "n8_ECOLI/12:0.01",
+                                                        ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n8.getNodeName().equals( "n8_ECOLI/12" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n8 ).equals( "ECOLI" ) ) {
                 return false;
             }
-            final PhylogenyNode n9 = new PhylogenyNode( "n9_ECOLI/12=12:0.01", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n9 = new PhylogenyNode( "n9_ECOLI/12=12:0.01",
+                                                        ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n9.getNodeName().equals( "n9_ECOLI/12=12" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n9 ).equals( "ECOLI" ) ) {
                 return false;
             }
-            final PhylogenyNode n10 = new PhylogenyNode( "n10.ECOLI", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n10 = new PhylogenyNode( "n10.ECOLI", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n10.getNodeName().equals( "n10.ECOLI" ) ) {
                 return false;
             }
-            final PhylogenyNode n20 = new PhylogenyNode( "n20_ECOLI/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n20 = new PhylogenyNode( "n20_ECOLI/1-2",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n20.getNodeName().equals( "n20_ECOLI/1-2" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n20 ).equals( "ECOLI" ) ) {
                 return false;
             }
-            final PhylogenyNode n20x = new PhylogenyNode( "n20_ECOL1/1-2", TAXONOMY_EXTRACTION.YES );
+            final PhylogenyNode n20x = new PhylogenyNode( "n20_ECOL1/1-2", ForesterUtil.TAXONOMY_EXTRACTION.YES );
             if ( !n20x.getNodeName().equals( "n20_ECOL1/1-2" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n20x ).equals( "ECOL1" ) ) {
                 return false;
             }
-            final PhylogenyNode n20xx = new PhylogenyNode( "n20_eCOL1/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n20xx = new PhylogenyNode( "n20_eCOL1/1-2",
+                                                           ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n20xx.getNodeName().equals( "n20_eCOL1/1-2" ) ) {
                 return false;
             }
             if ( PhylogenyMethods.getSpecies( n20xx ).length() > 0 ) {
                 return false;
             }
-            final PhylogenyNode n20xxx = new PhylogenyNode( "n20_ecoli/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n20xxx = new PhylogenyNode( "n20_ecoli/1-2",
+                                                            ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n20xxx.getNodeName().equals( "n20_ecoli/1-2" ) ) {
                 return false;
             }
             if ( PhylogenyMethods.getSpecies( n20xxx ).length() > 0 ) {
                 return false;
             }
-            final PhylogenyNode n20xxxx = new PhylogenyNode( "n20_Ecoli/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n20xxxx = new PhylogenyNode( "n20_Ecoli/1-2",
+                                                             ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n20xxxx.getNodeName().equals( "n20_Ecoli/1-2" ) ) {
                 return false;
             }
             if ( PhylogenyMethods.getSpecies( n20xxxx ).length() > 0 ) {
                 return false;
             }
-            final PhylogenyNode n21 = new PhylogenyNode( "n21_PIG", TAXONOMY_EXTRACTION.YES );
+            final PhylogenyNode n21 = new PhylogenyNode( "n21_PIG", ForesterUtil.TAXONOMY_EXTRACTION.YES );
             if ( !n21.getNodeName().equals( "n21_PIG" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n21 ).equals( "PIG" ) ) {
                 return false;
             }
-            final PhylogenyNode n21x = new PhylogenyNode( "n21_PIG", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n21x = new PhylogenyNode( "n21_PIG", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n21x.getNodeName().equals( "n21_PIG" ) ) {
                 return false;
             }
             if ( PhylogenyMethods.getSpecies( n21x ).length() > 0 ) {
                 return false;
             }
-            final PhylogenyNode n22 = new PhylogenyNode( "n22/PIG", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n22 = new PhylogenyNode( "n22/PIG", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n22.getNodeName().equals( "n22/PIG" ) ) {
                 return false;
             }
             if ( PhylogenyMethods.getSpecies( n22 ).length() > 0 ) {
                 return false;
             }
-            final PhylogenyNode n23 = new PhylogenyNode( "n23/PIG_1", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n23 = new PhylogenyNode( "n23/PIG_1", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n23.getNodeName().equals( "n23/PIG_1" ) ) {
                 return false;
             }
@@ -4135,35 +4590,39 @@ public final class Test {
                 return false;
             }
             if ( NHXParser.LIMIT_SPECIES_NAMES_TO_FIVE_CHARS ) {
-                final PhylogenyNode a = new PhylogenyNode( "n10_ECOLI/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                final PhylogenyNode a = new PhylogenyNode( "n10_ECOLI/1-2",
+                                                           ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
                 if ( !a.getNodeName().equals( "n10_ECOLI/1-2" ) ) {
                     return false;
                 }
                 if ( !PhylogenyMethods.getSpecies( a ).equals( "ECOLI" ) ) {
                     return false;
                 }
-                final PhylogenyNode b = new PhylogenyNode( "n10_ECOLI1/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                final PhylogenyNode b = new PhylogenyNode( "n10_ECOLI1/1-2",
+                                                           ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
                 if ( !b.getNodeName().equals( "n10_ECOLI1/1-2" ) ) {
                     return false;
                 }
                 if ( !PhylogenyMethods.getSpecies( b ).equals( "ECOLI" ) ) {
                     return false;
                 }
-                final PhylogenyNode c = new PhylogenyNode( "n10_RATAF12/1000-2000", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                final PhylogenyNode c = new PhylogenyNode( "n10_RATAF12/1000-2000",
+                                                           ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
                 if ( !c.getNodeName().equals( "n10_RATAF12/1000-2000" ) ) {
                     return false;
                 }
                 if ( !PhylogenyMethods.getSpecies( c ).equals( "RATAF" ) ) {
                     return false;
                 }
-                final PhylogenyNode d = new PhylogenyNode( "n10_RAT1/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                final PhylogenyNode d = new PhylogenyNode( "n10_RAT1/1-2",
+                                                           ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
                 if ( !d.getNodeName().equals( "n10_RAT1/1-2" ) ) {
                     return false;
                 }
                 if ( !PhylogenyMethods.getSpecies( d ).equals( "RAT" ) ) {
                     return false;
                 }
-                final PhylogenyNode e = new PhylogenyNode( "n10_RAT1", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                final PhylogenyNode e = new PhylogenyNode( "n10_RAT1", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
                 if ( !e.getNodeName().equals( "n10_RAT1" ) ) {
                     return false;
                 }
@@ -4171,7 +4630,8 @@ public final class Test {
                     return false;
                 }
             }
-            final PhylogenyNode n11 = new PhylogenyNode( "n111111_ECOLI/jdj:0.4", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n11 = new PhylogenyNode( "n111111_ECOLI/jdj:0.4",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n11.getNodeName().equals( "n111111_ECOLI/jdj" ) ) {
                 return false;
             }
@@ -4182,7 +4642,7 @@ public final class Test {
                 return false;
             }
             final PhylogenyNode n12 = new PhylogenyNode( "n111111-ECOLI---/jdj:0.4",
-                                                         TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n12.getNodeName().equals( "n111111-ECOLI---/jdj" ) ) {
                 return false;
             }
@@ -4269,21 +4729,24 @@ public final class Test {
             if ( !nx2.getNodeData().getSequence().getName().equals( "gene_2" ) ) {
                 return false;
             }
-            final PhylogenyNode n13 = new PhylogenyNode( "blah_12345/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n13 = new PhylogenyNode( "blah_12345/1-2",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n13.getNodeName().equals( "blah_12345/1-2" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n13 ).equals( "" ) ) {
                 return false;
             }
-            final PhylogenyNode n14 = new PhylogenyNode( "blah_12X45/1-2", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n14 = new PhylogenyNode( "blah_12X45/1-2",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n14.getNodeName().equals( "blah_12X45/1-2" ) ) {
                 return false;
             }
             if ( !PhylogenyMethods.getSpecies( n14 ).equals( "12X45" ) ) {
                 return false;
             }
-            final PhylogenyNode n15 = new PhylogenyNode( "something_wicked[123]", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n15 = new PhylogenyNode( "something_wicked[123]",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n15.getNodeName().equals( "something_wicked" ) ) {
                 return false;
             }
@@ -4293,7 +4756,8 @@ public final class Test {
             if ( !isEqual( n15.getBranchData().getConfidence( 0 ).getValue(), 123 ) ) {
                 return false;
             }
-            final PhylogenyNode n16 = new PhylogenyNode( "something_wicked2[9]", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n16 = new PhylogenyNode( "something_wicked2[9]",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n16.getNodeName().equals( "something_wicked2" ) ) {
                 return false;
             }
@@ -4303,14 +4767,15 @@ public final class Test {
             if ( !isEqual( n16.getBranchData().getConfidence( 0 ).getValue(), 9 ) ) {
                 return false;
             }
-            final PhylogenyNode n17 = new PhylogenyNode( "something_wicked3[a]", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n17 = new PhylogenyNode( "something_wicked3[a]",
+                                                         ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !n17.getNodeName().equals( "something_wicked3" ) ) {
                 return false;
             }
             if ( n17.getBranchData().getNumberOfConfidences() != 0 ) {
                 return false;
             }
-            final PhylogenyNode n18 = new PhylogenyNode( ":0.5[91]", TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+            final PhylogenyNode n18 = new PhylogenyNode( ":0.5[91]", ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
             if ( !isEqual( n18.getDistanceToParent(), 0.5 ) ) {
                 return false;
             }
@@ -4369,8 +4834,8 @@ public final class Test {
             if ( !p6[ 0 ].toNewHampshireX().equals( p6_S_WO_C ) ) {
                 return false;
             }
-            final String p7_S_C = "(((A [&&NHX:S=species_a], B [&&NHX:S=Varanus_storri] , C   , D),(A,B,C,D[comment])[],[c][]([xxx]A[comment],[comment]B[comment][comment],[comment][comment]C[comment][comment],[comment][comment]D[comment][comment])[comment][comment],[comment]   [comment](A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C[comment][comment][comment][comment][comment]    [comment],D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),[comment][comment]((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)))";
-            final String p7_S_WO_C = "(((A[&&NHX:S=species_a],B[&&NHX:S=Varanus_storri],C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)))";
+            final String p7_S_C = "(((A [&&NHX:S=species_a], B [&&NHX:S=Vstorri] , C   , D),(A,B,C,D[comment])[],[c][]([xxx]A[comment],[comment]B[comment][comment],[comment][comment]C[comment][comment],[comment][comment]D[comment][comment])[comment][comment],[comment]   [comment](A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C[comment][comment][comment][comment][comment]    [comment],D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),[comment][comment]((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)))";
+            final String p7_S_WO_C = "(((A[&&NHX:S=species_a],B[&&NHX:S=Vstorri],C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)),((A,B,C,D),(A,B,C,D),(A,B,C,D),(A,B,C,D)))";
             final Phylogeny[] p7 = factory.create( p7_S_C, new NHXParser() );
             if ( !p7[ 0 ].toNewHampshireX().equals( p7_S_WO_C ) ) {
                 return false;
@@ -4389,6 +4854,106 @@ public final class Test {
                     .create( " [79]   ( (A [co mment] :0 .2[comment],B:0.3[com])[com ment]: 0. 5 \t[ 9 1 ][ comment],C: 0.1)[comment]root:0.1[100] [comment]",
                              new NHXParser() )[ 0 ];
             if ( !p10.toNewHampshireX().equals( "((A:0.2,B:0.3):0.5[&&NHX:B=91.0],C:0.1)root:0.1[&&NHX:B=100.0]" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testNHXParsingQuotes() {
+        try {
+            final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
+            final NHXParser p = new NHXParser();
+            final Phylogeny[] phylogenies_0 = factory.create( new File( Test.PATH_TO_TEST_DATA + "quotes.nhx" ), p );
+            if ( phylogenies_0.length != 5 ) {
+                return false;
+            }
+            final Phylogeny phy = phylogenies_0[ 4 ];
+            if ( phy.getNumberOfExternalNodes() != 7 ) {
+                return false;
+            }
+            if ( phy.getNodes( "a name in double quotes from tree ((a,b),c)" ).size() != 1 ) {
+                return false;
+            }
+            if ( phy.getNodes( "charles darwin 'origin of species'" ).size() != 1 ) {
+                return false;
+            }
+            if ( !phy.getNodes( "charles darwin 'origin of species'" ).get( 0 ).getNodeData().getTaxonomy()
+                    .getScientificName().equals( "hsapiens" ) ) {
+                return false;
+            }
+            if ( phy.getNodes( "shouldbetogether single quotes" ).size() != 1 ) {
+                return false;
+            }
+            if ( phy.getNodes( "'single quotes' inside double quotes" ).size() != 1 ) {
+                return false;
+            }
+            if ( phy.getNodes( "double quotes inside single quotes" ).size() != 1 ) {
+                return false;
+            }
+            if ( phy.getNodes( "noquotes" ).size() != 1 ) {
+                return false;
+            }
+            if ( phy.getNodes( "A   (  B    C '" ).size() != 1 ) {
+                return false;
+            }
+            final NHXParser p1p = new NHXParser();
+            p1p.setIgnoreQuotes( true );
+            final Phylogeny p1 = factory.create( "(\"A\",'B1')", p1p )[ 0 ];
+            if ( !p1.toNewHampshire().equals( "(A,B1);" ) ) {
+                return false;
+            }
+            final NHXParser p2p = new NHXParser();
+            p1p.setIgnoreQuotes( false );
+            final Phylogeny p2 = factory.create( "(\"A\",'B1')", p2p )[ 0 ];
+            if ( !p2.toNewHampshire().equals( "(A,B1);" ) ) {
+                return false;
+            }
+            final NHXParser p3p = new NHXParser();
+            p3p.setIgnoreQuotes( false );
+            final Phylogeny p3 = factory.create( "(\"A)\",'B1')", p3p )[ 0 ];
+            if ( !p3.toNewHampshire().equals( "('A)',B1);" ) ) {
+                return false;
+            }
+            final NHXParser p4p = new NHXParser();
+            p4p.setIgnoreQuotes( false );
+            final Phylogeny p4 = factory.create( "(\"A)\",'B(),; x')", p4p )[ 0 ];
+            if ( !p4.toNewHampshire().equals( "('A)','B(),; x');" ) ) {
+                return false;
+            }
+            final Phylogeny p10 = factory
+                    .create( " [79]   ( (\"A \n\tB \" [co mment] :0 .2[comment],'B':0.3[com])[com ment]: 0. 5 \t[ 9 1 ][ comment],'C (or D?\\//;,))': 0.1)[comment]'\nroot is here (cool,  was! ) ':0.1[100] [comment]",
+                             new NHXParser() )[ 0 ];
+            final String p10_clean_str = "(('A B':0.2,B:0.3):0.5[&&NHX:B=91.0],'C (or D?\\//;,))':0.1)'root is here (cool,  was! )':0.1[&&NHX:B=100.0]";
+            if ( !p10.toNewHampshireX().equals( p10_clean_str ) ) {
+                return false;
+            }
+            final Phylogeny p11 = factory.create( p10.toNewHampshireX(), new NHXParser() )[ 0 ];
+            if ( !p11.toNewHampshireX().equals( p10_clean_str ) ) {
+                return false;
+            }
+            //
+            final Phylogeny p12 = factory
+                    .create( " [79]   ( (\"A \n\tB \" [[][] :0 .2[comment][\t&\t&\n N\tH\tX:S=mo\tnkey !],'\tB\t\b\t\n\f\rB B ':0.0\b3[])\t[com ment]: 0. 5 \t[ 9 1 ][ \ncomment],'C\t (or D?\\//;,))': 0.\b1)[comment]'\nroot \tis here (cool, \b\t\n\f\r was! ) ':0.1[100] [comment]",
+                             new NHXParser() )[ 0 ];
+            final String p12_clean_str = "(('A B':0.2[&&NHX:S=monkey!],'BB B':0.03):0.5[&&NHX:B=91.0],'C (or D?\\//;,))':0.1)'root is here (cool,  was! )':0.1[&&NHX:B=100.0]";
+            if ( !p12.toNewHampshireX().equals( p12_clean_str ) ) {
+                return false;
+            }
+            final Phylogeny p13 = factory.create( p12.toNewHampshireX(), new NHXParser() )[ 0 ];
+            if ( !p13.toNewHampshireX().equals( p12_clean_str ) ) {
+                return false;
+            }
+            final String p12_clean_str_nh = "(('A B':0.2,'BB B':0.03):0.5,'C (or D?\\//;,))':0.1)'root is here (cool,  was! )':0.1;";
+            if ( !p13.toNewHampshire().equals( p12_clean_str_nh ) ) {
+                return false;
+            }
+            final Phylogeny p14 = factory.create( p13.toNewHampshire(), new NHXParser() )[ 0 ];
+            if ( !p14.toNewHampshire().equals( p12_clean_str_nh ) ) {
                 return false;
             }
         }
@@ -4431,6 +4996,314 @@ public final class Test {
                 return false;
             }
             if ( !a1_b1_.equals( b1_a1 ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testPhyloXMLparsingOfDistributionElement() {
+        try {
+            final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
+            PhyloXmlParser xml_parser = null;
+            try {
+                xml_parser = PhyloXmlParser.createPhyloXmlParserXsdValidating();
+            }
+            catch ( final Exception e ) {
+                // Do nothing -- means were not running from jar.
+            }
+            if ( xml_parser == null ) {
+                xml_parser = new PhyloXmlParser();
+                if ( USE_LOCAL_PHYLOXML_SCHEMA ) {
+                    xml_parser.setValidateAgainstSchema( PHYLOXML_LOCAL_XSD );
+                }
+                else {
+                    xml_parser.setValidateAgainstSchema( PHYLOXML_REMOTE_XSD );
+                }
+            }
+            final Phylogeny[] phylogenies_0 = factory.create( Test.PATH_TO_TEST_DATA + "phyloxml_distribution.xml",
+                                                              xml_parser );
+            if ( xml_parser.getErrorCount() > 0 ) {
+                System.out.println( xml_parser.getErrorMessages().toString() );
+                return false;
+            }
+            if ( phylogenies_0.length != 1 ) {
+                return false;
+            }
+            final Phylogeny t1 = phylogenies_0[ 0 ];
+            PhylogenyNode n = null;
+            Distribution d = null;
+            n = t1.getNode( "root node" );
+            if ( !n.getNodeData().isHasDistribution() ) {
+                return false;
+            }
+            if ( n.getNodeData().getDistributions().size() != 1 ) {
+                return false;
+            }
+            d = n.getNodeData().getDistribution();
+            if ( !d.getDesc().equals( "Hirschweg 38" ) ) {
+                return false;
+            }
+            if ( d.getPoints().size() != 1 ) {
+                return false;
+            }
+            if ( d.getPolygons() != null ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltitude().toString().equals( "472" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltiudeUnit().equals( "m" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getGeodeticDatum().equals( "WGS84" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLatitude().toString().equals( "47.48148427110029" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLongitude().toString().equals( "8.768951296806335" ) ) {
+                return false;
+            }
+            n = t1.getNode( "node a" );
+            if ( !n.getNodeData().isHasDistribution() ) {
+                return false;
+            }
+            if ( n.getNodeData().getDistributions().size() != 2 ) {
+                return false;
+            }
+            d = n.getNodeData().getDistribution( 1 );
+            if ( !d.getDesc().equals( "San Diego" ) ) {
+                return false;
+            }
+            if ( d.getPoints().size() != 1 ) {
+                return false;
+            }
+            if ( d.getPolygons() != null ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltitude().toString().equals( "104" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltiudeUnit().equals( "m" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getGeodeticDatum().equals( "WGS84" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLatitude().toString().equals( "32.880933" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLongitude().toString().equals( "-117.217543" ) ) {
+                return false;
+            }
+            n = t1.getNode( "node bb" );
+            if ( !n.getNodeData().isHasDistribution() ) {
+                return false;
+            }
+            if ( n.getNodeData().getDistributions().size() != 1 ) {
+                return false;
+            }
+            d = n.getNodeData().getDistribution( 0 );
+            if ( d.getPoints().size() != 3 ) {
+                return false;
+            }
+            if ( d.getPolygons().size() != 2 ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLatitude().toString().equals( "1" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLongitude().toString().equals( "2" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 1 ).getLatitude().toString().equals( "3" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 1 ).getLongitude().toString().equals( "4" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 2 ).getLatitude().toString().equals( "5" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 2 ).getLongitude().toString().equals( "6" ) ) {
+                return false;
+            }
+            Polygon p = d.getPolygons().get( 0 );
+            if ( p.getPoints().size() != 3 ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLatitude().toString().equals( "0.1" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLongitude().toString().equals( "0.2" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getAltitude().toString().equals( "10" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 2 ).getLatitude().toString().equals( "0.5" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 2 ).getLongitude().toString().equals( "0.6" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 2 ).getAltitude().toString().equals( "30" ) ) {
+                return false;
+            }
+            p = d.getPolygons().get( 1 );
+            if ( p.getPoints().size() != 3 ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLatitude().toString().equals( "1.49348902489947473" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLongitude().toString().equals( "2.567489393947847492" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getAltitude().toString().equals( "10" ) ) {
+                return false;
+            }
+            // Roundtrip:
+            final StringBuffer t1_sb = new StringBuffer( t1.toPhyloXML( 0 ) );
+            final Phylogeny[] rt = factory.create( t1_sb, xml_parser );
+            if ( rt.length != 1 ) {
+                return false;
+            }
+            final Phylogeny t1_rt = rt[ 0 ];
+            n = t1_rt.getNode( "root node" );
+            if ( !n.getNodeData().isHasDistribution() ) {
+                return false;
+            }
+            if ( n.getNodeData().getDistributions().size() != 1 ) {
+                return false;
+            }
+            d = n.getNodeData().getDistribution();
+            if ( !d.getDesc().equals( "Hirschweg 38" ) ) {
+                return false;
+            }
+            if ( d.getPoints().size() != 1 ) {
+                return false;
+            }
+            if ( d.getPolygons() != null ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltitude().toString().equals( "472" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltiudeUnit().equals( "m" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getGeodeticDatum().equals( "WGS84" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLatitude().toString().equals( "47.48148427110029" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLongitude().toString().equals( "8.768951296806335" ) ) {
+                return false;
+            }
+            n = t1_rt.getNode( "node a" );
+            if ( !n.getNodeData().isHasDistribution() ) {
+                return false;
+            }
+            if ( n.getNodeData().getDistributions().size() != 2 ) {
+                return false;
+            }
+            d = n.getNodeData().getDistribution( 1 );
+            if ( !d.getDesc().equals( "San Diego" ) ) {
+                return false;
+            }
+            if ( d.getPoints().size() != 1 ) {
+                return false;
+            }
+            if ( d.getPolygons() != null ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltitude().toString().equals( "104" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getAltiudeUnit().equals( "m" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getGeodeticDatum().equals( "WGS84" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLatitude().toString().equals( "32.880933" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLongitude().toString().equals( "-117.217543" ) ) {
+                return false;
+            }
+            n = t1_rt.getNode( "node bb" );
+            if ( !n.getNodeData().isHasDistribution() ) {
+                return false;
+            }
+            if ( n.getNodeData().getDistributions().size() != 1 ) {
+                return false;
+            }
+            d = n.getNodeData().getDistribution( 0 );
+            if ( d.getPoints().size() != 3 ) {
+                return false;
+            }
+            if ( d.getPolygons().size() != 2 ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLatitude().toString().equals( "1" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 0 ).getLongitude().toString().equals( "2" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 1 ).getLatitude().toString().equals( "3" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 1 ).getLongitude().toString().equals( "4" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 2 ).getLatitude().toString().equals( "5" ) ) {
+                return false;
+            }
+            if ( !d.getPoints().get( 2 ).getLongitude().toString().equals( "6" ) ) {
+                return false;
+            }
+            p = d.getPolygons().get( 0 );
+            if ( p.getPoints().size() != 3 ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLatitude().toString().equals( "0.1" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLongitude().toString().equals( "0.2" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getAltitude().toString().equals( "10" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 2 ).getLatitude().toString().equals( "0.5" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 2 ).getLongitude().toString().equals( "0.6" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 2 ).getAltitude().toString().equals( "30" ) ) {
+                return false;
+            }
+            p = d.getPolygons().get( 1 );
+            if ( p.getPoints().size() != 3 ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLatitude().toString().equals( "1.49348902489947473" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getLongitude().toString().equals( "2.567489393947847492" ) ) {
+                return false;
+            }
+            if ( !p.getPoints().get( 0 ).getAltitude().toString().equals( "10" ) ) {
                 return false;
             }
         }
@@ -4594,6 +5467,55 @@ public final class Test {
                 return false;
             }
             if ( it.hasNext() ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testPropertiesMap() {
+        try {
+            final PropertiesMap pm = new PropertiesMap();
+            final Property p0 = new Property( "dimensions:diameter", "1", "metric:mm", "xsd:decimal", AppliesTo.NODE );
+            final Property p1 = new Property( "dimensions:length", "2", "metric:mm", "xsd:decimal", AppliesTo.NODE );
+            final Property p2 = new Property( "something:else",
+                                              "?",
+                                              "improbable:research",
+                                              "xsd:decimal",
+                                              AppliesTo.NODE );
+            pm.addProperty( p0 );
+            pm.addProperty( p1 );
+            pm.addProperty( p2 );
+            if ( !pm.getProperty( "dimensions:diameter" ).getValue().equals( "1" ) ) {
+                return false;
+            }
+            if ( !pm.getProperty( "dimensions:length" ).getValue().equals( "2" ) ) {
+                return false;
+            }
+            if ( pm.getProperties().size() != 3 ) {
+                return false;
+            }
+            if ( pm.getPropertiesWithGivenReferencePrefix( "dimensions" ).size() != 2 ) {
+                return false;
+            }
+            if ( pm.getPropertiesWithGivenReferencePrefix( "something" ).size() != 1 ) {
+                return false;
+            }
+            if ( pm.getProperties().size() != 3 ) {
+                return false;
+            }
+            pm.removeProperty( "dimensions:diameter" );
+            if ( pm.getProperties().size() != 2 ) {
+                return false;
+            }
+            if ( pm.getPropertiesWithGivenReferencePrefix( "dimensions" ).size() != 1 ) {
+                return false;
+            }
+            if ( pm.getPropertiesWithGivenReferencePrefix( "something" ).size() != 1 ) {
                 return false;
             }
         }
@@ -5479,51 +6401,663 @@ public final class Test {
         return true;
     }
 
+    private static boolean testSplit() {
+        try {
+            final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
+            final Phylogeny p0 = factory.create( "(((A,B,C),D),(E,(F,G)))R", new NHXParser() )[ 0 ];
+            //Archaeopteryx.createApplication( p0 );
+            final Set<PhylogenyNode> ex = new HashSet<PhylogenyNode>();
+            ex.add( new PhylogenyNode( "A" ) );
+            ex.add( new PhylogenyNode( "B" ) );
+            ex.add( new PhylogenyNode( "C" ) );
+            ex.add( new PhylogenyNode( "D" ) );
+            ex.add( new PhylogenyNode( "E" ) );
+            ex.add( new PhylogenyNode( "F" ) );
+            ex.add( new PhylogenyNode( "G" ) );
+            ex.add( new PhylogenyNode( "X" ) );
+            ex.add( new PhylogenyNode( "Y" ) );
+            final TreeSplitMatrix s0 = new TreeSplitMatrix( p0, false, ex );
+            // System.out.println( s0.toString() );
+            //
+            Set<PhylogenyNode> query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            /////////
+            //            query_nodes = new HashSet<PhylogenyNode>();
+            //            query_nodes.add( new PhylogenyNode( "X" ) );
+            //            query_nodes.add( new PhylogenyNode( "Y" ) );
+            //            query_nodes.add( new PhylogenyNode( "A" ) );
+            //            query_nodes.add( new PhylogenyNode( "B" ) );
+            //            query_nodes.add( new PhylogenyNode( "C" ) );
+            //            query_nodes.add( new PhylogenyNode( "D" ) );
+            //            query_nodes.add( new PhylogenyNode( "E" ) );
+            //            query_nodes.add( new PhylogenyNode( "F" ) );
+            //            query_nodes.add( new PhylogenyNode( "G" ) );
+            //            if ( !s0.match( query_nodes ) ) {
+            //                return false;
+            //            }
+            //            query_nodes = new HashSet<PhylogenyNode>();
+            //            query_nodes.add( new PhylogenyNode( "X" ) );
+            //            query_nodes.add( new PhylogenyNode( "Y" ) );
+            //            query_nodes.add( new PhylogenyNode( "A" ) );
+            //            query_nodes.add( new PhylogenyNode( "B" ) );
+            //            query_nodes.add( new PhylogenyNode( "C" ) );
+            //            if ( !s0.match( query_nodes ) ) {
+            //                return false;
+            //            }
+            //            //
+            //            query_nodes = new HashSet<PhylogenyNode>();
+            //            query_nodes.add( new PhylogenyNode( "X" ) );
+            //            query_nodes.add( new PhylogenyNode( "Y" ) );
+            //            query_nodes.add( new PhylogenyNode( "D" ) );
+            //            query_nodes.add( new PhylogenyNode( "E" ) );
+            //            query_nodes.add( new PhylogenyNode( "F" ) );
+            //            query_nodes.add( new PhylogenyNode( "G" ) );
+            //            if ( !s0.match( query_nodes ) ) {
+            //                return false;
+            //            }
+            //            //
+            //            query_nodes = new HashSet<PhylogenyNode>();
+            //            query_nodes.add( new PhylogenyNode( "X" ) );
+            //            query_nodes.add( new PhylogenyNode( "Y" ) );
+            //            query_nodes.add( new PhylogenyNode( "A" ) );
+            //            query_nodes.add( new PhylogenyNode( "B" ) );
+            //            query_nodes.add( new PhylogenyNode( "C" ) );
+            //            query_nodes.add( new PhylogenyNode( "D" ) );
+            //            if ( !s0.match( query_nodes ) ) {
+            //                return false;
+            //            }
+            //            //
+            //            query_nodes = new HashSet<PhylogenyNode>();
+            //            query_nodes.add( new PhylogenyNode( "X" ) );
+            //            query_nodes.add( new PhylogenyNode( "Y" ) );
+            //            query_nodes.add( new PhylogenyNode( "E" ) );
+            //            query_nodes.add( new PhylogenyNode( "F" ) );
+            //            query_nodes.add( new PhylogenyNode( "G" ) );
+            //            if ( !s0.match( query_nodes ) ) {
+            //                return false;
+            //            }
+            //            //
+            //            query_nodes = new HashSet<PhylogenyNode>();
+            //            query_nodes.add( new PhylogenyNode( "X" ) );
+            //            query_nodes.add( new PhylogenyNode( "Y" ) );
+            //            query_nodes.add( new PhylogenyNode( "F" ) );
+            //            query_nodes.add( new PhylogenyNode( "G" ) );
+            //            if ( !s0.match( query_nodes ) ) {
+            //                return false;
+            //            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            ///////////////////////////
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "X" ) );
+            query_nodes.add( new PhylogenyNode( "Y" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testSplitStrict() {
+        try {
+            final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
+            final Phylogeny p0 = factory.create( "(((A,B,C),D),(E,(F,G)))R", new NHXParser() )[ 0 ];
+            final Set<PhylogenyNode> ex = new HashSet<PhylogenyNode>();
+            ex.add( new PhylogenyNode( "A" ) );
+            ex.add( new PhylogenyNode( "B" ) );
+            ex.add( new PhylogenyNode( "C" ) );
+            ex.add( new PhylogenyNode( "D" ) );
+            ex.add( new PhylogenyNode( "E" ) );
+            ex.add( new PhylogenyNode( "F" ) );
+            ex.add( new PhylogenyNode( "G" ) );
+            final TreeSplitMatrix s0 = new TreeSplitMatrix( p0, true, ex );
+            Set<PhylogenyNode> query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( !s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "C" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "F" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "B" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+            //
+            query_nodes = new HashSet<PhylogenyNode>();
+            query_nodes.add( new PhylogenyNode( "E" ) );
+            query_nodes.add( new PhylogenyNode( "D" ) );
+            query_nodes.add( new PhylogenyNode( "A" ) );
+            query_nodes.add( new PhylogenyNode( "G" ) );
+            if ( s0.match( query_nodes ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
     private static boolean testSubtreeDeletion() {
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
             final Phylogeny t1 = factory.create( "((A,B,C)abc,(D,E,F)def)r", new NHXParser() )[ 0 ];
-            t1.deleteSubtree( t1.getNode( "A" ) );
+            t1.deleteSubtree( t1.getNode( "A" ), false );
             if ( t1.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
             t1.toNewHampshireX();
-            t1.deleteSubtree( t1.getNode( "E" ) );
+            t1.deleteSubtree( t1.getNode( "E" ), false );
             if ( t1.getNumberOfExternalNodes() != 4 ) {
                 return false;
             }
             t1.toNewHampshireX();
-            t1.deleteSubtree( t1.getNode( "F" ) );
+            t1.deleteSubtree( t1.getNode( "F" ), false );
             if ( t1.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
             t1.toNewHampshireX();
-            t1.deleteSubtree( t1.getNode( "D" ) );
+            t1.deleteSubtree( t1.getNode( "D" ), false );
             t1.toNewHampshireX();
             if ( t1.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "def" ) );
+            t1.deleteSubtree( t1.getNode( "def" ), false );
             t1.toNewHampshireX();
             if ( t1.getNumberOfExternalNodes() != 2 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "B" ) );
+            t1.deleteSubtree( t1.getNode( "B" ), false );
             t1.toNewHampshireX();
             if ( t1.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "C" ) );
+            t1.deleteSubtree( t1.getNode( "C" ), false );
             t1.toNewHampshireX();
             if ( t1.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "abc" ) );
+            t1.deleteSubtree( t1.getNode( "abc" ), false );
             t1.toNewHampshireX();
             if ( t1.getNumberOfExternalNodes() != 1 ) {
                 return false;
             }
-            t1.deleteSubtree( t1.getNode( "r" ) );
+            t1.deleteSubtree( t1.getNode( "r" ), false );
             if ( t1.getNumberOfExternalNodes() != 0 ) {
                 return false;
             }
@@ -5531,17 +7065,17 @@ public final class Test {
                 return false;
             }
             final Phylogeny t2 = factory.create( "(((1,2,3)A,B,C)abc,(D,E,F)def)r", new NHXParser() )[ 0 ];
-            t2.deleteSubtree( t2.getNode( "A" ) );
+            t2.deleteSubtree( t2.getNode( "A" ), false );
             t2.toNewHampshireX();
             if ( t2.getNumberOfExternalNodes() != 5 ) {
                 return false;
             }
-            t2.deleteSubtree( t2.getNode( "abc" ) );
+            t2.deleteSubtree( t2.getNode( "abc" ), false );
             t2.toNewHampshireX();
             if ( t2.getNumberOfExternalNodes() != 3 ) {
                 return false;
             }
-            t2.deleteSubtree( t2.getNode( "def" ) );
+            t2.deleteSubtree( t2.getNode( "def" ), false );
             t2.toNewHampshireX();
             if ( t2.getNumberOfExternalNodes() != 1 ) {
                 return false;
@@ -5743,91 +7277,91 @@ public final class Test {
             s0.setRooted( true );
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "AB" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "AB" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABC" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "ABC" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=A])a,[&&NHX:S=A])b,[&&NHX:S=A])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=B])a,[&&NHX:S=A])b,[&&NHX:S=A])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "AB" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "AB" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "AB" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "AB" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "AB" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "AB" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=B])a,[&&NHX:S=C])b,[&&NHX:S=A])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "AB" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "AB" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABC" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABC" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABC" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "ABC" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=B])a,[&&NHX:S=C])b,[&&NHX:S=D])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "AB" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "AB" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABC" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABC" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=E])a,[&&NHX:S=C])b,[&&NHX:S=D])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCDE" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCDE" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCDE" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCDE" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCDE" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCDE" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=E])a,[&&NHX:S=A])b,[&&NHX:S=A])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCDE" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCDE" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCDE" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCDE" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCDE" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCDE" ) ) {
                 return false;
             }
             s0_str = "(([&&NHX:S=A],[&&NHX:S=B],[&&NHX:S=C],[&&NHX:S=D])[&&NHX:S=ABCD],"
@@ -5843,19 +7377,19 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "EFGH" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "EFGH" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "IJKL" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "IJKL" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "MNOP" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "MNOP" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(([&&NHX:S=A],[&&NHX:S=B],[&&NHX:S=A],[&&NHX:S=B])a,"
@@ -5865,19 +7399,19 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "EFGH" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "EFGH" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "IJKL" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "IJKL" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "MNOP" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "MNOP" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(([&&NHX:S=A],[&&NHX:S=B],[&&NHX:S=A],[&&NHX:S=B])a,"
@@ -5887,19 +7421,19 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "EFGH" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "EFGH" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(([&&NHX:S=L],[&&NHX:S=L],[&&NHX:S=L],[&&NHX:S=L])a,"
@@ -5909,45 +7443,45 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=A])a,[&&NHX:S=A])b,[&&NHX:S=A])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
             g0_str = "((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=B])a,[&&NHX:S=I])b,[&&NHX:S=J])c";
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(((([&&NHX:S=A],[&&NHX:S=B],[&&NHX:S=C],[&&NHX:S=D])a,"
@@ -5957,25 +7491,25 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=C],[&&NHX:S=D])a,"
@@ -5985,25 +7519,25 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=C],[&&NHX:S=D])a,"
@@ -6013,25 +7547,25 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "L" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "L" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             g0_str = "(((([&&NHX:S=A],[&&NHX:S=A],[&&NHX:S=C],[&&NHX:S=D])a,"
@@ -6041,25 +7575,25 @@ public final class Test {
             g0 = ParserBasedPhylogenyFactory.getInstance().create( g0_str, new NHXParser() )[ 0 ];
             g0.setRooted( true );
             TaxonomyAssigner.execute( g0, s0 );
-            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "a" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "b" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "ab" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ABCD" ) ) {
+            if ( !g0.getNode( "abc" ).getNodeData().getTaxonomy().getScientificName().equals( "ABCD" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "d" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
-            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "ROOT" ) ) {
+            if ( !g0.getNode( "r" ).getNodeData().getTaxonomy().getScientificName().equals( "ROOT" ) ) {
                 return false;
             }
             s0_str = "(([&&NHX:S=A],[&&NHX:S=B],[&&NHX:S=C],[&&NHX:S=D]),"
@@ -6078,7 +7612,326 @@ public final class Test {
             if ( g0.getNode( "a" ).getNodeData().isHasTaxonomy() ) {
                 return false;
             }
-            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getTaxonomyCode().equals( "A" ) ) {
+            if ( !g0.getNode( "c" ).getNodeData().getTaxonomy().getScientificName().equals( "A" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testUniprotTaxonomySearch() {
+        try {
+            List<UniProtTaxonomy> results = UniProtWsTools
+                    .getTaxonomiesFromCommonNameStrict( "starlet sea anemone", 10 );
+            if ( results.size() != 1 ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCode().equals( "NEMVE" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCommonName().equalsIgnoreCase( "starlet sea anemone" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getId().equalsIgnoreCase( "45351" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getRank().equalsIgnoreCase( "species" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getScientificName().equals( "Nematostella vectensis" ) ) {
+                return false;
+            }
+            results = null;
+            results = UniProtWsTools.getTaxonomiesFromScientificNameStrict( "Nematostella vectensis", 10 );
+            if ( results.size() != 1 ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCode().equals( "NEMVE" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCommonName().equalsIgnoreCase( "starlet sea anemone" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getId().equalsIgnoreCase( "45351" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getRank().equalsIgnoreCase( "species" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getScientificName().equals( "Nematostella vectensis" ) ) {
+                return false;
+            }
+            results = null;
+            results = UniProtWsTools.getTaxonomiesFromId( "45351", 10 );
+            if ( results.size() != 1 ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCode().equals( "NEMVE" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCommonName().equalsIgnoreCase( "starlet sea anemone" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getId().equalsIgnoreCase( "45351" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getRank().equalsIgnoreCase( "species" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getScientificName().equals( "Nematostella vectensis" ) ) {
+                return false;
+            }
+            results = null;
+            results = UniProtWsTools.getTaxonomiesFromTaxonomyCode( "NEMVE", 10 );
+            if ( results.size() != 1 ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCode().equals( "NEMVE" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getCommonName().equalsIgnoreCase( "starlet sea anemone" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getId().equalsIgnoreCase( "45351" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getRank().equalsIgnoreCase( "species" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getScientificName().equals( "Nematostella vectensis" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getLineage()[ 0 ].equals( "Eukaryota" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getLineage()[ 1 ].equals( "Metazoa" ) ) {
+                return false;
+            }
+            if ( !results.get( 0 ).getLineage()[ results.get( 0 ).getLineage().length - 1 ].equals( "Nematostella" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            System.out.println();
+            System.out.println( "the following might be due to absence internet connection:" );
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testWabiTxSearch() {
+        try {
+            String result = "";
+            result = TxSearch.searchSimple( "nematostella" );
+            result = TxSearch.getTxId( "nematostella" );
+            if ( !result.equals( "45350" ) ) {
+                return false;
+            }
+            result = TxSearch.getTxName( "45350" );
+            if ( !result.equals( "Nematostella" ) ) {
+                return false;
+            }
+            result = TxSearch.getTxId( "nematostella vectensis" );
+            if ( !result.equals( "45351" ) ) {
+                return false;
+            }
+            result = TxSearch.getTxName( "45351" );
+            if ( !result.equals( "Nematostella vectensis" ) ) {
+                return false;
+            }
+            result = TxSearch.getTxId( "Bacillus subtilis subsp. subtilis str. N170" );
+            if ( !result.equals( "536089" ) ) {
+                return false;
+            }
+            result = TxSearch.getTxName( "536089" );
+            if ( !result.equals( "Bacillus subtilis subsp. subtilis str. N170" ) ) {
+                return false;
+            }
+            final List<String> queries = new ArrayList<String>();
+            queries.add( "Campylobacter coli" );
+            queries.add( "Escherichia coli" );
+            queries.add( "Arabidopsis" );
+            queries.add( "Trichoplax" );
+            queries.add( "Samanea saman" );
+            queries.add( "Kluyveromyces marxianus" );
+            queries.add( "Bacillus subtilis subsp. subtilis str. N170" );
+            queries.add( "Bornavirus parrot/PDD/2008" );
+            final List<RANKS> ranks = new ArrayList<RANKS>();
+            ranks.add( RANKS.SUPERKINGDOM );
+            ranks.add( RANKS.KINGDOM );
+            ranks.add( RANKS.FAMILY );
+            ranks.add( RANKS.GENUS );
+            ranks.add( RANKS.TRIBE );
+            result = TxSearch.searchLineage( queries, ranks );
+            result = TxSearch.searchParam( "Homo sapiens", TAX_NAME_CLASS.ALL, TAX_RANK.SPECIES, 10, true );
+            result = TxSearch.searchParam( "Samanea saman", TAX_NAME_CLASS.SCIENTIFIC_NAME, TAX_RANK.ALL, 10, true );
+        }
+        catch ( final Exception e ) {
+            System.out.println();
+            System.out.println( "the following might be due to absence internet connection:" );
+            e.printStackTrace( System.out );
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testAminoAcidSequence() {
+        try {
+            final Sequence aa1 = BasicSequence.createAaSequence( "aa1", "aAklm-?xX*z$#" );
+            if ( aa1.getLength() != 13 ) {
+                return false;
+            }
+            if ( aa1.getResidueAt( 0 ) != 'A' ) {
+                return false;
+            }
+            if ( aa1.getResidueAt( 2 ) != 'K' ) {
+                return false;
+            }
+            if ( !new String( aa1.getMolecularSequence() ).equals( "AAKLM-XXX*ZXX" ) ) {
+                return false;
+            }
+            final Sequence aa2 = BasicSequence.createAaSequence( "aa3", "ARNDCQEGHILKMFPSTWYVX*-BZOJU" );
+            if ( !new String( aa2.getMolecularSequence() ).equals( "ARNDCQEGHILKMFPSTWYVX*-BZXXU" ) ) {
+                return false;
+            }
+            final Sequence dna1 = BasicSequence.createDnaSequence( "dna1", "ACGTUX*-?RYMKWSN" );
+            if ( !new String( dna1.getMolecularSequence() ).equals( "ACGTNN*-NRYMKWSN" ) ) {
+                return false;
+            }
+            final Sequence rna1 = BasicSequence.createRnaSequence( "rna1", "..ACGUTX*-?RYMKWSN" );
+            if ( !new String( rna1.getMolecularSequence() ).equals( "--ACGUNN*-NRYMKWSN" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testCreateBalancedPhylogeny() {
+        try {
+            final Phylogeny p0 = DevelopmentTools.createBalancedPhylogeny( 6, 5 );
+            if ( p0.getRoot().getNumberOfDescendants() != 5 ) {
+                return false;
+            }
+            if ( p0.getNumberOfExternalNodes() != 15625 ) {
+                return false;
+            }
+            final Phylogeny p1 = DevelopmentTools.createBalancedPhylogeny( 2, 10 );
+            if ( p1.getRoot().getNumberOfDescendants() != 10 ) {
+                return false;
+            }
+            if ( p1.getNumberOfExternalNodes() != 100 ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testFastaParser() {
+        try {
+            if ( !FastaParser.isLikelyFasta( new FileInputStream( PATH_TO_TEST_DATA + "fasta_0.fasta" ) ) ) {
+                return false;
+            }
+            if ( FastaParser.isLikelyFasta( new FileInputStream( PATH_TO_TEST_DATA + "msa_3.txt" ) ) ) {
+                return false;
+            }
+            final Msa msa_0 = FastaParser.parseMsa( new FileInputStream( PATH_TO_TEST_DATA + "fasta_0.fasta" ) );
+            if ( !msa_0.getSequenceAsString( 0 ).toString().equalsIgnoreCase( "ACGTGKXFMFDMXEXXXSFMFMF" ) ) {
+                return false;
+            }
+            if ( !msa_0.getIdentifier( 0 ).equals( "one dumb" ) ) {
+                return false;
+            }
+            if ( !msa_0.getSequenceAsString( 1 ).toString().equalsIgnoreCase( "DKXASDFXSFXFKFKSXDFKSLX" ) ) {
+                return false;
+            }
+            if ( !msa_0.getSequenceAsString( 2 ).toString().equalsIgnoreCase( "SXDFKSXLFSFPWEXPRXWXERR" ) ) {
+                return false;
+            }
+            if ( !msa_0.getSequenceAsString( 3 ).toString().equalsIgnoreCase( "AAAAAAAAAAAAAAAAAAAAAAA" ) ) {
+                return false;
+            }
+            if ( !msa_0.getSequenceAsString( 4 ).toString().equalsIgnoreCase( "DDDDDDDDDDDDDDDDDDDDAXF" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testGeneralMsaParser() {
+        try {
+            final String msa_str_0 = "seq1 abcd\n\nseq2 efgh\n";
+            final Msa msa_0 = GeneralMsaParser.parse( new ByteArrayInputStream( msa_str_0.getBytes() ) );
+            final String msa_str_1 = "seq_1 abc\nseq2 ghi\nseq_1 def\nseq2 jkm\n";
+            final Msa msa_1 = GeneralMsaParser.parse( new ByteArrayInputStream( msa_str_1.getBytes() ) );
+            final String msa_str_2 = "seq1 abc\nseq2 ghi\n\ndef\njkm\n";
+            final Msa msa_2 = GeneralMsaParser.parse( new ByteArrayInputStream( msa_str_2.getBytes() ) );
+            final String msa_str_3 = "seq1 abc\n def\nseq2 ghi\n jkm\n";
+            final Msa msa_3 = GeneralMsaParser.parse( new ByteArrayInputStream( msa_str_3.getBytes() ) );
+            final Msa msa_4 = GeneralMsaParser.parse( new FileInputStream( PATH_TO_TEST_DATA + "msa_1.txt" ) );
+            if ( !msa_4.getSequenceAsString( 0 ).toString().equalsIgnoreCase( "abcdefeeeeeeeexx" ) ) {
+                return false;
+            }
+            if ( !msa_4.getSequenceAsString( 1 ).toString().equalsIgnoreCase( "efghixffffffffyy" ) ) {
+                return false;
+            }
+            if ( !msa_4.getSequenceAsString( 2 ).toString().equalsIgnoreCase( "klmnxphhhhhhhhzz" ) ) {
+                return false;
+            }
+            final Msa msa_5 = GeneralMsaParser.parse( new FileInputStream( PATH_TO_TEST_DATA + "msa_2.txt" ) );
+            if ( !msa_5.getSequenceAsString( 0 ).toString().equalsIgnoreCase( "abcdefxx" ) ) {
+                return false;
+            }
+            if ( !msa_5.getSequenceAsString( 1 ).toString().equalsIgnoreCase( "efghixyy" ) ) {
+                return false;
+            }
+            if ( !msa_5.getSequenceAsString( 2 ).toString().equalsIgnoreCase( "klmnxpzz" ) ) {
+                return false;
+            }
+            final Msa msa_6 = GeneralMsaParser.parse( new FileInputStream( PATH_TO_TEST_DATA + "msa_3.txt" ) );
+            if ( !msa_6.getSequenceAsString( 0 ).toString().equalsIgnoreCase( "abcdefeeeeeeeexx" ) ) {
+                return false;
+            }
+            if ( !msa_6.getSequenceAsString( 1 ).toString().equalsIgnoreCase( "efghixffffffffyy" ) ) {
+                return false;
+            }
+            if ( !msa_6.getSequenceAsString( 2 ).toString().equalsIgnoreCase( "klmnxphhhhhhhhzz" ) ) {
+                return false;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+    private static boolean testMafft() {
+        try {           
+            final List<String> opts = new ArrayList<String>();
+            opts.add( "--maxiterate" );
+            opts.add( "1000" );
+            opts.add( "--localpair" );
+            opts.add( "--quiet" );
+            Msa msa = null;
+            final MsaInferrer mafft = MafftOLD.createInstance( "/usr/local/bin/mafft" );
+            msa = mafft.infer( new File(PATH_TO_TEST_DATA + "ncbi.fasta" ), opts );
+            if ( msa == null || msa.getLength() < 10 || msa.getNumberOfSequences() != 19) {
                 return false;
             }
         }

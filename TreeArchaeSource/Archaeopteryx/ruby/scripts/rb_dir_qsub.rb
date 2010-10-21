@@ -5,7 +5,7 @@
 # Copyright::  Copyright (C) 2006-2008 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: rb_dir_qsub.rb,v 1.11 2008/09/13 00:28:21 cmzmasek Exp $
+# $Id: rb_dir_qsub.rb,v 1.15 2009/11/07 02:06:59 cmzmasek Exp $
 #
 # To execute qsub commands.
 # Submits PRG for every file in the current directory.
@@ -21,6 +21,11 @@
 # VOPT:    AMPQU
 # VOPT:    HYDMA
 # SUFFIX:  _blast
+#
+# PRG:     /home/czmasek/SOFTWARE/HMMER/hmmer-3.0b2/binaries/intel-linux-x86_64/hmmscan
+# OPT:     -E 2 --notextw --qformat fasta /home/czmasek/DATA/PFAM/PFAM240/Pfam-A.hmm
+# SUFFIX:  .hmmscan30b2_240
+# OUTPUT:  --domtblout
 
 
 module ForesterScripts
@@ -30,13 +35,14 @@ module ForesterScripts
         exit( -1 )
     end
 
-    PARAMETER_FILE    = 'parameters.rb_dir_qsub'
-    SLEEP = 1.0
+    PARAMETER_FILE = 'parameters.rb_dir_qsub'
+    SLEEP          = 1.0
+    REMOVE_SUFFIX  = true
 
     PRG         = 'PRG:'
     OPT         = 'OPT:'
     VOPT        = 'VOPT:'
-    OUTPUT_OPT  = 'OUTPUT:' # TODO e.g. > or -o
+    OUTPUT_OPT  = 'OUTPUT:'
     SUFFIX      = 'SUFFIX:'
     INPUT_PART  = 'INPUT_PART:'
 
@@ -56,6 +62,7 @@ module ForesterScripts
     vopts = Array.new
     suffix = ''
     input_part = ''
+    output_opt = ''
     open( PARAMETER_FILE ).each { |line|
         if ( line.length > 1 && line =~ /^[^#]\S+/ )
             if line =~ /^#{PRG}\s+(\S+)/
@@ -73,6 +80,9 @@ module ForesterScripts
             if line =~ /^\s*#{INPUT_PART}\s+(\S+)/
                 input_part = $1
             end
+            if line =~ /^\s*#{OUTPUT_OPT}\s+(\S+.+)/
+                output_opt = $1
+            end
         end
     }
     if ( prg.length < 1 )
@@ -86,7 +96,10 @@ module ForesterScripts
     }
     puts( '[' + NAME + '] > suffix :  ' + suffix )
     if ( input_part.length > 0 )
-        puts( '[' + NAME + '] > input  :  ' + input_part )
+        puts( '[' + NAME + '] > input:  ' + input_part )
+    end
+    if ( output_opt.length > 0 )
+        puts( '[' + NAME + '] > output opt :  ' + output_opt )
     end
     if vopts.empty?
         vopts.push( "" )
@@ -102,15 +115,27 @@ module ForesterScripts
             end
             vopts.each { |vopt|
                 cmd = ""
-                if vopt.length > 0
+                outputfile = file.to_str
+                if REMOVE_SUFFIX
+                    if outputfile =~ /(.+)\..{1,5}/
+                        outputfile = $1
+                    end
+                end
+                if output_opt.length > 0
+                    cmd = prg + ' ' +
+                     output_opt + ' ' + PBS_O_WORKDIR + outputfile + suffix + ' ' +
+                     opt + ' ' +
+                     PBS_O_WORKDIR + file.to_str +
+                     ' > /dev/null'
+                elsif vopt.length > 0
                     cmd = prg + ' ' + opt + ' ' + vopt + ' ' + PBS_O_WORKDIR + file.to_str +
-                     ' > ' + PBS_O_WORKDIR + vopt + "_" + file.to_str + suffix
+                     ' > ' + PBS_O_WORKDIR + vopt + "_" + outputfile + suffix
                 else
                     cmd = prg + ' ' + opt + ' ' + PBS_O_WORKDIR + file.to_str +
-                     ' > ' + PBS_O_WORKDIR + file.to_str + suffix
+                     ' > ' + PBS_O_WORKDIR + outputfile + suffix
                 end
                 tmp_cmd_file = file.to_str + TMP_CMD_FILE_SUFFIX
-                if ( File.exists?( tmp_cmd_file ) )
+                if File.exists?( tmp_cmd_file )
                     File.delete( tmp_cmd_file )
                 end
                 open( tmp_cmd_file, 'w' ) do |f|
@@ -122,7 +147,7 @@ module ForesterScripts
                     puts pipe.read
                 end
                 sleep( SLEEP )
-                if ( File.exists?( tmp_cmd_file ) )
+                if File.exists?( tmp_cmd_file )
                     File.delete( tmp_cmd_file )
                 end
             }

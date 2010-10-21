@@ -344,12 +344,26 @@
         </options>
     </meta>
     <projectTree name="phyloxml_oxygen_project.xpr">
-        <file name="../../resources/phyloxml_schema/0.90/phyloxml.xsd"/>
+        <file name="../../examples/apaf.xml"/>
+        <file name="../../examples/bcl_2.xml"/>
+        <file name="../../examples/branch_widths.xml"/>
+        <file name="../../examples/demo_colors_and_widths.xml"/>
+        <file name="../../test_data/gene_tree_1.xml"/>
+        <file name="../../test_data/gene_tree_2.xml"/>
+        <file name="../../resources/phyloxml_schema/1.10/phyloxml.xsd"/>
+        <file name="../../examples/phyloxml_examples.xml"/>
         <file name="../../examples/phyloxml_examples_1.xml"/>
+        <file name="../../examples/phyloxml_seq_annotation.xml"/>
+        <file name="../../test_data/phyloxml_test_atv.xml"/>
         <file name="../../test_data/phyloxml_test_t1.xml"/>
         <file name="../../test_data/phyloxml_test_t2.xml"/>
         <file name="../../test_data/phyloxml_test_t3.xml"/>
         <file name="../../test_data/phyloxml_test_t4.xml"/>
         <file name="phyloxml_to_html_xslt.xml"/>
+        <file name="../../examples/single_descendants.xml"/>
+        <file name="../../examples/singlet.xml"/>
+        <file name="../../test_data/special_characters.xml"/>
+        <file name="../../test_data/species_tree_1.xml"/>
+        <file name="../../test_data/species_tree_1_unresolved.xml"/>
     </projectTree>
 </project>

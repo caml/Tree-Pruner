@@ -1,4 +1,4 @@
-// $Id: CombinableDomains.java,v 1.6 2008/08/19 21:34:23 cmzmasek Exp $
+// $Id: CombinableDomains.java,v 1.7 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -39,6 +39,17 @@ public interface CombinableDomains {
      * @param protein_domain
      */
     public void addCombinableDomain( final DomainId protein_domain );
+
+    /**
+     * 
+     * This must return all domains in this set of combinable domains (i.e.
+     * the key domain and all domains which can combine with the key domain).
+     * 
+     *  @return all domains
+     */
+    List<DomainId> getAllDomains();
+
+    List<DomainId> getCombinableDomains();
 
     /**
      * Returns the combinable domain identifiers sorted in alphabetical manner: -
@@ -97,19 +108,6 @@ public interface CombinableDomains {
 
     public boolean isCombinable( final DomainId protein_domain );
 
-    public List<BinaryDomainCombination> toBinaryDomainCombinations();
-
-    /**
-     * 
-     * This must return all domains in this set of combinable domains (i.e.
-     * the key domain and all domains which can combine with the key domain).
-     * 
-     *  @return all domains
-     */
-    List<DomainId> getAllDomains();
-
-    List<DomainId> getCombinableDomains();
-
     /**
      * This is to set descriptive statistics for the confidence (i.e. E-values)
      * of the key domain.
@@ -135,4 +133,6 @@ public interface CombinableDomains {
      *            key domain protein count in species
      */
     void setKeyDomainProteinsCount( final int key_domain_proteins_count );
+
+    public List<BinaryDomainCombination> toBinaryDomainCombinations();
 }

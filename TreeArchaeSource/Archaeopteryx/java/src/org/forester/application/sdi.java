@@ -1,4 +1,4 @@
-// $Id: sdi.java,v 1.13 2009/04/09 06:58:02 cmzmasek Exp $
+// $Id: sdi.java,v 1.14 2009/07/26 05:36:14 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -183,7 +183,7 @@ public final class sdi {
             }
         }
         catch ( final Exception e ) {
-            ForesterUtil.unexpectedFatalError( PRG_NAME, e );
+            ForesterUtil.fatalError( PRG_NAME, e.getLocalizedMessage() );
         }
         System.out.println();
         System.out.println( "Running time (excluding I/O): " + ( new Date().getTime() - start_time ) + "ms" );

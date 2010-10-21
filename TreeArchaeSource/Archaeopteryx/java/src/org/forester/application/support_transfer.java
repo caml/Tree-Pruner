@@ -1,4 +1,4 @@
-// $Id: support_transfer.java,v 1.13 2009/01/13 19:49:32 cmzmasek Exp $
+// $Id: support_transfer.java,v 1.15 2010/06/23 22:20:31 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.nhx.NHXParser;
-import org.forester.io.parsers.nhx.NHXParser.TAXONOMY_EXTRACTION;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
@@ -92,10 +91,10 @@ public final class support_transfer {
                 System.exit( -1 );
             }
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp_bl = ForesterUtil.createParserDependingOnFileType( infile_bl );
-            final PhylogenyParser pp_s = ForesterUtil.createParserDependingOnFileType( infile_support_vals );
+            final PhylogenyParser pp_bl = ForesterUtil.createParserDependingOnFileType( infile_bl, true );
+            final PhylogenyParser pp_s = ForesterUtil.createParserDependingOnFileType( infile_support_vals, true );
             if ( pp_bl instanceof NHXParser ) {
-                ( ( NHXParser ) pp_bl ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.YES );
+                ( ( NHXParser ) pp_bl ).setTaxonomyExtraction( ForesterUtil.TAXONOMY_EXTRACTION.YES );
             }
             phylogeny_w_bl = factory.create( infile_bl, pp_bl )[ index_of_tree_w_bl ];
             phylogeny_w_support_vals = factory.create( infile_support_vals, pp_s )[ 0 ];

@@ -1,4 +1,4 @@
-// $Id: BasicGoTerm.java,v 1.22 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: BasicGoTerm.java,v 1.26 2009/11/17 03:51:34 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -40,6 +40,7 @@ public class BasicGoTerm implements GoTerm {
     private final boolean        _is_obsolete;
     private final GoNameSpace    _namespace;
     private String               _definition;
+    private List<GoId>           _alt_ids;
     private List<GoId>           _super_go_ids;
     private List<GoXRef>         _go_xrefs;
     private List<GoSubset>       _go_subsets;
@@ -94,6 +95,7 @@ public class BasicGoTerm implements GoTerm {
         gt.setGoXrefs( getGoXRefs() );
         gt.setGoSubsets( getGoSubsets() );
         gt.setSuperTerms( getSuperGoIds() );
+        gt.setAltIds( getAltIds() );
         gt.setDefinition( getDefinition() );
         return gt;
     }
@@ -119,10 +121,16 @@ public class BasicGoTerm implements GoTerm {
         }
     }
 
+    public List<GoId> getAltIds() {
+        return _alt_ids;
+    }
+
+    @Override
     public String getComment() {
         return _comment;
     }
 
+    @Override
     public String getDefinition() {
         return _definition;
     }
@@ -135,10 +143,12 @@ public class BasicGoTerm implements GoTerm {
         return _namespace;
     }
 
+    @Override
     public List<GoRelationship> getGoRelationships() {
         return _go_relationships;
     }
 
+    @Override
     public List<GoSubset> getGoSubsets() {
         return _go_subsets;
     }
@@ -165,12 +175,26 @@ public class BasicGoTerm implements GoTerm {
         return getGoId().hashCode();
     }
 
+    private void init() {
+        setGoXrefs( new ArrayList<GoXRef>() );
+        setSuperTerms( new ArrayList<GoId>() );
+        setAltIds( new ArrayList<GoId>() );
+        setGoRelationships( new ArrayList<GoRelationship>() );
+        setGoSubsets( new ArrayList<GoSubset>() );
+        setDefinition( "" );
+        setComment( "" );
+    }
+
     public boolean isEqual( final PhylogenyData go_term ) {
         return equals( go_term );
     }
 
     public boolean isObsolete() {
         return _is_obsolete;
+    }
+
+    private void setAltIds( final List<GoId> alt_ids ) {
+        _alt_ids = alt_ids;
     }
 
     public void setComment( final String comment ) {
@@ -181,8 +205,20 @@ public class BasicGoTerm implements GoTerm {
         _definition = definition;
     }
 
+    private void setGoRelationships( final List<GoRelationship> go_relationships ) {
+        _go_relationships = go_relationships;
+    }
+
     public void setGoSubsets( final List<GoSubset> go_subsets ) {
         _go_subsets = go_subsets;
+    }
+
+    private void setGoXrefs( final List<GoXRef> xrefs ) {
+        _go_xrefs = xrefs;
+    }
+
+    private void setSuperTerms( final List<GoId> super_terms ) {
+        _super_go_ids = super_terms;
     }
 
     public StringBuffer toNHX() {
@@ -206,26 +242,5 @@ public class BasicGoTerm implements GoTerm {
             sb.append( " [is obsolete]" );
         }
         return sb.toString();
-    }
-
-    private void init() {
-        setGoXrefs( new ArrayList<GoXRef>() );
-        setSuperTerms( new ArrayList<GoId>() );
-        setGoRelationships( new ArrayList<GoRelationship>() );
-        setGoSubsets( new ArrayList<GoSubset>() );
-        setDefinition( "" );
-        setComment( "" );
-    }
-
-    private void setGoRelationships( final List<GoRelationship> go_relationships ) {
-        _go_relationships = go_relationships;
-    }
-
-    private void setGoXrefs( final List<GoXRef> xrefs ) {
-        _go_xrefs = xrefs;
-    }
-
-    private void setSuperTerms( final List<GoId> super_terms ) {
-        _super_go_ids = super_terms;
     }
 }

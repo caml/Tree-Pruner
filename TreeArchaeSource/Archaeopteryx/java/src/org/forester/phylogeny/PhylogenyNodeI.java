@@ -1,4 +1,4 @@
-// $Id: PhylogenyNodeI.java,v 1.11 2009/01/13 19:49:31 cmzmasek Exp $
+// $Id: PhylogenyNodeI.java,v 1.12 2009/10/20 21:33:50 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -42,4 +42,6 @@ public interface PhylogenyNodeI {
     public void setDistanceToParent( double d );
 
     public void setName( String name );
+
+    public void setParent( PhylogenyNode phylogenyNode );
 }

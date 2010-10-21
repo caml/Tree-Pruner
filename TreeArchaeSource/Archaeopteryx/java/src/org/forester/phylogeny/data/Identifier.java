@@ -1,4 +1,4 @@
-// $Id: Identifier.java,v 1.36 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: Identifier.java,v 1.41 2009/11/10 21:16:37 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -35,16 +35,21 @@ import org.forester.util.ForesterUtil;
 public class Identifier implements PhylogenyData {
 
     final String _value;
-    final String _type;
+    final String _provider;
+
+    public Identifier() {
+        _value = "";
+        _provider = "";
+    }
 
     public Identifier( final String value ) {
         _value = value;
-        _type = "";
+        _provider = "";
     }
 
-    public Identifier( final String value, final String type ) {
+    public Identifier( final String value, final String provider ) {
         _value = value;
-        _type = type;
+        _provider = provider;
     }
 
     public StringBuffer asSimpleText() {
@@ -53,9 +58,9 @@ public class Identifier implements PhylogenyData {
 
     public StringBuffer asText() {
         final StringBuffer sb = new StringBuffer();
-        if ( !ForesterUtil.isEmpty( getType() ) ) {
+        if ( !ForesterUtil.isEmpty( getProvider() ) ) {
             sb.append( "[" );
-            sb.append( getType() );
+            sb.append( getProvider() );
             sb.append( "] " );
         }
         sb.append( getValue() );
@@ -63,7 +68,7 @@ public class Identifier implements PhylogenyData {
     }
 
     public PhylogenyData copy() {
-        return new Identifier( new String( getValue() ), new String( getType() ) );
+        return new Identifier( new String( getValue() ), new String( getProvider() ) );
     }
 
     @Override
@@ -83,8 +88,8 @@ public class Identifier implements PhylogenyData {
         }
     }
 
-    public String getType() {
-        return _type;
+    public String getProvider() {
+        return _provider;
     }
 
     public String getValue() {
@@ -93,14 +98,24 @@ public class Identifier implements PhylogenyData {
 
     @Override
     public int hashCode() {
+        if ( getProvider() != null ) {
+            return ( getProvider() + getValue() ).hashCode();
+        }
         return getValue().hashCode();
     }
 
     public boolean isEqual( final PhylogenyData data ) {
+        if ( this == data ) {
+            return true;
+        }
         if ( ( data == null ) || ( getValue() == null ) ) {
             return false;
         }
-        return ( ( Identifier ) data ).getValue().equals( getValue() );
+        final Identifier a = ( Identifier ) data;
+        if ( ( getProvider() != null ) && ( a.getProvider() != null ) ) {
+            return ( a.getValue().equals( getValue() ) && a.getProvider().equals( getProvider() ) );
+        }
+        return ( a.getValue().equals( getValue() ) );
     }
 
     public StringBuffer toNHX() {
@@ -112,12 +127,12 @@ public class Identifier implements PhylogenyData {
     }
 
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
-        if ( !org.forester.util.ForesterUtil.isEmpty( getType() ) ) {
+        if ( !org.forester.util.ForesterUtil.isEmpty( getProvider() ) ) {
             PhylogenyDataUtil.appendElement( writer,
                                              PhyloXmlMapping.IDENTIFIER,
                                              getValue(),
-                                             PhyloXmlMapping.IDENTIFIER_TYPE_ATTR,
-                                             getType(),
+                                             PhyloXmlMapping.IDENTIFIER_PROVIDER_ATTR,
+                                             getProvider(),
                                              indentation );
         }
         else {

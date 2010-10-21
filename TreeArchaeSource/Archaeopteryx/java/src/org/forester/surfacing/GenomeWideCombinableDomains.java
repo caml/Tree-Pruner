@@ -31,6 +31,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 
 import org.forester.surfacing.BinaryDomainCombination.DomainCombinationType;
+import org.forester.util.DescriptiveStatistics;
 
 public interface GenomeWideCombinableDomains {
 
@@ -48,6 +49,16 @@ public interface GenomeWideCombinableDomains {
     public SortedSet<DomainId> getAllDomainIds();
 
     public DomainCombinationType getDomainCombinationType();
+
+    SortedSet<DomainId> getMostPromiscuosDomain();
+
+    /**
+     * This should return a statistic for per domain 
+     * promiscuity in a genome.
+     * 
+     * @return descriptive statistics for per domain promiscuity in a genome
+     */
+    public DescriptiveStatistics getPerGenomeDomainPromiscuityStatistics();
 
     public int getSize();
 

@@ -1,4 +1,4 @@
-// $Id: Distribution.java,v 1.16 2008/09/24 16:42:47 cmzmasek Exp $
+// $Id: Distribution.java,v 1.26 2010/06/23 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -29,90 +29,119 @@ package org.forester.phylogeny.data;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
+import org.forester.io.writers.PhylogenyWriter;
 import org.forester.util.ForesterUtil;
 
 public class Distribution implements PhylogenyData {
 
-    private final String     _desc;
-    private final BigDecimal _latitude;
-    private final BigDecimal _longitude;
-    private final BigDecimal _altitude;
-    private final String     _geodetic_datum;
+    private final String        _desc;
+    private final List<Point>   _points;
+    private final List<Polygon> _polygons;
 
     public Distribution( final String desc ) {
         _desc = desc;
-        _latitude = null;
-        _longitude = null;
-        _altitude = null;
-        _geodetic_datum = "";
+        _points = null;
+        _polygons = null;
     }
 
-    public Distribution( final String desc,
-                         final BigDecimal latitude,
-                         final BigDecimal longitude,
-                         final BigDecimal altitude,
-                         final String geodetic_datum ) {
+    public Distribution( final String desc, final List<Point> points ) {
+        _desc = null;
+        _points = points;
+        _polygons = null;
+    }
+
+    public Distribution( final String desc, final List<Point> points, final List<Polygon> polygons ) {
         _desc = desc;
-        _latitude = latitude;
-        _longitude = longitude;
-        _altitude = altitude;
-        _geodetic_datum = geodetic_datum;
+        _points = points;
+        _polygons = polygons;
     }
 
+    @Override
     public StringBuffer asSimpleText() {
-        if ( ( getLatitude() != null ) || ( getLongitude() != null ) || ( getAltitude() != null ) ) {
-            return new StringBuffer( getDesc() + " [" + getLatitude().toPlainString() + ","
-                    + getLongitude().toPlainString() + "," + getAltitude().toPlainString() + "] [" + getGeodeticDatum()
-                    + "]" );
+        final StringBuffer sb = new StringBuffer();
+        sb.append( "Distribution: " );
+        if ( !ForesterUtil.isEmpty( getDesc() ) ) {
+            sb.append( ForesterUtil.LINE_SEPARATOR );
+            sb.append( " Description: " );
+            sb.append( getDesc() );
         }
-        else {
-            return new StringBuffer( getDesc() );
+        int i = 0;
+        if ( getPoints() != null ) {
+            for( final Point point : getPoints() ) {
+                if ( point != null ) {
+                    sb.append( ForesterUtil.LINE_SEPARATOR );
+                    sb.append( " Point " + i + ": " );
+                    sb.append( point.asSimpleText() );
+                    i++;
+                }
+            }
         }
+        i = 0;
+        if ( getPolygons() != null ) {
+            for( final Polygon polygon : getPolygons() ) {
+                if ( polygon != null ) {
+                    sb.append( ForesterUtil.LINE_SEPARATOR );
+                    sb.append( " Polygon " + i + ":" );
+                    sb.append( ForesterUtil.LINE_SEPARATOR );
+                    sb.append( polygon.asSimpleText() );
+                    i++;
+                }
+            }
+        }
+        return sb;
     }
 
+    @Override
     public StringBuffer asText() {
         return asSimpleText();
     }
 
+    @Override
     public PhylogenyData copy() {
-        return new Distribution( new String( getDesc() ),
-                                 new BigDecimal( getLatitude().toPlainString() ),
-                                 new BigDecimal( getLongitude().toPlainString() ),
-                                 new BigDecimal( getAltitude().toPlainString() ),
-                                 new String( getGeodeticDatum() ) );
-    }
-
-    public BigDecimal getAltitude() {
-        return _altitude;
+        List<Point> new_points = null;
+        List<Polygon> new_polygons = null;
+        if ( getPoints() != null ) {
+            new_points = new ArrayList<Point>();
+            for( final Point point : getPoints() ) {
+                new_points.add( ( Point ) point.copy() );
+            }
+        }
+        if ( getPolygons() != null ) {
+            new_polygons = new ArrayList<Polygon>();
+            for( final Polygon polygon : getPolygons() ) {
+                new_polygons.add( ( Polygon ) polygon.copy() );
+            }
+        }
+        return new Distribution( getDesc() != null ? new String( getDesc() ) : null, new_points, new_polygons );
     }
 
     public String getDesc() {
         return _desc;
     }
 
-    public String getGeodeticDatum() {
-        return _geodetic_datum;
+    public List<Point> getPoints() {
+        return _points;
     }
 
-    public BigDecimal getLatitude() {
-        return _latitude;
+    public List<Polygon> getPolygons() {
+        return _polygons;
     }
 
-    public BigDecimal getLongitude() {
-        return _longitude;
-    }
-
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );
@@ -120,24 +149,16 @@ public class Distribution implements PhylogenyData {
         if ( !ForesterUtil.isEmpty( getDesc() ) ) {
             PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.DISTRIBUTION_DESC, getDesc(), indentation );
         }
-        if ( ( getLatitude() != null ) || ( getLongitude() != null ) || ( getAltitude() != null ) ) {
-            PhylogenyDataUtil.appendOpen( writer,
-                                          PhyloXmlMapping.POINT,
-                                          PhyloXmlMapping.POINT_GEODETIC_DATUM,
-                                          getGeodeticDatum() );
-            PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.POINT_LATITUDE,
-                                             getLatitude().toPlainString(),
-                                             indentation );
-            PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.POINT_LONGITUDE,
-                                             getLongitude().toPlainString(),
-                                             indentation );
-            PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.POINT_ALTITUDE,
-                                             getAltitude().toPlainString(),
-                                             indentation );
-            PhylogenyDataUtil.appendClose( writer, PhyloXmlMapping.POINT );
+        final String ind = indentation + PhylogenyWriter.PHYLO_XML_INTENDATION_BASE;
+        if ( getPoints() != null ) {
+            for( final Point point : getPoints() ) {
+                point.toPhyloXML( writer, level, ind );
+            }
+        }
+        if ( getPolygons() != null ) {
+            for( final Polygon polygon : getPolygons() ) {
+                polygon.toPhyloXML( writer, level, ind );
+            }
         }
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );

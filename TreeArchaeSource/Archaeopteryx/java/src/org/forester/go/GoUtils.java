@@ -1,4 +1,4 @@
-// $Id: GoUtils.java,v 1.17 2009/04/28 01:59:44 cmzmasek Exp $
+// $Id: GoUtils.java,v 1.22 2010/06/23 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -103,8 +103,20 @@ public final class GoUtils {
         final Map<GoId, GoTerm> go_id_to_term_map = new HashMap<GoId, GoTerm>();
         for( final GoTerm go_term : go_terms ) {
             go_id_to_term_map.put( go_term.getGoId(), go_term );
+            for( final GoId alt_id : go_term.getAltIds() ) {
+                go_id_to_term_map.put( alt_id, go_term );
+            }
         }
         return go_id_to_term_map;
+    }
+
+    public static SortedSet<GoId> getAllSuperGoIds( final GoId go_id, final Map<GoId, GoTerm> goid_to_term_map ) {
+        final SortedSet<GoId> ids = new TreeSet<GoId>();
+        final SortedSet<GoTerm> terms = GoUtils.getAllSuperGoTerms( go_id, goid_to_term_map );
+        for( final GoTerm term : terms ) {
+            ids.add( term.getGoId() );
+        }
+        return ids;
     }
 
     public static SortedSet<GoTerm> getAllSuperGoTerms( final GoId go_id, final List<GoTerm> go_terms ) {
@@ -124,6 +136,21 @@ public final class GoUtils {
         final SortedSet<GoTerm> supers = new TreeSet<GoTerm>();
         getAllSuperGoTerms( go_term, goid_to_term_map, supers );
         return supers;
+    }
+
+    private static void getAllSuperGoTerms( final GoTerm go_term,
+                                            final Map<GoId, GoTerm> goid_to_term_map,
+                                            final Set<GoTerm> supers ) {
+        if ( ( go_term.getSuperGoIds() != null ) && ( go_term.getSuperGoIds().size() > 0 ) ) {
+            for( final GoId super_go_id : go_term.getSuperGoIds() ) {
+                if ( !goid_to_term_map.containsKey( super_go_id ) ) {
+                    throw new IllegalArgumentException( "GO id [" + super_go_id + "] not found in GO id to term map" );
+                }
+                final GoTerm super_go_term = goid_to_term_map.get( super_go_id );
+                supers.add( super_go_term );
+                getAllSuperGoTerms( super_go_term, goid_to_term_map, supers );
+            }
+        }
     }
 
     public static GoTerm getPenultimateGoTerm( final GoTerm go_term, final Map<GoId, GoTerm> map ) {
@@ -190,20 +217,5 @@ public final class GoUtils {
         results.put( label, current_list );
         reader.close();
         return results;
-    }
-
-    private static void getAllSuperGoTerms( final GoTerm go_term,
-                                            final Map<GoId, GoTerm> goid_to_term_map,
-                                            final Set<GoTerm> supers ) {
-        if ( ( go_term.getSuperGoIds() != null ) && ( go_term.getSuperGoIds().size() > 0 ) ) {
-            for( final GoId super_go_id : go_term.getSuperGoIds() ) {
-                if ( !goid_to_term_map.containsKey( super_go_id ) ) {
-                    throw new IllegalArgumentException( "GO id [" + super_go_id + "] not found in GO id to term map" );
-                }
-                final GoTerm super_go_term = goid_to_term_map.get( super_go_id );
-                supers.add( super_go_term );
-                getAllSuperGoTerms( super_go_term, goid_to_term_map, supers );
-            }
-        }
     }
 }

@@ -4,7 +4,7 @@
 # Copyright::  Copyright (C) 2006-2008 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: multi_sequence_extractor.rb,v 1.8 2008/09/10 02:16:28 cmzmasek Exp $
+# $Id: multi_sequence_extractor.rb,v 1.9 2009/10/03 03:32:22 cmzmasek Exp $
 
 
 require 'lib/evo/util/constants'
@@ -37,7 +37,7 @@ module Evoruby
         FASTA_WITH_NORMALIZED_IDS_SUFFIX    = ".ni.fasta"
         NORMALIZED_IDS_MAP_SUFFIX           = ".nim"
         PROTEINS_LIST_FILE_SEPARATOR        = "\t"
-        CACHE_GENOMES                       = true
+        CACHE_GENOMES                       = false
 
         def run()
 

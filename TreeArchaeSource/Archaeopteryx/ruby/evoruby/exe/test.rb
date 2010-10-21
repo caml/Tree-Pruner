@@ -5,7 +5,7 @@
 # Copyright::  Copyright (C) 2006-2007 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: test.rb,v 1.14 2009/01/07 02:48:20 cmzmasek Exp $
+# $Id: test.rb,v 1.18 2010/10/08 22:04:17 cmzmasek Exp $
 #
 # last modified: 05/15/2007
 
@@ -26,11 +26,13 @@ require 'lib/evo/io/parser/fasta_parser'
 require 'lib/evo/io/parser/ncbi_tseq_parser'
 require 'lib/evo/io/parser/hmmsearch_domain_extractor'
 require 'lib/evo/apps/domain_sequence_extractor'
-require 'lib/evo/apps/hmmpfam_parser'
+require 'lib/evo/apps/hmmscan_parser'
 require 'lib/evo/apps/domains_to_forester'
 require 'lib/evo/io/parser/general_msa_parser'
 require 'lib/evo/io/parser/basic_table_parser'
 require 'lib/evo/util/command_line_arguments'
+require 'lib/evo/soft/fastme'
+require 'lib/evo/soft/tree_puzzle'
 
 
 
@@ -691,7 +693,7 @@ module Evoruby
                 if ( seq3.get_name() != "sequence 3" )
                     return false
                 end
-                if ( seq3.get_sequence_as_string() != "a c  f" )
+                if ( seq3.get_sequence_as_string() != "a-c--f" )
                     return false
                 end
 
@@ -819,9 +821,9 @@ module Evoruby
             return true
         end
 
-        def test_hmmpfam_parser()
+        def test_hmmscan_parser()
             begin
-                h = Evoruby::HmmpfamParser.new()
+                h = Evoruby::HmmscanParser.new()
             rescue Exception => e
                 puts()
                 puts( e.to_s )
@@ -860,6 +862,35 @@ module Evoruby
         def test_cla()
             begin
                 cla = CommandLineArguments.new( Array.new )
+            rescue Exception => e
+                puts()
+                puts( e.to_s )
+                puts()
+                return false
+            end
+            return true
+        end
+
+        def test_tree_puzzle()
+            begin
+                tp = TreePuzzle.new()
+                tp.run( '/home/czmasek/scratch/small.aln',
+                    :wag,
+                    :uniform,
+                    200 )
+            rescue Exception => e
+                puts()
+                puts( e.to_s )
+                puts()
+                return false
+            end
+            return true
+        end
+
+        def test_fastme()
+            begin
+                fastme = FastMe.new()
+                fastme.run( '/home/czmasek/scratch/outdist', 0, :GME )
             rescue Exception => e
                 puts()
                 puts( e.to_s )
@@ -1033,8 +1064,8 @@ module Evoruby
                 @failures += 1
             end
 
-            print( "--- Hmmpfam parser: " )
-            if ( test_hmmpfam_parser )
+            print( "--- Hmmscan parser: " )
+            if ( test_hmmscan_parser )
                 puts( "ok" )
                 @successes += 1
             else
@@ -1060,6 +1091,26 @@ module Evoruby
                 puts( "FAILED" )
                 @failures += 1
             end
+
+            print( "--- TreePuzzle (wrapper): " )
+            if ( test_tree_puzzle() )
+                puts( "ok" )
+                @successes += 1
+            else
+                puts( "FAILED" )
+                @failures += 1
+            end
+
+            print( "--- FastMe (wrapper): " )
+            if ( test_fastme() )
+                puts( "ok" )
+                @successes += 1
+            else
+                puts( "FAILED" )
+                @failures += 1
+            end
+
+
 
             print( "--- CLA: " )
             if ( test_cla() )

@@ -1,4 +1,4 @@
-// $Id: PhylogenyWriter.java,v 1.39 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: PhylogenyWriter.java,v 1.43 2009/10/26 23:29:40 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -82,8 +82,242 @@ public final class PhylogenyWriter {
         setIndentPhyloxml( INDENT_PHYLOXML_DEAFULT );
     }
 
+    private void appendPhylogenyLevelPhyloXml( final Writer writer, final Phylogeny tree ) throws IOException {
+        final String indentation = new String();
+        if ( !ForesterUtil.isEmpty( tree.getName() ) ) {
+            PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.PHYLOGENY_NAME, tree.getName(), indentation );
+        }
+        if ( tree.getIdentifier() != null ) {
+            if ( ForesterUtil.isEmpty( tree.getIdentifier().getProvider() ) ) {
+                PhylogenyDataUtil.appendElement( writer,
+                                                 PhyloXmlMapping.IDENTIFIER,
+                                                 tree.getIdentifier().getValue(),
+                                                 indentation );
+            }
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.IDENTIFIER,
+                                             tree.getIdentifier().getValue(),
+                                             PhyloXmlMapping.IDENTIFIER_PROVIDER_ATTR,
+                                             tree.getIdentifier().getProvider(),
+                                             indentation );
+        }
+        if ( !ForesterUtil.isEmpty( tree.getDescription() ) ) {
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.PHYLOGENY_DESCRIPTION,
+                                             tree.getDescription(),
+                                             indentation );
+        }
+        if ( tree.getConfidence() != null ) {
+            if ( ForesterUtil.isEmpty( tree.getConfidence().getType() ) ) {
+                PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.CONFIDENCE, tree.getConfidence().getValue()
+                        + "", indentation );
+            }
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.CONFIDENCE,
+                                             tree.getConfidence().getValue() + "",
+                                             PhyloXmlMapping.CONFIDENCE_TYPE_ATTR,
+                                             tree.getConfidence().getType(),
+                                             indentation );
+        }
+    }
+
+    private StringBuffer createIndentation() {
+        if ( !isIndentPhyloxml() ) {
+            return null;
+        }
+        final StringBuffer sb = new StringBuffer( getNodeLevel() * 2 );
+        for( int i = 0; i < getNodeLevel(); ++i ) {
+            sb.append( PhylogenyWriter.PHYLO_XML_INTENDATION_BASE );
+        }
+        return sb;
+    }
+
+    private void decreaseNodeLevel() {
+        --_node_level;
+    }
+
+    private StringBuffer getBuffer() {
+        return _buffer;
+    }
+
+    private int getNodeLevel() {
+        return _node_level;
+    }
+
+    private StringBuffer getOutput( final Phylogeny tree ) throws IOException {
+        if ( getOutputFormt() == FORMAT.PHYLO_XML ) {
+            throw new IllegalStateException( "method inappropriately called" );
+        }
+        if ( tree != null ) {
+            reset( tree );
+            while ( isHasNext() ) {
+                next();
+            }
+            if ( getOutputFormt() == FORMAT.NH ) {
+                getBuffer().append( ';' );
+            }
+            return getBuffer();
+        }
+        else {
+            return new StringBuffer( 0 );
+        }
+    }
+
+    private FORMAT getOutputFormt() {
+        return _format;
+    }
+
+    private int getPhyloXmlLevel() {
+        return _phyloxml_level;
+    }
+
+    private PhylogenyNode getRoot() {
+        return _root;
+    }
+
+    private Stack<PostOrderStackObject> getStack() {
+        return _stack;
+    }
+
+    private Writer getWriter() {
+        return _writer;
+    }
+
+    private void increaseNodeLevel() {
+        ++_node_level;
+    }
+
+    private boolean isHasNext() {
+        return _has_next;
+    }
+
+    private boolean isIndentPhyloxml() {
+        return _indent_phyloxml;
+    }
+
+    private boolean isSawComma() {
+        return _saw_comma;
+    }
+
+    private boolean isSimpleNH() {
+        return _simple_nh;
+    }
+
+    private boolean isWriteDistanceToParentInNH() {
+        return _nh_write_distance_to_parent;
+    }
+
+    private void next() throws IOException {
+        while ( true ) {
+            final PostOrderStackObject si = getStack().pop();
+            final PhylogenyNode node = si.getNode();
+            final int phase = si.getPhase();
+            if ( phase > node.getNumberOfDescendants() ) {
+                setHasNext( node != getRoot() );
+                if ( ( getOutputFormt() != FORMAT.PHYLO_XML ) || node.isExternal() ) {
+                    if ( !node.isRoot() && node.isFirstChildNode() ) {
+                        increaseNodeLevel();
+                    }
+                    if ( getOutputFormt() == FORMAT.PHYLO_XML ) {
+                        writeNode( node, createIndentation() );
+                    }
+                    else {
+                        writeNode( node, null );
+                    }
+                }
+                if ( !node.isRoot() ) {
+                    if ( !node.isLastChildNode() ) {
+                        writeCladeSeparator();
+                    }
+                    else {
+                        writeCloseClade();
+                    }
+                }
+                return;
+            }
+            else {
+                getStack().push( new PostOrderStackObject( node, ( phase + 1 ) ) );
+                if ( node.isInternal() ) {
+                    getStack().push( new PostOrderStackObject( node.getChildNode( phase - 1 ), 1 ) );
+                    writeOpenClade( node );
+                    if ( getOutputFormt() == FORMAT.PHYLO_XML ) {
+                        if ( phase == 1 ) {
+                            writeNode( node, createIndentation() );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void reset( final Phylogeny tree ) {
+        setBuffer( new StringBuffer() );
+        setWriter( null );
+        setSawComma( false );
+        setHasNext( true );
+        setRoot( tree.getRoot() );
+        setStack( new Stack<PostOrderStackObject>() );
+        getStack().push( new PostOrderStackObject( tree.getRoot(), 1 ) );
+        setNodeLevel( 1 );
+    }
+
+    private void reset( final Writer writer, final Phylogeny tree ) {
+        setBuffer( null );
+        setWriter( writer );
+        setSawComma( false );
+        setHasNext( true );
+        setRoot( tree.getRoot() );
+        setStack( new Stack<PostOrderStackObject>() );
+        getStack().push( new PostOrderStackObject( tree.getRoot(), 1 ) );
+        setNodeLevel( 1 );
+    }
+
+    private void setBuffer( final StringBuffer buffer ) {
+        _buffer = buffer;
+    }
+
+    private void setHasNext( final boolean has_next ) {
+        _has_next = has_next;
+    }
+
     public void setIndentPhyloxml( final boolean indent_phyloxml ) {
         _indent_phyloxml = indent_phyloxml;
+    }
+
+    private void setNodeLevel( final int level ) {
+        _node_level = level;
+    }
+
+    private void setOutputFormt( final FORMAT format ) {
+        _format = format;
+    }
+
+    private void setPhyloXmlLevel( final int phyloxml_level ) {
+        _phyloxml_level = phyloxml_level;
+    }
+
+    private void setRoot( final PhylogenyNode root ) {
+        _root = root;
+    }
+
+    private void setSawComma( final boolean saw_comma ) {
+        _saw_comma = saw_comma;
+    }
+
+    private void setSimpleNH( final boolean simple_nh ) {
+        _simple_nh = simple_nh;
+    }
+
+    private void setStack( final Stack<PostOrderStackObject> stack ) {
+        _stack = stack;
+    }
+
+    private void setWriteDistanceToParentInNH( final boolean nh_write_distance_to_parent ) {
+        _nh_write_distance_to_parent = nh_write_distance_to_parent;
+    }
+
+    private void setWriter( final Writer writer ) {
+        _writer = writer;
     }
 
     public void toNewHampshire( final List<Phylogeny> trees,
@@ -267,237 +501,6 @@ public final class PhylogenyWriter {
         writePhyloXmlEnd( writer );
     }
 
-    private void appendPhylogenyLevelPhyloXml( final Writer writer, final Phylogeny tree ) throws IOException {
-        final String indentation = new String();
-        if ( !ForesterUtil.isEmpty( tree.getName() ) ) {
-            PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.PHYLOGENY_NAME, tree.getName(), indentation );
-        }
-        if ( tree.getIdentifier() != null ) {
-            if ( ForesterUtil.isEmpty( tree.getIdentifier().getType() ) ) {
-                PhylogenyDataUtil.appendElement( writer,
-                                                 PhyloXmlMapping.IDENTIFIER,
-                                                 tree.getIdentifier().getValue(),
-                                                 indentation );
-            }
-            PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.IDENTIFIER,
-                                             tree.getIdentifier().getValue(),
-                                             PhyloXmlMapping.IDENTIFIER_TYPE_ATTR,
-                                             tree.getIdentifier().getType(),
-                                             indentation );
-        }
-        if ( !ForesterUtil.isEmpty( tree.getDescription() ) ) {
-            PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.PHYLOGENY_DESCRIPTION,
-                                             tree.getDescription(),
-                                             indentation );
-        }
-        if ( tree.getConfidence() != null ) {
-            if ( ForesterUtil.isEmpty( tree.getConfidence().getType() ) ) {
-                PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.CONFIDENCE, tree.getConfidence().getValue()
-                        + "", indentation );
-            }
-            PhylogenyDataUtil.appendElement( writer,
-                                             PhyloXmlMapping.CONFIDENCE,
-                                             tree.getConfidence().getValue() + "",
-                                             PhyloXmlMapping.CONFIDENCE_TYPE_ATTR,
-                                             tree.getConfidence().getType(),
-                                             indentation );
-        }
-    }
-
-    private StringBuffer createIndentation() {
-        if ( !isIndentPhyloxml() ) {
-            return null;
-        }
-        final StringBuffer sb = new StringBuffer( getNodeLevel() * 2 );
-        for( int i = 0; i < getNodeLevel(); ++i ) {
-            sb.append( PhylogenyWriter.PHYLO_XML_INTENDATION_BASE );
-        }
-        return sb;
-    }
-
-    private void decreaseNodeLevel() {
-        --_node_level;
-    }
-
-    private StringBuffer getBuffer() {
-        return _buffer;
-    }
-
-    private int getNodeLevel() {
-        return _node_level;
-    }
-
-    private StringBuffer getOutput( final Phylogeny tree ) throws IOException {
-        if ( getOutputFormt() == FORMAT.PHYLO_XML ) {
-            throw new IllegalStateException( "method inappropriately called" );
-        }
-        if ( tree != null ) {
-            reset( tree );
-            while ( isHasNext() ) {
-                next();
-            }
-            return getBuffer();
-        }
-        else {
-            return new StringBuffer( 0 );
-        }
-    }
-
-    private FORMAT getOutputFormt() {
-        return _format;
-    }
-
-    private int getPhyloXmlLevel() {
-        return _phyloxml_level;
-    }
-
-    private PhylogenyNode getRoot() {
-        return _root;
-    }
-
-    private Stack<PostOrderStackObject> getStack() {
-        return _stack;
-    }
-
-    private Writer getWriter() {
-        return _writer;
-    }
-
-    private void increaseNodeLevel() {
-        ++_node_level;
-    }
-
-    private boolean isHasNext() {
-        return _has_next;
-    }
-
-    private boolean isIndentPhyloxml() {
-        return _indent_phyloxml;
-    }
-
-    private boolean isSawComma() {
-        return _saw_comma;
-    }
-
-    private boolean isSimpleNH() {
-        return _simple_nh;
-    }
-
-    private boolean isWriteDistanceToParentInNH() {
-        return _nh_write_distance_to_parent;
-    }
-
-    private void next() throws IOException {
-        while ( true ) {
-            final PostOrderStackObject si = getStack().pop();
-            final PhylogenyNode node = si.getNode();
-            final int phase = si.getPhase();
-            if ( phase > node.getNumberOfDescendants() ) {
-                setHasNext( node != getRoot() );
-                if ( ( getOutputFormt() != FORMAT.PHYLO_XML ) || node.isExternal() ) {
-                    if ( !node.isRoot() && node.isFirstChildNode() ) {
-                        increaseNodeLevel();
-                    }
-                    if ( getOutputFormt() == FORMAT.PHYLO_XML ) {
-                        writeNode( node, createIndentation() );
-                    }
-                    else {
-                        writeNode( node, null );
-                    }
-                }
-                if ( !node.isRoot() ) {
-                    if ( !node.isLastChildNode() ) {
-                        writeCladeSeparator();
-                    }
-                    else {
-                        writeCloseClade();
-                    }
-                }
-                return;
-            }
-            else {
-                getStack().push( new PostOrderStackObject( node, ( phase + 1 ) ) );
-                if ( node.isInternal() ) {
-                    getStack().push( new PostOrderStackObject( node.getChildNode( phase - 1 ), 1 ) );
-                    writeOpenClade( node );
-                    if ( getOutputFormt() == FORMAT.PHYLO_XML ) {
-                        if ( phase == 1 ) {
-                            writeNode( node, createIndentation() );
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void reset( final Phylogeny tree ) {
-        setBuffer( new StringBuffer() );
-        setWriter( null );
-        setSawComma( false );
-        setHasNext( true );
-        setRoot( tree.getRoot() );
-        setStack( new Stack<PostOrderStackObject>() );
-        getStack().push( new PostOrderStackObject( tree.getRoot(), 1 ) );
-        setNodeLevel( 1 );
-    }
-
-    private void reset( final Writer writer, final Phylogeny tree ) {
-        setBuffer( null );
-        setWriter( writer );
-        setSawComma( false );
-        setHasNext( true );
-        setRoot( tree.getRoot() );
-        setStack( new Stack<PostOrderStackObject>() );
-        getStack().push( new PostOrderStackObject( tree.getRoot(), 1 ) );
-        setNodeLevel( 1 );
-    }
-
-    private void setBuffer( final StringBuffer buffer ) {
-        _buffer = buffer;
-    }
-
-    private void setHasNext( final boolean has_next ) {
-        _has_next = has_next;
-    }
-
-    private void setNodeLevel( final int level ) {
-        _node_level = level;
-    }
-
-    private void setOutputFormt( final FORMAT format ) {
-        _format = format;
-    }
-
-    private void setPhyloXmlLevel( final int phyloxml_level ) {
-        _phyloxml_level = phyloxml_level;
-    }
-
-    private void setRoot( final PhylogenyNode root ) {
-        _root = root;
-    }
-
-    private void setSawComma( final boolean saw_comma ) {
-        _saw_comma = saw_comma;
-    }
-
-    private void setSimpleNH( final boolean simple_nh ) {
-        _simple_nh = simple_nh;
-    }
-
-    private void setStack( final Stack<PostOrderStackObject> stack ) {
-        _stack = stack;
-    }
-
-    private void setWriteDistanceToParentInNH( final boolean nh_write_distance_to_parent ) {
-        _nh_write_distance_to_parent = nh_write_distance_to_parent;
-    }
-
-    private void setWriter( final Writer writer ) {
-        _writer = writer;
-    }
-
     private void toPhyloXMLNoPhyloXmlSource( final Writer writer, final Phylogeny tree, final int phyloxml_level )
             throws IOException {
         setPhyloXmlLevel( phyloxml_level );
@@ -653,6 +656,11 @@ public final class PhylogenyWriter {
         return new PhylogenyWriter();
     }
 
+    private static void writeNexusStart( final Writer writer ) throws IOException {
+        writer.write( NexusConstants.NEXUS );
+        writer.write( ForesterUtil.LINE_SEPARATOR );
+    }
+
     public static void writeNexusTaxaBlock( final Writer writer, final Phylogeny tree ) throws IOException {
         writer.write( NexusConstants.BEGIN_TAXA );
         writer.write( ForesterUtil.LINE_SEPARATOR );
@@ -728,16 +736,10 @@ public final class PhylogenyWriter {
                 writer.write( "[&U]" );
             }
             writer.write( phylogeny.toNewHampshire( false ) );
-            writer.write( ";" );
             writer.write( ForesterUtil.LINE_SEPARATOR );
             i++;
         }
         writer.write( NexusConstants.END );
-        writer.write( ForesterUtil.LINE_SEPARATOR );
-    }
-
-    private static void writeNexusStart( final Writer writer ) throws IOException {
-        writer.write( NexusConstants.NEXUS );
         writer.write( ForesterUtil.LINE_SEPARATOR );
     }
 

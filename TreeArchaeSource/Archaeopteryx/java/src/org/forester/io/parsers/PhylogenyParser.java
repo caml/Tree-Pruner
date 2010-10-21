@@ -1,4 +1,4 @@
-// $Id: PhylogenyParser.java,v 1.4 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: PhylogenyParser.java,v 1.5 2010/09/29 23:50:16 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,6 +27,7 @@ package org.forester.io.parsers;
 
 import java.io.IOException;
 
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.phylogeny.Phylogeny;
 
 /*

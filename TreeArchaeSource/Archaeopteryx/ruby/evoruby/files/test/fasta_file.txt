@@ -18,5 +18,5 @@ f
 123456   
  >  sequence 3   
 
-   a c  f   
+   a-c--f   
 

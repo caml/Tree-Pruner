@@ -1,4 +1,4 @@
-// $Id: ChildNodeIteratorForward.java,v 1.8 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: ChildNodeIteratorForward.java,v 1.9 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -63,6 +63,24 @@ public class ChildNodeIteratorForward implements PhylogenyNodeIterator {
         reset();
     }
 
+    // Private methods
+    // ---------------
+    /**
+     * Returns the counter.
+     */
+    private int getI() {
+        return _i;
+    }
+
+    /**
+     * Returns the parent of the nodes to iterate over.
+     * 
+     * @return the parent of the nodes to iterate over.
+     */
+    private PhylogenyNode getNode() {
+        return _node;
+    }
+
     // Public methods
     // --------------
     /**
@@ -74,6 +92,13 @@ public class ChildNodeIteratorForward implements PhylogenyNodeIterator {
      */
     public boolean hasNext() {
         return ( getI() < getNode().getNumberOfDescendants() );
+    }
+
+    /**
+     * Increases the counter by one.
+     */
+    private void increaseI() {
+        ++_i;
     }
 
     /**
@@ -105,31 +130,6 @@ public class ChildNodeIteratorForward implements PhylogenyNodeIterator {
      */
     public void reset() {
         setI( 0 );
-    }
-
-    // Private methods
-    // ---------------
-    /**
-     * Returns the counter.
-     */
-    private int getI() {
-        return _i;
-    }
-
-    /**
-     * Returns the parent of the nodes to iterate over.
-     * 
-     * @return the parent of the nodes to iterate over.
-     */
-    private PhylogenyNode getNode() {
-        return _node;
-    }
-
-    /**
-     * Increases the counter by one.
-     */
-    private void increaseI() {
-        ++_i;
     }
 
     /**

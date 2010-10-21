@@ -1,4 +1,4 @@
-// $Id: BranchData.java,v 1.14 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: BranchData.java,v 1.16 2009/12/16 03:07:11 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -39,21 +39,24 @@ public class BranchData implements PhylogenyData {
     private BranchWidth      _branch_width;
 
     public BranchData() {
-        init();
+        // Doing nothing. 
     }
 
     public void addConfidence( final Confidence confidence ) {
         getConfidences().add( confidence );
     }
 
+    @Override
     public StringBuffer asSimpleText() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public StringBuffer asText() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public PhylogenyData copy() {
         final BranchData new_bd = new BranchData();
         if ( isHasBranchColor() ) {
@@ -83,6 +86,9 @@ public class BranchData implements PhylogenyData {
     }
 
     public List<Confidence> getConfidences() {
+        if ( _confidences == null ) {
+            _confidences = new ArrayList<Confidence>();
+        }
         return _confidences;
     }
 
@@ -90,6 +96,7 @@ public class BranchData implements PhylogenyData {
         return getConfidences().size();
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         throw new UnsupportedOperationException();
     }
@@ -114,6 +121,7 @@ public class BranchData implements PhylogenyData {
         _branch_width = branch_width;
     }
 
+    @Override
     public StringBuffer toNHX() {
         final StringBuffer sb = new StringBuffer();
         if ( isHasConfidences() && ( getConfidence( 0 ).getValue() != Confidence.CONFIDENCE_DEFAULT_VALUE ) ) {
@@ -131,6 +139,7 @@ public class BranchData implements PhylogenyData {
         return sb;
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         if ( isHasConfidences() ) {
             for( final Confidence confidence : getConfidences() ) {
@@ -143,9 +152,5 @@ public class BranchData implements PhylogenyData {
         if ( isHasBranchColor() ) {
             getBranchColor().toPhyloXML( writer, level, indentation );
         }
-    }
-
-    private void init() {
-        _confidences = new ArrayList<Confidence>();
     }
 }

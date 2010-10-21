@@ -1,4 +1,4 @@
-// $Id: TolXmlMapping.java,v 1.5 2009/03/19 02:12:45 cmzmasek Exp $
+// $Id: TolXmlMapping.java,v 1.7 2009/11/17 19:53:23 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -31,10 +31,15 @@ public final class TolXmlMapping {
 
     public static final String PHYLOGENY               = "TREE";
     public static final String CLADE                   = "NODE";
+    public static final String AUTHDATE                = "AUTHDATE";
+    public static final String AUTHORITY               = "AUTHORITY";
     public static final String TAXONOMY_NAME           = "NAME";
+    public static final String OTHERNAMES              = "OTHERNAMES";
+    public static final String OTHERNAME               = "OTHERNAME";
+    public static final String OTHERNAME_NAME          = "NAME";
     public static final String NODE_ID_ATTR            = "ID";
     public static final String NODE_ITALICIZENAME_ATTR = "ITALICIZENAME";
-    static final String        TOL_TAXONOMY_ID_TYPE    = "tol";
+    public static final String TOL_TAXONOMY_ID_TYPE    = "tol";
 
     private TolXmlMapping() {
         // Hidden.

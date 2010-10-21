@@ -1,4 +1,4 @@
-// $Id: RenderablePhylogenyData.java,v 1.1 2009/02/22 01:03:30 cmzmasek Exp $
+// $Id: RenderablePhylogenyData.java,v 1.3 2009/12/30 04:33:45 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -26,7 +26,7 @@
 package org.forester.archaeopteryx.phylogeny.data;
 
 import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 import org.forester.archaeopteryx.TreePanel;
 import org.forester.phylogeny.data.PhylogenyData;
@@ -47,7 +47,7 @@ public interface RenderablePhylogenyData extends PhylogenyData {
      * @param g
      *            the Graphics to render to
      */
-    public void render( final double x, final double y, final Graphics g, final TreePanel tree_panel );
+    public void render( final double x, final double y, final Graphics2D g, final TreePanel tree_panel, boolean to_pdf );
 
     public void setParameter( final double parameter );
 

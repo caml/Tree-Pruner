@@ -1,6 +1,6 @@
 #!/usr/bin/perl -W
 #
-# $Id: phylo_pl.pl,v 1.26 2008/12/31 23:44:33 cmzmasek Exp $
+# $Id: phylo_pl.pl,v 1.31 2010/09/14 21:09:42 cmzmasek Exp $
 #
 # FORESTER -- software libraries and applications
 # for evolutionary biology research and applications.
@@ -61,7 +61,7 @@ use lib $FindBin::Bin;
 use forester;
 
 my $VERSION                = "1.0.1";
-my $LAST_MODIFIED          = "2008.12.31";
+my $LAST_MODIFIED          = "2009.10.02";
 
 my $RAXML_MODEL_BASE       = "PROTGAMMA";
 my $RAXML_ALGORITHM        = "a";
@@ -342,9 +342,19 @@ if ( $rate_heterogeneity == 2
 if ( $outfile =~ /\.xml$/i ) {
     $outfile =~ s/\.xml//i;
 } 
-if ( $outfile =~ /\.aln$/i ) {
+elsif ( $outfile =~ /\.aln$/i ) {
     $outfile =~ s/\.aln//i;
-} 
+}
+elsif ( $outfile =~ /\.fasta$/i ) {
+    $outfile =~ s/\.fasta//i;
+}
+elsif ( $outfile =~ /\.fas$/i ) {
+    $outfile =~ s/\.fas//i;
+}
+elsif ( $outfile =~ /\.seqs$/i ) {
+    $outfile =~ s/\.seqs//i;
+}  
+
 
 $logfile          = $outfile.$LOG_FILE_SUFFIX;
 $multipwdfile     = $outfile.$MULTIPLE_PWD_FILE_SUFFIX;
@@ -1032,7 +1042,7 @@ if ( $bootstraps > 1 ) {
     # Puzzle for ML branch lenghts:
     # The alignment is read from infile by default.
     # The tree is read from intree by default.
-    &rm( "infile" )
+    &rm( "infile" );
     &mv( "align", "infile" ); # align = original alignment in phylip interleaved.
     
     &executePuzzleToCalculateBranchLenghts( $matrix,
@@ -1483,7 +1493,7 @@ $mat$est$rate
 x
 y
 !" )
-    && die "$0: Could not execute \"$PUZZLE\"";
+    && die "$0: Could not execute \"$PUZZLE\" (mat=$mat est=$est rate=$rate)";
     
 }
 

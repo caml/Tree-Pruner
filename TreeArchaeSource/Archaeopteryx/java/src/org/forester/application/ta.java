@@ -1,4 +1,4 @@
-// $Id: ta.java,v 1.3 2009/01/31 05:20:31 cmzmasek Exp $
+// $Id: ta.java,v 1.4 2009/11/20 22:22:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -127,7 +127,7 @@ public class ta {
         }
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( species_tree_file );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( species_tree_file, true );
             species_tree = factory.create( species_tree_file, pp )[ 0 ];
         }
         catch ( final IOException e ) {
@@ -136,7 +136,7 @@ public class ta {
         }
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( gene_tree_file );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( gene_tree_file, true );
             gene_tree = factory.create( gene_tree_file, pp )[ 0 ];
         }
         catch ( final IOException e ) {

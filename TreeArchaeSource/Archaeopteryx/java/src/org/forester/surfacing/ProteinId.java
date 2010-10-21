@@ -39,6 +39,7 @@ public class ProteinId implements Comparable<ProteinId> {
         _id = id.trim();
     }
 
+    @Override
     public int compareTo( final ProteinId protein_id ) {
         if ( this == protein_id ) {
             return 0;

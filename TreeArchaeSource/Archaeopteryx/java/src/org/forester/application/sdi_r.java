@@ -1,4 +1,4 @@
-// $Id: sdi_r.java,v 1.10 2009/06/19 16:27:31 cmzmasek Exp $
+// $Id: sdi_r.java,v 1.13 2010/04/26 23:29:32 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -44,22 +44,18 @@ import org.forester.util.ForesterUtil;
 
 public class sdi_r {
 
-    final static private String                  HELP_OPTION_1           = "help";
-    final static private String                  HELP_OPTION_2           = "h";
-    final static private String                  MIN_MAPPING_COST_OPTION = "ml";
-    final static private String                  MIN_DUPS_OPTION         = "md";
-    final static private String                  MIN_HEIGHT_OPTION       = "mh";
-    final static private String                  PRG_NAME                = "sdi_r";
-    final static private String                  PRG_VERSION             = "1.11";
-    final static private String                  PRG_DATE                = "2009.06.19";
-    final static private String                  E_MAIL                  = "czmasek@burnham.org";
-    final static private String                  WWW                     = "www.phylosoft.org";
-    private final static java.text.DecimalFormat DF                      = new java.text.DecimalFormat( "0.0#####" );
+    final static private String HELP_OPTION_1           = "help";
+    final static private String HELP_OPTION_2           = "h";
+    final static private String MIN_MAPPING_COST_OPTION = "ml";
+    final static private String MIN_DUPS_OPTION         = "md";
+    final static private String MIN_HEIGHT_OPTION       = "mh";
+    final static private String PRG_NAME                = "sdi_r";
+    final static private String PRG_VERSION             = "1.11";
+    final static private String PRG_DATE                = "2009.06.19";
+    final static private String E_MAIL                  = "czmasek@burnham.org";
+    final static private String WWW                     = "www.phylosoft.org";
     // How many resulting trees "main" should return/display.
-    private final static int                     TREES_TO_RETURN         = 5;
-    static {
-        DF.setDecimalSeparatorAlwaysShown( true );
-    }
+    private final static int    TREES_TO_RETURN         = 5;
 
     public static void main( final String args[] ) {
         ForesterUtil.printProgramInformation( PRG_NAME, PRG_VERSION, PRG_DATE, E_MAIL, WWW );
@@ -169,9 +165,9 @@ public class sdi_r {
                         + sdiunrooted.getMinimalDuplications() );
                 if ( minimize_height ) {
                     ForesterUtil.programMessage( PRG_NAME, "Phylogeny height                                      : "
-                            + DF.format( sdiunrooted.getMinimalTreeHeight() ) );
+                            + ForesterUtil.FORMATTER_06.format( sdiunrooted.getMinimalTreeHeight() ) );
                     ForesterUtil.programMessage( PRG_NAME, "Difference in subtree heights                         : "
-                            + DF.format( sdiunrooted.getMinimalDiffInSubTreeHeights() ) );
+                            + ForesterUtil.FORMATTER_06.format( sdiunrooted.getMinimalDiffInSubTreeHeights() ) );
                 }
             }
             else if ( minimize_sum_of_dup ) {
@@ -187,18 +183,20 @@ public class sdi_r {
                 if ( minimize_height ) {
                     ForesterUtil.programMessage( PRG_NAME,
                                                  "Phylogeny height                                            : "
-                                                         + DF.format( sdiunrooted.getMinimalTreeHeight() ) );
+                                                         + ForesterUtil.FORMATTER_06.format( sdiunrooted
+                                                                 .getMinimalTreeHeight() ) );
                     ForesterUtil.programMessage( PRG_NAME,
                                                  "Difference in subtree heights                               : "
-                                                         + DF.format( sdiunrooted.getMinimalDiffInSubTreeHeights() ) );
+                                                         + ForesterUtil.FORMATTER_06.format( sdiunrooted
+                                                                 .getMinimalDiffInSubTreeHeights() ) );
                 }
             }
             else if ( minimize_height ) {
                 ForesterUtil.programMessage( PRG_NAME, "Rooted by minimizing tree height (midpoint rooting)." );
                 ForesterUtil.programMessage( PRG_NAME, "Minimal tree height                  : "
-                        + DF.format( sdiunrooted.getMinimalTreeHeight() ) );
+                        + ForesterUtil.FORMATTER_06.format( sdiunrooted.getMinimalTreeHeight() ) );
                 ForesterUtil.programMessage( PRG_NAME, "Minimal difference in subtree heights: "
-                        + DF.format( sdiunrooted.getMinimalDiffInSubTreeHeights() ) );
+                        + ForesterUtil.FORMATTER_06.format( sdiunrooted.getMinimalDiffInSubTreeHeights() ) );
                 ForesterUtil.programMessage( PRG_NAME, "Duplications in midpoint rooted tree : "
                         + sdiunrooted.getMinimalDuplications() );
             }

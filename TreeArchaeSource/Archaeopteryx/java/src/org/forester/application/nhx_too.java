@@ -1,4 +1,4 @@
-// $Id: nhx_too.java,v 1.7 2009/02/06 18:54:43 cmzmasek Exp $
+// $Id: nhx_too.java,v 1.8 2009/11/20 22:22:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -79,7 +79,7 @@ public class nhx_too {
         Phylogeny p = null;
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogeny_infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogeny_infile, true );
             p = factory.create( phylogeny_infile, pp )[ 0 ];
         }
         catch ( final Exception e ) {

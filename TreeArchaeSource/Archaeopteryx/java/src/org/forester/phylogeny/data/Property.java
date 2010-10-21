@@ -1,4 +1,4 @@
-// $Id: Property.java,v 1.16 2009/06/09 00:05:05 cmzmasek Exp $
+// $Id: Property.java,v 1.19 2010/06/23 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -36,7 +36,7 @@ import org.forester.util.ForesterUtil;
 
 public class Property implements PhylogenyData {
 
-    private final String    _value;
+    private String          _value;
     private final String    _ref;
     private final String    _unit;
     private final String    _datatype;
@@ -49,6 +49,21 @@ public class Property implements PhylogenyData {
                      final String datatype,
                      final AppliesTo applies_to ) {
         this( ref, value, unit, datatype, applies_to, "" );
+    }
+
+    // Only used by method createFromNhxString.
+    private Property( final String ref,
+                      final String value,
+                      final String unit,
+                      final String datatype,
+                      final AppliesTo applies_to,
+                      final boolean dummy ) {
+        _ref = ref;
+        _unit = unit;
+        _datatype = datatype;
+        _applies_to = applies_to;
+        _id_ref = "";
+        setValue( value );
     }
 
     public Property( final String ref,
@@ -70,31 +85,19 @@ public class Property implements PhylogenyData {
                     + "] is not in the expected format (missing a \":\")" );
         }
         _ref = ref;
-        _value = value;
         _unit = unit;
         _datatype = datatype;
         _applies_to = applies_to;
         _id_ref = id_ref;
+        setValue( value );
     }
 
-    private Property( final String ref,
-                      final String value,
-                      final String unit,
-                      final String datatype,
-                      final AppliesTo applies_to,
-                      final boolean dummy ) {
-        _ref = ref;
-        _value = value;
-        _unit = unit;
-        _datatype = datatype;
-        _applies_to = applies_to;
-        _id_ref = "";
-    }
-
+    @Override
     public StringBuffer asSimpleText() {
         return new StringBuffer( getValue() );
     }
 
+    @Override
     public StringBuffer asText() {
         final StringBuffer sb = new StringBuffer();
         sb.append( getRef() );
@@ -106,6 +109,7 @@ public class Property implements PhylogenyData {
         return sb;
     }
 
+    @Override
     public PhylogenyData copy() {
         return new Property( new String( getRef() ),
                              new String( getValue() ),
@@ -139,6 +143,7 @@ public class Property implements PhylogenyData {
         return _value;
     }
 
+    @Override
     public boolean isEqual( final PhylogenyData data ) {
         if ( data == null ) {
             return false;
@@ -148,6 +153,11 @@ public class Property implements PhylogenyData {
                 && ( ( Property ) data ).getRef().equals( getRef() );
     }
 
+    public void setValue( final String value ) {
+        _value = value;
+    }
+
+    @Override
     public StringBuffer toNHX() {
         final StringBuffer nhx = new StringBuffer();
         nhx.append( ":X" );
@@ -198,6 +208,7 @@ public class Property implements PhylogenyData {
         return nhx;
     }
 
+    @Override
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         PhylogenyDataUtil.appendElement( writer,
                                          PhyloXmlMapping.PROPERTY,

@@ -1,4 +1,4 @@
-// $Id: NexusCharactersParser.java,v 1.5 2009/01/13 19:49:30 cmzmasek Exp $
+// $Id: NexusCharactersParser.java,v 1.7 2010/09/29 23:50:18 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -31,8 +31,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.forester.io.parsers.ParserUtils;
-import org.forester.io.parsers.PhylogenyParserException;
+import org.forester.io.parsers.util.ParserUtils;
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.util.ForesterUtil;
 
 public class NexusCharactersParser {
@@ -43,6 +43,10 @@ public class NexusCharactersParser {
 
     public String[] getCharStateLabels() {
         return _char_state_labels;
+    }
+
+    private Object getNexusSource() {
+        return _nexus_source;
     }
 
     public void parse() throws IOException {
@@ -96,22 +100,18 @@ public class NexusCharactersParser {
         }
     }
 
-    public void setSource( final Object nexus_source ) throws PhylogenyParserException, IOException {
-        if ( nexus_source == null ) {
-            throw new PhylogenyParserException( getClass() + ": attempt to parse null object." );
-        }
-        _nexus_source = nexus_source;
-    }
-
-    private Object getNexusSource() {
-        return _nexus_source;
-    }
-
     private void reset() {
         setCharStateLabels( new String[ 0 ] );
     }
 
     private void setCharStateLabels( final String[] char_state_labels ) {
         _char_state_labels = char_state_labels;
+    }
+
+    public void setSource( final Object nexus_source ) throws PhylogenyParserException, IOException {
+        if ( nexus_source == null ) {
+            throw new PhylogenyParserException( getClass() + ": attempt to parse null object." );
+        }
+        _nexus_source = nexus_source;
     }
 }

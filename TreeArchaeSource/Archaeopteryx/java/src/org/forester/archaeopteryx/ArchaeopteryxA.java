@@ -1,4 +1,4 @@
-// $Id: ArchaeopteryxA.java,v 1.4 2009/02/23 18:59:17 cmzmasek Exp $
+// $Id: ArchaeopteryxA.java,v 1.8 2010/03/30 22:23:59 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -24,13 +24,8 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-/**
- * NOTE - The original file was obtained from SourceForge.net (ATV Version 4.1.04) on 2009.07.02
- *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
- */
+
 import java.awt.Color;
-
-
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
@@ -42,14 +37,6 @@ import javax.swing.UIManager;
 
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
-
-//******************************************START**********************************************************//
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.AppletTerminate;
-import com.lanl.application.TPTD.applet.CrashRevovery;
-import com.lanl.application.TPTD.applet.SubTreePanel;
-import com.lanl.application.treeDecorator.applet.communication.TreeDecoratorCommunication;
-//********************************************END**********************************************************//
 
 public class ArchaeopteryxA extends JApplet {
 
@@ -64,15 +51,25 @@ public class ArchaeopteryxA extends JApplet {
     private String             _message_1          = "";
     private String             _message_2          = "";
     public final static String NAME                = "ArchaeopteryxA";
-    //******************************************START**********************************************************//
-    private CrashRevovery crashRecovery = new CrashRevovery();
-    //********************************************END**********************************************************//
+
     @Override
     public void destroy() {
         Util.printAppletMessage( NAME, "going to be destroyed" );
         if ( getMainFrameApplet() != null ) {
             getMainFrameApplet().close();
         }
+    }
+
+    private MainFrameApplet getMainFrameApplet() {
+        return _mainframe_applet;
+    }
+
+    private String getMessage1() {
+        return _message_1;
+    }
+
+    private String getMessage2() {
+        return _message_2;
     }
 
     public String getUrlString() {
@@ -83,20 +80,7 @@ public class ArchaeopteryxA extends JApplet {
     public void init() {
         boolean has_exception = false;
         setName( NAME );
-      //******************************************START CHANGED**********************************************************//
-        if(getParameter("app_type").equals("1") || getParameter("app_type").equals("4")   //BHB TP TD
-				|| getParameter("app_type").equals("2") || getParameter("app_type").equals("5")  //LANL TP TD
-				|| getParameter("app_type").equals("3") || getParameter("app_type").equals("6")   //Others TP TD
-				|| getParameter("app_type").equals("0")){  //LANL/BHB Archae
-        	getParams();
-        	setUrlString(AppletParams.urlOfTreeToLoad);
-        }
-        else{
-        	setUrlString( getParameter( Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD ) );
-        }
-        // // take url of tree 2 load from applet params and not// from parameter -changed
-      //********************************************END**********************************************************//
-        
+        setUrlString( getParameter( Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD ) );
         Util.printAppletMessage( NAME, "URL of phylogenies to load: \"" + getUrlString() + "\"" );
         setBackground( background_color );
         setForeground( font_color );
@@ -113,21 +97,7 @@ public class ArchaeopteryxA extends JApplet {
             setMessage2( "[Your Java version: " + s + "]" );
             repaint();
         }
-      //******************************************START CHANGED**********************************************************//
-        final String config_filename;
-        if(AppletParams.isEitherTPorTDForAll() || AppletParams.isArchaeopteryxForBHBorLANL()){
-        	config_filename = AppletParams.configFilename;
-        }
-        else{
-        	config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL ); 
-        }
-        if(AppletParams.isTreeDecoratorForAll()){
-        	TreeDecoratorCommunication.getSequenceDetailsComm();
-        }
-        //// take config filename from applet params  
-																										  // and not from parameter -changed
-      //********************************************END**********************************************************//
-        
+        final String config_filename = getParameter( Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL );
         Util.printAppletMessage( NAME, "URL for configuration file is: " + config_filename );
         final Configuration configuration = new Configuration( config_filename, true, true );
         try {
@@ -141,18 +111,9 @@ public class ArchaeopteryxA extends JApplet {
             _mainframe_applet = new MainFrameApplet( this, configuration );
             URL url = null;
             url = new URL( getUrlString() );
-            final Phylogeny[] phys = Util.readPhylogeniesFromUrl( url );
-          //******************************************START CHANGED**********************************************************//
-            if(AppletParams.isEitherTPorTDForAll()){
-            	Util.addPhylogeniesToTabs( phys, AppletParams.tabName, getUrlString(), getMainFrameApplet()
-            			.getConfiguration(), getMainFrameApplet().getMainPanel() );
-            }
-            else{
-            	  Util.addPhylogeniesToTabs( phys, new File( url.getFile() ).getName(), getUrlString(), getMainFrameApplet()
-            		                 .getConfiguration(), getMainFrameApplet().getMainPanel() );
-            }
-            // changed from name of file to AppletParams.tabName - changed
-            //********************************************END**********************************************************//
+            final Phylogeny[] phys = Util.readPhylogeniesFromUrl( url, configuration.isValidatePhyloXmlAgainstSchema() );
+            Util.addPhylogeniesToTabs( phys, new File( url.getFile() ).getName(), getUrlString(), getMainFrameApplet()
+                    .getConfiguration(), getMainFrameApplet().getMainPanel() );
             getMainFrameApplet().getMainPanel().getControlPanel().showWholeAll();
             getMainFrameApplet().getMainPanel().getControlPanel().showWhole();
             setVisible( true );
@@ -175,22 +136,18 @@ public class ArchaeopteryxA extends JApplet {
         getMainFrameApplet().requestFocus();
         getMainFrameApplet().requestFocusInWindow();
         getMainFrameApplet().requestFocus();
-        
-      //******************************************START**********************************************************//
-        if(AppletParams.isTreePrunerForAll()){
-        	SubTreePanel.mainAppletFrame = _mainframe_applet;
-        	AppletTerminate.appletContext = getAppletContext();
-        	crashRecovery.treePrunerCrashRecoveryInit();
+        /* GUILHEM_BEG */
+        final String default_relation = getParameter( Constants.APPLET_PARAM_NAME_FOR_DEFAULT_SEQUENCE_RELATION_TYPE );
+        if ( default_relation != null ) {
+            getMainFrameApplet().getMainPanel().getControlPanel().getSequenceRelationTypeBox()
+                    .setSelectedItem( default_relation );
         }
-        else if(AppletParams.isTreeDecoratorForAll()){
-        	SubTreePanel.mainAppletFrame = _mainframe_applet;
-        	AppletTerminate.appletContext = getAppletContext();
-        	if(TreeDecoratorCommunication.isCommError){
-        		AppletTerminate.closeParentAppletOnCommError();
-        	}
-        	crashRecovery.treeDecoratorCrashRecoveryInit();
+        final String default_sequence = getParameter( Constants.APPLET_PARAM_NAME_FOR_DEFAULT_QUERY_SEQUENCE );
+        if ( default_sequence != null ) {
+            getMainFrameApplet().getMainPanel().getControlPanel().getSequenceRelationBox()
+                    .setSelectedItem( default_sequence );
+            /* GUILHEM_END */
         }
-      //********************************************END**********************************************************//
     }
 
     /**
@@ -208,27 +165,6 @@ public class ArchaeopteryxA extends JApplet {
         g.drawString( getMessage1(), 10, 40 );
     }
 
-    @Override
-    public void start() {
-        getMainFrameApplet().getMainPanel().validate();
-        getMainFrameApplet().requestFocus();
-        getMainFrameApplet().requestFocusInWindow();
-        getMainFrameApplet().requestFocus();
-        Util.printAppletMessage( NAME, "started" );
-    }
-
-    private MainFrameApplet getMainFrameApplet() {
-        return _mainframe_applet;
-    }
-
-    private String getMessage1() {
-        return _message_1;
-    }
-
-    private String getMessage2() {
-        return _message_2;
-    }
-
     private void setMessage1( final String message_1 ) {
         _message_1 = message_1;
     }
@@ -240,36 +176,13 @@ public class ArchaeopteryxA extends JApplet {
     private void setUrlString( final String url_string ) {
         _url_string = url_string;
     }
-    
-    //******************************************START**********************************************************//
-    private void getParams(){
-    	String urlOfTreeToLoad1 = getParameter(Constants.APPLET_PARAM_NAME_FOR_URL_OF_TREE_TO_LOAD);
-    	String configFileName1 = getParameter(Constants.APPLET_PARAM_NAME_FOR_CONFIG_FILE_URL);
-    	String filename1 = getParameter("filename");
-    	String URLprefix1 = getParameter("URLPrefix");
-    	int applicationType1=-1;
-    	applicationType1 = Integer.parseInt(getParameter("app_type"));
-    	String savedAcc1 = getParameter("saved_acc");
-    	String savedAccFlag1 = getParameter("saved_acc_flag");
-    	String tabName1 = getParameter("tree_panel_tab_name"); 
-    	String remoteUser = "";
-    	if(applicationType1 == 2 || applicationType1 == 5){   
-			remoteUser = getParameter("remote_user");
-    	}
-    	
-    	AppletParams.setAppletParams(urlOfTreeToLoad1, configFileName1, getCodeBase(), filename1,
-    								URLprefix1, applicationType1, savedAccFlag1,tabName1,remoteUser);
-    	
-    	
-    	System.out.println(AppletParams.getAllAppletParamsAsString());
+
+    @Override
+    public void start() {
+        getMainFrameApplet().getMainPanel().validate();
+        getMainFrameApplet().requestFocus();
+        getMainFrameApplet().requestFocusInWindow();
+        getMainFrameApplet().requestFocus();
+        Util.printAppletMessage( NAME, "started" );
     }
-    
-    public MainFrameApplet create_new_Frame(){
-    		setUrlString(AppletParams.urlOfTreeToLoad);
-    		final Configuration configuration = new Configuration( AppletParams.configFilename, true, true );
-    		MainFrameApplet mfa = new MainFrameApplet( this, configuration );
-        	return mfa;
-        }
-    
-    //********************************************END**********************************************************//
 }

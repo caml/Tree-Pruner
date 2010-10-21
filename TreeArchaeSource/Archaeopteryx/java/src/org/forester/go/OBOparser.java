@@ -1,4 +1,4 @@
-// $Id: OBOparser.java,v 1.12 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: OBOparser.java,v 1.15 2009/11/10 23:09:38 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -30,7 +30,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.forester.util.ForesterUtil;
 
@@ -52,8 +54,86 @@ public class OBOparser {
         init();
     }
 
+    private GoTerm createNewBasicGoTerm( final String id,
+                                         final String name,
+                                         final String namespace,
+                                         final String is_obsolete,
+                                         final String comment,
+                                         final String definition,
+                                         final Set<String> alt_ids,
+                                         final List<GoXRef> go_xrefs,
+                                         final List<GoId> super_go_ids,
+                                         final List<GoRelationship> go_relationships,
+                                         final List<GoSubset> go_subsets ) {
+        final GoTerm gt = new BasicGoTerm( id, name, namespace, is_obsolete.trim().toLowerCase().equals( "true" ) );
+        ( ( BasicGoTerm ) gt ).setComment( comment );
+        ( ( BasicGoTerm ) gt ).setDefinition( definition );
+        for( final GoXRef x : go_xrefs ) {
+            gt.getGoXRefs().add( x );
+        }
+        for( final GoId s : super_go_ids ) {
+            gt.getSuperGoIds().add( s );
+        }
+        for( final GoRelationship r : go_relationships ) {
+            gt.getGoRelationships().add( r );
+        }
+        for( final GoSubset sub : go_subsets ) {
+            gt.getGoSubsets().add( sub );
+        }
+        for( final String alt_id : alt_ids ) {
+            gt.getAltIds().add( new GoId( alt_id ) );
+        }
+        ++_go_term_count;
+        return gt;
+    }
+
+    private void createNewGoTerm( final List<GoTerm> go_terms,
+                                  final String id,
+                                  final String name,
+                                  final String namespace,
+                                  final String is_obsolete,
+                                  final String comment,
+                                  final String definition,
+                                  final Set<String> alt_ids,
+                                  final List<GoXRef> go_xrefs,
+                                  final List<GoId> super_go_ids,
+                                  final List<GoRelationship> go_relationships,
+                                  final List<GoSubset> go_subsets ) {
+        GoTerm gt;
+        switch ( getReturnType() ) {
+            case BASIC_GO_TERM:
+                gt = createNewBasicGoTerm( id,
+                                           name,
+                                           namespace,
+                                           is_obsolete,
+                                           comment,
+                                           definition,
+                                           alt_ids,
+                                           go_xrefs,
+                                           super_go_ids,
+                                           go_relationships,
+                                           go_subsets );
+                break;
+            default:
+                throw new AssertionError( "unknown return type: " + getReturnType() );
+        }
+        go_terms.add( gt );
+    }
+
     public int getGoTermCount() {
         return _go_term_count;
+    }
+
+    private File getInputFile() {
+        return _input_file;
+    }
+
+    private ReturnType getReturnType() {
+        return _return_type;
+    }
+
+    private void init() {
+        setGoTermCount( 0 );
     }
 
     public List<GoTerm> parse() throws IOException {
@@ -72,6 +152,7 @@ public class OBOparser {
         String def = "";
         String comment = "";
         String is_obsolete = "";
+        HashSet<String> alt_ids = new HashSet<String>();
         List<GoId> super_go_ids = new ArrayList<GoId>();
         List<GoXRef> go_xrefs = new ArrayList<GoXRef>();
         List<GoRelationship> go_relationships = new ArrayList<GoRelationship>();
@@ -95,6 +176,7 @@ public class OBOparser {
                                          is_obsolete,
                                          comment,
                                          def,
+                                         alt_ids,
                                          go_xrefs,
                                          super_go_ids,
                                          go_relationships,
@@ -103,6 +185,7 @@ public class OBOparser {
                     id = "";
                     name = "";
                     namespace = "";
+                    alt_ids = new HashSet<String>();
                     def = "";
                     comment = "";
                     is_obsolete = "";
@@ -119,6 +202,9 @@ public class OBOparser {
                 }
                 else if ( in_term && line.startsWith( "namespace:" ) ) {
                     namespace = line.substring( 10 ).trim();
+                }
+                else if ( in_term && line.startsWith( "alt_id:" ) ) {
+                    alt_ids.add( line.substring( 7 ).trim() );
                 }
                 else if ( in_term && line.startsWith( "def:" ) ) {
                     def = line.substring( 4 ).trim();
@@ -158,85 +244,13 @@ public class OBOparser {
                              is_obsolete,
                              comment,
                              def,
+                             alt_ids,
                              go_xrefs,
                              super_go_ids,
                              go_relationships,
                              go_subsets );
         }
         return go_terms;
-    }
-
-    private GoTerm createNewBasicGoTerm( final String id,
-                                         final String name,
-                                         final String namespace,
-                                         final String is_obsolete,
-                                         final String comment,
-                                         final String definition,
-                                         final List<GoXRef> go_xrefs,
-                                         final List<GoId> super_go_ids,
-                                         final List<GoRelationship> go_relationships,
-                                         final List<GoSubset> go_subsets ) {
-        final GoTerm gt = new BasicGoTerm( id, name, namespace, is_obsolete.trim().toLowerCase().equals( "true" ) );
-        ( ( BasicGoTerm ) gt ).setComment( comment );
-        ( ( BasicGoTerm ) gt ).setDefinition( definition );
-        for( final GoXRef x : go_xrefs ) {
-            ( ( BasicGoTerm ) gt ).getGoXRefs().add( x );
-        }
-        for( final GoId s : super_go_ids ) {
-            ( ( BasicGoTerm ) gt ).getSuperGoIds().add( s );
-        }
-        for( final GoRelationship r : go_relationships ) {
-            ( ( BasicGoTerm ) gt ).getGoRelationships().add( r );
-        }
-        for( final GoSubset sub : go_subsets ) {
-            ( ( BasicGoTerm ) gt ).getGoSubsets().add( sub );
-        }
-        ++_go_term_count;
-        return gt;
-    }
-
-    private void createNewGoTerm( final List<GoTerm> go_terms,
-                                  final String id,
-                                  final String name,
-                                  final String namespace,
-                                  final String is_obsolete,
-                                  final String comment,
-                                  final String definition,
-                                  final List<GoXRef> go_xrefs,
-                                  final List<GoId> super_go_ids,
-                                  final List<GoRelationship> go_relationships,
-                                  final List<GoSubset> go_subsets ) {
-        GoTerm gt;
-        switch ( getReturnType() ) {
-            case BASIC_GO_TERM:
-                gt = createNewBasicGoTerm( id,
-                                           name,
-                                           namespace,
-                                           is_obsolete,
-                                           comment,
-                                           definition,
-                                           go_xrefs,
-                                           super_go_ids,
-                                           go_relationships,
-                                           go_subsets );
-                break;
-            default:
-                throw new AssertionError( "unknown return type: " + getReturnType() );
-        }
-        go_terms.add( gt );
-        //System.out.println( gt.toString() );
-    }
-
-    private File getInputFile() {
-        return _input_file;
-    }
-
-    private ReturnType getReturnType() {
-        return _return_type;
-    }
-
-    private void init() {
-        setGoTermCount( 0 );
     }
 
     private void setGoTermCount( final int go_term_count ) {

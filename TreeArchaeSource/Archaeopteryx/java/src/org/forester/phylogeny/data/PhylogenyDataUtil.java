@@ -1,4 +1,4 @@
-// $Id: PhylogenyDataUtil.java,v 1.30 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: PhylogenyDataUtil.java,v 1.31 2009/11/01 04:18:53 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -356,42 +356,9 @@ public final class PhylogenyDataUtil {
                     org.forester.util.ForesterUtil.roundToInt( y2 ) );
     }
 
-    public static void drawOval( final double x,
-                                 final double y,
-                                 final double width,
-                                 final double heigth,
-                                 final Graphics g ) {
-        g.drawOval( org.forester.util.ForesterUtil.roundToInt( x ),
-                    org.forester.util.ForesterUtil.roundToInt( y ),
-                    org.forester.util.ForesterUtil.roundToInt( width ),
-                    org.forester.util.ForesterUtil.roundToInt( heigth ) );
-    }
-
-    public static void drawRect( final double x,
-                                 final double y,
-                                 final double width,
-                                 final double heigth,
-                                 final Graphics g ) {
-        g.drawRect( org.forester.util.ForesterUtil.roundToInt( x ),
-                    org.forester.util.ForesterUtil.roundToInt( y ),
-                    org.forester.util.ForesterUtil.roundToInt( width ),
-                    org.forester.util.ForesterUtil.roundToInt( heigth ) );
-    }
-
     public static void drawString( final String str, final double x, final double y, final Graphics g ) {
         g.drawString( str, org.forester.util.ForesterUtil.roundToInt( x ), org.forester.util.ForesterUtil
                 .roundToInt( y ) );
-    }
-
-    public static void fillRect( final double x,
-                                 final double y,
-                                 final double width,
-                                 final double heigth,
-                                 final Graphics g ) {
-        g.fillRect( org.forester.util.ForesterUtil.roundToInt( x ),
-                    org.forester.util.ForesterUtil.roundToInt( y ),
-                    org.forester.util.ForesterUtil.roundToInt( width ),
-                    org.forester.util.ForesterUtil.roundToInt( heigth ) );
     }
 
     public static String replaceIllegalXmlCharacters( final String value ) {

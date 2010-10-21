@@ -1,4 +1,4 @@
-// $Id: nj.java,v 1.7 2008/03/11 00:29:26 cmzmasek Exp $
+// $Id: nj.java,v 1.8 2010/09/29 23:50:17 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -32,11 +32,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.forester.evoinference.distance.NeighborJoining;
+import org.forester.evoinference.matrix.distance.DistanceMatrix;
+import org.forester.io.parsers.SymmetricalDistanceMatrixParser;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.Phylogeny;
-import org.forester.phylogenyinference.DistanceMatrix;
-import org.forester.phylogenyinference.NeighborJoining;
-import org.forester.phylogenyinference.SymmetricalDistanceMatrixParser;
 import org.forester.util.CommandLineArguments;
 import org.forester.util.ForesterUtil;
 

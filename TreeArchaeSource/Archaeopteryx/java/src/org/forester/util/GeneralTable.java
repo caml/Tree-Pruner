@@ -1,4 +1,4 @@
-// $Id: GeneralTable.java,v 1.4 2009/05/11 22:57:47 cmzmasek Exp $
+// $Id: GeneralTable.java,v 1.5 2009/10/26 23:29:40 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -45,8 +45,16 @@ public class GeneralTable<IDENTIFIER_TYPE, VALUE_TYPE> {
         return _column_identifiers;
     }
 
+    private Map<IDENTIFIER_TYPE, VALUE_TYPE> getRow( final IDENTIFIER_TYPE row ) {
+        return getRows().get( row );
+    }
+
     public SortedSet<IDENTIFIER_TYPE> getRowIdentifiers() {
         return _row_identifiers;
+    }
+
+    private Map<IDENTIFIER_TYPE, Map<IDENTIFIER_TYPE, VALUE_TYPE>> getRows() {
+        return _rows;
     }
 
     public VALUE_TYPE getValue( final IDENTIFIER_TYPE col, final IDENTIFIER_TYPE row ) throws IllegalArgumentException {
@@ -61,6 +69,12 @@ public class GeneralTable<IDENTIFIER_TYPE, VALUE_TYPE> {
             throws IllegalArgumentException {
         final VALUE_TYPE value = getValue( col, row );
         return ( value == null ? "" : getValue( col, row ).toString() );
+    }
+
+    private void init() {
+        _rows = new HashMap<IDENTIFIER_TYPE, Map<IDENTIFIER_TYPE, VALUE_TYPE>>();
+        _row_identifiers = new TreeSet<IDENTIFIER_TYPE>();
+        _column_identifiers = new TreeSet<IDENTIFIER_TYPE>();
     }
 
     public void setValue( final IDENTIFIER_TYPE col, final IDENTIFIER_TYPE row, final VALUE_TYPE value ) {
@@ -121,19 +135,5 @@ public class GeneralTable<IDENTIFIER_TYPE, VALUE_TYPE> {
             sb.append( ForesterUtil.LINE_SEPARATOR );
         }
         return sb.toString();
-    }
-
-    private Map<IDENTIFIER_TYPE, VALUE_TYPE> getRow( final IDENTIFIER_TYPE row ) {
-        return getRows().get( row );
-    }
-
-    private Map<IDENTIFIER_TYPE, Map<IDENTIFIER_TYPE, VALUE_TYPE>> getRows() {
-        return _rows;
-    }
-
-    private void init() {
-        _rows = new HashMap<IDENTIFIER_TYPE, Map<IDENTIFIER_TYPE, VALUE_TYPE>>();
-        _row_identifiers = new TreeSet<IDENTIFIER_TYPE>();
-        _column_identifiers = new TreeSet<IDENTIFIER_TYPE>();
     }
 }

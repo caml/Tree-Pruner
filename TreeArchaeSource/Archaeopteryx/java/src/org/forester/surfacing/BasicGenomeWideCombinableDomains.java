@@ -107,6 +107,10 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         _dc_type = dc_type;
     }
 
+    private void add( final DomainId key, final CombinableDomains cdc ) {
+        _combinable_domains_map.put( key, cdc );
+    }
+
     public boolean contains( final DomainId key_id ) {
         return _combinable_domains_map.containsKey( key_id );
     }
@@ -119,6 +123,7 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return _combinable_domains_map;
     }
 
+    @Override
     public SortedSet<DomainId> getAllDomainIds() {
         final SortedSet<DomainId> domains = new TreeSet<DomainId>();
         for( final DomainId key : getAllCombinableDomainsIds().keySet() ) {
@@ -131,8 +136,32 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return domains;
     }
 
+    @Override
     public DomainCombinationType getDomainCombinationType() {
         return _dc_type;
+    }
+
+    @Override
+    public SortedSet<DomainId> getMostPromiscuosDomain() {
+        final SortedSet<DomainId> doms = new TreeSet<DomainId>();
+        final int max = ( int ) getPerGenomeDomainPromiscuityStatistics().getMax();
+        for( final DomainId key : getAllCombinableDomainsIds().keySet() ) {
+            final CombinableDomains cb = getAllCombinableDomainsIds().get( key );
+            if ( cb.getNumberOfCombinableDomains() == max ) {
+                doms.add( key );
+            }
+        }
+        return doms;
+    }
+
+    @Override
+    public DescriptiveStatistics getPerGenomeDomainPromiscuityStatistics() {
+        final DescriptiveStatistics stats = new BasicDescriptiveStatistics();
+        for( final DomainId key : getAllCombinableDomainsIds().keySet() ) {
+            final CombinableDomains cb = getAllCombinableDomainsIds().get( key );
+            stats.addValue( cb.getNumberOfCombinableDomains() );
+        }
+        return stats;
     }
 
     public int getSize() {
@@ -143,6 +172,7 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return _species;
     }
 
+    @Override
     public SortedSet<BinaryDomainCombination> toBinaryDomainCombinations() {
         final SortedSet<BinaryDomainCombination> binary_combinations = new TreeSet<BinaryDomainCombination>();
         for( final DomainId key : getAllCombinableDomainsIds().keySet() ) {
@@ -197,8 +227,25 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
         return sb;
     }
 
-    private void add( final DomainId key, final CombinableDomains cdc ) {
-        _combinable_domains_map.put( key, cdc );
+    private static void countDomains( final Map<DomainId, Integer> domain_counts,
+                                      final Map<DomainId, Integer> domain_protein_counts,
+                                      final Map<DomainId, DescriptiveStatistics> stats,
+                                      final Set<DomainId> saw_c,
+                                      final DomainId id_i,
+                                      final double support ) {
+        if ( domain_counts.containsKey( id_i ) ) {
+            domain_counts.put( id_i, 1 + domain_counts.get( ( id_i ) ) );
+            if ( !saw_c.contains( id_i ) ) {
+                domain_protein_counts.put( id_i, 1 + domain_protein_counts.get( ( id_i ) ) );
+            }
+        }
+        else {
+            stats.put( id_i, new BasicDescriptiveStatistics() );
+            domain_counts.put( id_i, 1 );
+            domain_protein_counts.put( id_i, 1 );
+        }
+        stats.get( id_i ).addValue( support );
+        saw_c.add( id_i );
     }
 
     public static BasicGenomeWideCombinableDomains createInstance( final List<Protein> protein_list,
@@ -243,7 +290,7 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
                                                                stats,
                                                                saw_c,
                                                                id_i,
-                                                               pd_i.getConfidence() );
+                                                               pd_i.getPerSequenceEvalue() );
                 if ( !saw_i.contains( id_i ) ) {
                     if ( dc_type == DomainCombinationType.BASIC ) {
                         saw_i.add( id_i );
@@ -314,26 +361,5 @@ public class BasicGenomeWideCombinableDomains implements GenomeWideCombinableDom
             instance.get( key_id ).setKeyDomainConfidenceDescriptiveStatistics( stats.get( key_id ) );
         }
         return instance;
-    }
-
-    private static void countDomains( final Map<DomainId, Integer> domain_counts,
-                                      final Map<DomainId, Integer> domain_protein_counts,
-                                      final Map<DomainId, DescriptiveStatistics> stats,
-                                      final Set<DomainId> saw_c,
-                                      final DomainId id_i,
-                                      final double support ) {
-        if ( domain_counts.containsKey( id_i ) ) {
-            domain_counts.put( id_i, 1 + domain_counts.get( ( id_i ) ) );
-            if ( !saw_c.contains( id_i ) ) {
-                domain_protein_counts.put( id_i, 1 + domain_protein_counts.get( ( id_i ) ) );
-            }
-        }
-        else {
-            stats.put( id_i, new BasicDescriptiveStatistics() );
-            domain_counts.put( id_i, 1 );
-            domain_protein_counts.put( id_i, 1 );
-        }
-        stats.get( id_i ).addValue( support );
-        saw_c.add( id_i );
     }
 }

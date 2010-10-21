@@ -1,4 +1,4 @@
-// $Id: SDI.java,v 1.12 2009/01/13 19:49:30 cmzmasek Exp $
+// $Id: SDI.java,v 1.14 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -87,6 +87,27 @@ public abstract class SDI {
         _mapping_cost = -1;
     }
 
+    // Helper method for "computeMappingCost()".
+    private void computeMappingCostHelper( final PhylogenyNode g ) {
+        if ( !g.isExternal() ) {
+            computeMappingCostHelper( g.getChildNode1() );
+            computeMappingCostHelper( g.getChildNode2() );
+            if ( ( g.getLink() != g.getChildNode1().getLink() ) && ( g.getLink() != g.getChildNode2().getLink() ) ) {
+                _mapping_cost += ( g.getChildNode1().getLink().getNodeId() + g.getChildNode2().getLink().getNodeId()
+                        - ( 2 * g.getLink().getNodeId() ) - 2 );
+            }
+            else if ( ( g.getLink() != g.getChildNode1().getLink() ) && ( g.getLink() == g.getChildNode2().getLink() ) ) {
+                _mapping_cost += ( g.getChildNode1().getLink().getNodeId() - g.getLink().getNodeId() + 1 );
+            }
+            else if ( ( g.getLink() == g.getChildNode1().getLink() ) && ( g.getLink() != g.getChildNode2().getLink() ) ) {
+                _mapping_cost += ( g.getChildNode2().getLink().getNodeId() - g.getLink().getNodeId() + 1 );
+            }
+            else {
+                _mapping_cost++;
+            }
+        }
+    }
+
     /**
      * Computes the cost of mapping the gene tree gene_tree onto the species
      * tree species_tree. Before this method can be called, the mapping has to
@@ -103,6 +124,72 @@ public abstract class SDI {
         _mapping_cost = 0;
         computeMappingCostHelper( _gene_tree.getRoot() );
         return _mapping_cost;
+    }
+
+    private TaxonomyComparisonBase determineTaxonomyComparisonBase() {
+        TaxonomyComparisonBase base = null;
+        boolean all_have_id = true;
+        boolean all_have_code = true;
+        boolean all_have_sn = true;
+        boolean all_have_cn = true;
+        for( final PhylogenyNodeIterator iter = _species_tree.iteratorExternalForward(); iter.hasNext(); ) {
+            final PhylogenyNode n = iter.next();
+            if ( n.getNodeData().isHasTaxonomy() ) {
+                final Taxonomy tax = n.getNodeData().getTaxonomy();
+                if ( ( tax.getIdentifier() == null ) || ForesterUtil.isEmpty( tax.getIdentifier().getValue() ) ) {
+                    all_have_id = false;
+                }
+                if ( ForesterUtil.isEmpty( tax.getTaxonomyCode() ) ) {
+                    all_have_code = false;
+                }
+                if ( ForesterUtil.isEmpty( tax.getScientificName() ) ) {
+                    all_have_sn = false;
+                }
+                if ( ForesterUtil.isEmpty( tax.getCommonName() ) ) {
+                    all_have_cn = false;
+                }
+            }
+            else {
+                throw new IllegalArgumentException( "species tree node [" + n + "] has no taxonomic data" );
+            }
+        }
+        for( final PhylogenyNodeIterator iter = _gene_tree.iteratorExternalForward(); iter.hasNext(); ) {
+            final PhylogenyNode n = iter.next();
+            if ( n.getNodeData().isHasTaxonomy() ) {
+                final Taxonomy tax = n.getNodeData().getTaxonomy();
+                if ( ( tax.getIdentifier() == null ) || ForesterUtil.isEmpty( tax.getIdentifier().getValue() ) ) {
+                    all_have_id = false;
+                }
+                if ( ForesterUtil.isEmpty( tax.getTaxonomyCode() ) ) {
+                    all_have_code = false;
+                }
+                if ( ForesterUtil.isEmpty( tax.getScientificName() ) ) {
+                    all_have_sn = false;
+                }
+                if ( ForesterUtil.isEmpty( tax.getCommonName() ) ) {
+                    all_have_cn = false;
+                }
+            }
+            else {
+                throw new IllegalArgumentException( "gene tree node [" + n + "] has no taxonomic data" );
+            }
+        }
+        if ( all_have_id ) {
+            base = TaxonomyComparisonBase.ID;
+        }
+        else if ( all_have_code ) {
+            base = TaxonomyComparisonBase.CODE;
+        }
+        else if ( all_have_sn ) {
+            base = TaxonomyComparisonBase.SCIENTIFIC_NAME;
+        }
+        else if ( all_have_cn ) {
+            base = TaxonomyComparisonBase.COMMON_NAME;
+        }
+        else {
+            throw new IllegalArgumentException( "gene tree and species tree have incomparable taxonomies" );
+        }
+        return base;
     }
 
     /**
@@ -130,17 +217,6 @@ public abstract class SDI {
      */
     public Phylogeny getSpeciesTree() {
         return _species_tree;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append( getClass() );
-        sb.append( ForesterUtil.LINE_SEPARATOR );
-        sb.append( "Duplications sum                   : " + getDuplicationsSum() );
-        sb.append( ForesterUtil.LINE_SEPARATOR );
-        sb.append( "mapping cost L                     : " + computeMappingCostL() );
-        return sb.toString();
     }
 
     /**
@@ -209,91 +285,15 @@ public abstract class SDI {
         }
     }
 
-    // Helper method for "computeMappingCost()".
-    private void computeMappingCostHelper( final PhylogenyNode g ) {
-        if ( !g.isExternal() ) {
-            computeMappingCostHelper( g.getChildNode1() );
-            computeMappingCostHelper( g.getChildNode2() );
-            if ( ( g.getLink() != g.getChildNode1().getLink() ) && ( g.getLink() != g.getChildNode2().getLink() ) ) {
-                _mapping_cost += ( g.getChildNode1().getLink().getNodeId() + g.getChildNode2().getLink().getNodeId()
-                        - ( 2 * g.getLink().getNodeId() ) - 2 );
-            }
-            else if ( ( g.getLink() != g.getChildNode1().getLink() ) && ( g.getLink() == g.getChildNode2().getLink() ) ) {
-                _mapping_cost += ( g.getChildNode1().getLink().getNodeId() - g.getLink().getNodeId() + 1 );
-            }
-            else if ( ( g.getLink() == g.getChildNode1().getLink() ) && ( g.getLink() != g.getChildNode2().getLink() ) ) {
-                _mapping_cost += ( g.getChildNode2().getLink().getNodeId() - g.getLink().getNodeId() + 1 );
-            }
-            else {
-                _mapping_cost++;
-            }
-        }
-    }
-
-    private TaxonomyComparisonBase determineTaxonomyComparisonBase() {
-        TaxonomyComparisonBase base = null;
-        boolean all_have_id = true;
-        boolean all_have_code = true;
-        boolean all_have_sn = true;
-        boolean all_have_cn = true;
-        for( final PhylogenyNodeIterator iter = _species_tree.iteratorExternalForward(); iter.hasNext(); ) {
-            final PhylogenyNode n = iter.next();
-            if ( n.getNodeData().isHasTaxonomy() ) {
-                final Taxonomy tax = n.getNodeData().getTaxonomy();
-                if ( ( tax.getIdentifier() == null ) || ForesterUtil.isEmpty( tax.getIdentifier().getValue() ) ) {
-                    all_have_id = false;
-                }
-                if ( ForesterUtil.isEmpty( tax.getTaxonomyCode() ) ) {
-                    all_have_code = false;
-                }
-                if ( !ForesterUtil.isEmpty( tax.getScientificName() ) ) {
-                    all_have_sn = false;
-                }
-                if ( !ForesterUtil.isEmpty( tax.getCommonName() ) ) {
-                    all_have_cn = false;
-                }
-            }
-            else {
-                throw new IllegalArgumentException( "species tree node [" + n + "] has no taxonomic data" );
-            }
-        }
-        for( final PhylogenyNodeIterator iter = _gene_tree.iteratorExternalForward(); iter.hasNext(); ) {
-            final PhylogenyNode n = iter.next();
-            if ( n.getNodeData().isHasTaxonomy() ) {
-                final Taxonomy tax = n.getNodeData().getTaxonomy();
-                if ( ( tax.getIdentifier() == null ) || ForesterUtil.isEmpty( tax.getIdentifier().getValue() ) ) {
-                    all_have_id = false;
-                }
-                if ( ForesterUtil.isEmpty( tax.getTaxonomyCode() ) ) {
-                    all_have_code = false;
-                }
-                if ( !ForesterUtil.isEmpty( tax.getScientificName() ) ) {
-                    all_have_sn = false;
-                }
-                if ( !ForesterUtil.isEmpty( tax.getCommonName() ) ) {
-                    all_have_cn = false;
-                }
-            }
-            else {
-                throw new IllegalArgumentException( "gene tree node [" + n + "] has no taxonomic data" );
-            }
-        }
-        if ( all_have_id ) {
-            base = TaxonomyComparisonBase.ID;
-        }
-        else if ( all_have_code ) {
-            base = TaxonomyComparisonBase.CODE;
-        }
-        else if ( all_have_sn ) {
-            base = TaxonomyComparisonBase.SCIENTIFIC_NAME;
-        }
-        else if ( all_have_cn ) {
-            base = TaxonomyComparisonBase.COMMON_NAME;
-        }
-        else {
-            throw new IllegalArgumentException( "gene tree and species tree have incomparable taxonomies" );
-        }
-        return base;
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append( getClass() );
+        sb.append( ForesterUtil.LINE_SEPARATOR );
+        sb.append( "Duplications sum                   : " + getDuplicationsSum() );
+        sb.append( ForesterUtil.LINE_SEPARATOR );
+        sb.append( "mapping cost L                     : " + computeMappingCostL() );
+        return sb.toString();
     }
 
     private static String taxonomyToString( final PhylogenyNode n, final TaxonomyComparisonBase base ) {

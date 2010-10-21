@@ -1,4 +1,4 @@
-// $Id: PhylogenyMethods.java,v 1.52 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: PhylogenyMethods.java,v 1.79 2010/10/02 02:54:33 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.forester.phylogeny.data.BranchColor;
 import org.forester.phylogeny.data.BranchWidth;
@@ -43,10 +45,10 @@ import org.forester.util.ForesterUtil;
 
 public class PhylogenyMethods {
 
-    private static PhylogenyMethods  _instance      = null;
-    private final Set<PhylogenyNode> _temp_hash_set = new HashSet<PhylogenyNode>();
-    private PhylogenyNode            _farthest_1    = null;
-    private PhylogenyNode            _farthest_2    = null;
+    private static PhylogenyMethods _instance      = null;
+    private final Set<Integer>      _temp_hash_set = new HashSet<Integer>();
+    private PhylogenyNode           _farthest_1    = null;
+    private PhylogenyNode           _farthest_2    = null;
 
     private PhylogenyMethods() {
         // Hidden constructor.
@@ -61,7 +63,7 @@ public class PhylogenyMethods {
      * @return distance between node1 and node2
      */
     public double calculateDistance( final PhylogenyNode node1, final PhylogenyNode node2 ) {
-        final PhylogenyNode lca = getLCA( node1, node2 );
+        final PhylogenyNode lca = obtainLCA( node1, node2 );
         final PhylogenyNode n1 = node1;
         final PhylogenyNode n2 = node2;
         return ( PhylogenyMethods.getDistance( n1, lca ) + PhylogenyMethods.getDistance( n2, lca ) );
@@ -114,58 +116,81 @@ public class PhylogenyMethods {
      * @param node2
      * @return LCA of node1 and node2
      */
-    public PhylogenyNode getLCA( final PhylogenyNode node1, final PhylogenyNode node2 ) {
+    public PhylogenyNode obtainLCA( final PhylogenyNode node1, final PhylogenyNode node2 ) {
         _temp_hash_set.clear();
-        boolean done_with_1 = false;
-        boolean done_with_2 = false;
         PhylogenyNode n1 = node1;
         PhylogenyNode n2 = node2;
-        while ( !done_with_1 || !done_with_2 ) {
-            if ( n1 == n2 ) {
-                return n1;
-            }
-            if ( !done_with_1 ) {
-                _temp_hash_set.add( n1 );
-            }
-            if ( !done_with_2 ) {
-                _temp_hash_set.add( n2 );
-            }
-            if ( !done_with_1 ) {
-                if ( !n1.isRoot() ) {
-                    n1 = n1.getParent();
-                    if ( _temp_hash_set.contains( n1 ) ) {
-                        return n1;
-                    }
-                }
-                else {
-                    done_with_1 = true;
-                }
-            }
-            if ( !done_with_2 ) {
-                if ( !n2.isRoot() ) {
-                    n2 = n2.getParent();
-                    if ( _temp_hash_set.contains( n2 ) ) {
-                        return n2;
-                    }
-                }
-                else {
-                    done_with_2 = true;
-                }
+        _temp_hash_set.add( n1.getNodeId() );
+        while ( !n1.isRoot() ) {
+            n1 = n1.getParent();
+            _temp_hash_set.add( n1.getNodeId() );
+        }
+        while ( !_temp_hash_set.contains( n2.getNodeId() ) && !n2.isRoot() ) {
+            n2 = n2.getParent();
+        }
+        if ( !_temp_hash_set.contains( n2.getNodeId() ) ) {
+            throw new IllegalArgumentException( "attempt to get LCA of two nodes which do not share a common root" );
+        }
+        return n2;
+    }
+
+    /**
+     * Returns all orthologs of the external PhylogenyNode n of this Phylogeny.
+     * Orthologs are returned as List of node references.
+     * <p>
+     * PRECONDITION: This tree must be binary and rooted, and speciation -
+     * duplication need to be assigned for each of its internal Nodes.
+     * <p>
+     * Returns null if this Phylogeny is empty or if n is internal.
+     * @param n
+     *            external PhylogenyNode whose orthologs are to be returned
+     * @return Vector of references to all orthologous Nodes of PhylogenyNode n
+     *         of this Phylogeny, null if this Phylogeny is empty or if n is
+     *         internal
+     */
+    public List<PhylogenyNode> getOrthologousNodes( final Phylogeny phy, final PhylogenyNode node ) {
+        final List<PhylogenyNode> nodes = new ArrayList<PhylogenyNode>();
+        final PhylogenyNodeIterator it = phy.iteratorExternalForward();
+        while ( it.hasNext() ) {
+            final PhylogenyNode temp_node = it.next();
+            if ( ( temp_node != node ) && isAreOrthologous( node, temp_node ) ) {
+                nodes.add( temp_node );
             }
         }
-        throw new IllegalArgumentException( "attempt to get LCA of two nodes which do not share a common root" );
+        return nodes;
+    }
+
+    public boolean isAreOrthologous( final PhylogenyNode node1, final PhylogenyNode node2 ) {
+        return !obtainLCA( node1, node2 ).isDuplication();
+    }
+
+    static double addPhylogenyDistances( final double a, final double b ) {
+        if ( ( a >= 0.0 ) && ( b >= 0.0 ) ) {
+            return a + b;
+        }
+        else if ( a >= 0.0 ) {
+            return a;
+        }
+        else if ( b >= 0.0 ) {
+            return b;
+        }
+        return PhylogenyNode.DISTANCE_DEFAULT;
     }
 
     // Helper for getUltraParalogousNodes( PhylogenyNode ).
     public static boolean areAllChildrenDuplications( final PhylogenyNode n ) {
         if ( n.isExternal() ) {
-            return true;
+            return false;
         }
         else {
-            // FIXME
             if ( n.isDuplication() ) {
-                return ( areAllChildrenDuplications( n.getChildNode1() ) && areAllChildrenDuplications( n
-                        .getChildNode2() ) );
+                //FIXME test me!
+                for( final PhylogenyNode desc : n.getDescendants() ) {
+                    if ( !areAllChildrenDuplications( desc ) ) {
+                        return false;
+                    }
+                }
+                return true;
             }
             else {
                 return false;
@@ -193,6 +218,29 @@ public class PhylogenyMethods {
             n = n.getParent();
         }
         return d;
+    }
+
+    public static short calculateMaxBranchesToLeaf( final PhylogenyNode node ) {
+        if ( node.isExternal() ) {
+            return 0;
+        }
+        short max = 0;
+        for( PhylogenyNode d : node.getAllExternalDescendants() ) {
+            short steps = 0;
+            while ( d != node ) {
+                if ( d.isCollapse() ) {
+                    steps = 0;
+                }
+                else {
+                    steps++;
+                }
+                d = d.getParent();
+            }
+            if ( max < steps ) {
+                max = steps;
+            }
+        }
+        return max;
     }
 
     public static int calculateMaxDepth( final Phylogeny phy ) {
@@ -231,22 +279,73 @@ public class PhylogenyMethods {
     }
 
     /**
-     * Returns the sum of different taxonomies of
+     * Returns the set of distinct taxonomies of
      * all external nodes of node.
      * If at least one the external nodes has no taxonomy,
-     * 0 is returned.
+     * null is returned.
      * 
      */
-    public static int calculateSumOfDistinctTaxonomies( final PhylogenyNode node ) {
+    public static Set<Taxonomy> obtainDistinctTaxonomies( final PhylogenyNode node ) {
         final List<PhylogenyNode> descs = node.getAllExternalDescendants();
         final Set<Taxonomy> tax_set = new HashSet<Taxonomy>();
         for( final PhylogenyNode n : descs ) {
             if ( !n.getNodeData().isHasTaxonomy() || n.getNodeData().getTaxonomy().isEmpty() ) {
-                return 0;
+                return null;
             }
             tax_set.add( n.getNodeData().getTaxonomy() );
         }
-        return tax_set.size();
+        return tax_set;
+    }
+
+    /**
+     * Returns a map of distinct taxonomies of
+     * all external nodes of node.
+     * If at least one of the external nodes has no taxonomy,
+     * null is returned.
+     * 
+     */
+    public static SortedMap<Taxonomy, Integer> obtainDistinctTaxonomyCounts( final PhylogenyNode node ) {
+        final List<PhylogenyNode> descs = node.getAllExternalDescendants();
+        final SortedMap<Taxonomy, Integer> tax_map = new TreeMap<Taxonomy, Integer>();
+        for( final PhylogenyNode n : descs ) {
+            if ( !n.getNodeData().isHasTaxonomy() || n.getNodeData().getTaxonomy().isEmpty() ) {
+                return null;
+            }
+            final Taxonomy t = n.getNodeData().getTaxonomy();
+            if ( tax_map.containsKey( t ) ) {
+                tax_map.put( t, tax_map.get( t ) + 1 );
+            }
+            else {
+                tax_map.put( t, 1 );
+            }
+        }
+        return tax_map;
+    }
+
+    /**
+     * Deep copies the phylogeny originating from this node.
+     */
+    static PhylogenyNode copySubTree( final PhylogenyNode source ) {
+        if ( source == null ) {
+            return null;
+        }
+        else {
+            final PhylogenyNode newnode = source.copyNodeData();
+            if ( !source.isExternal() ) {
+                for( int i = 0; i < source.getNumberOfDescendants(); ++i ) {
+                    newnode.setChildNode( i, PhylogenyMethods.copySubTree( source.getChildNode( i ) ) );
+                }
+            }
+            return newnode;
+        }
+    }
+
+    public static void deleteExternalNodesNegativeSelection( final Set<Integer> to_delete, final Phylogeny phy ) {
+        phy.hashIDs();
+        for( final Integer id : to_delete ) {
+            phy.deleteSubtree( phy.getNode( id ), true );
+        }
+        phy.hashIDs();
     }
 
     public static void deleteExternalNodesNegativeSelection( final String[] node_names_to_delete, final Phylogeny p )
@@ -264,9 +363,28 @@ public class PhylogenyMethods {
                     throw new IllegalArgumentException( "attempt to delete non-external node \""
                             + node_names_to_delete[ i ] + "\"" );
                 }
-                p.deleteExternalNode( n );
+                p.deleteSubtree( n, true );
             }
         }
+    }
+
+    public static void deleteExternalNodesPositiveSelection( final Set<Taxonomy> species_to_keep, final Phylogeny phy ) {
+        //   final Set<Integer> to_delete = new HashSet<Integer>();
+        for( final PhylogenyNodeIterator it = phy.iteratorExternalForward(); it.hasNext(); ) {
+            final PhylogenyNode n = it.next();
+            if ( n.getNodeData().isHasTaxonomy() ) {
+                if ( !species_to_keep.contains( n.getNodeData().getTaxonomy() ) ) {
+                    //to_delete.add( n.getNodeId() );
+                    phy.deleteSubtree( n, true );
+                }
+            }
+            else {
+                throw new IllegalArgumentException( "node " + n.getNodeId() + " has no taxonomic data" );
+            }
+        }
+        phy.hashIDs();
+        phy.externalNodesHaveChanged();
+        //  deleteExternalNodesNegativeSelection( to_delete, phy );
     }
 
     public static void deleteExternalNodesPositiveSelection( final String[] node_names_to_keep, final Phylogeny p ) {
@@ -336,6 +454,41 @@ public class PhylogenyMethods {
     }
 
     /**
+     * Convenience method
+     */
+    public static double[] getConfidenceValuesAsArray( final PhylogenyNode node ) {
+        if ( !node.getBranchData().isHasConfidences() ) {
+            return new double[ 0 ];
+        }
+        final double[] values = new double[ node.getBranchData().getConfidences().size() ];
+        int i = 0;
+        for( final Confidence c : node.getBranchData().getConfidences() ) {
+            values[ i++ ] = c.getValue();
+        }
+        return values;
+    }
+
+    /**
+     * Calculates the distance between PhylogenyNodes n1 and n2.
+     * PRECONDITION: n1 is a descendant of n2.
+     * 
+     * @param n1
+     *            a descendant of n2
+     * @param n2
+     * @return distance between n1 and n2
+     */
+    private static double getDistance( PhylogenyNode n1, final PhylogenyNode n2 ) {
+        double d = 0.0;
+        while ( n1 != n2 ) {
+            if ( n1.getDistanceToParent() > 0.0 ) {
+                d += n1.getDistanceToParent();
+            }
+            n1 = n1.getParent();
+        }
+        return d;
+    }
+
+    /**
      * Returns taxonomy t if all external descendants have 
      * the same taxonomy t, null otherwise.
      * 
@@ -391,44 +544,20 @@ public class PhylogenyMethods {
         return max;
     }
 
-    /**
-     * Returns all orthologs of the external PhylogenyNode n of this Phylogeny.
-     * Orthologs are returned as List of node references.
-     * <p>
-     * PRECONDITION: This tree must be binary and rooted, and speciation -
-     * duplication need to be assigned for each of its internal Nodes.
-     * <p>
-     * Returns null if this Phylogeny is empty or if n is internal.
-     * <p>
-     * (Last modified: 11/22/00)
-     * 
-     * @param n
-     *            external PhylogenyNode whose orthologs are to be returned
-     * @return Vector of references to all orthologous Nodes of PhylogenyNode n
-     *         of this Phylogeny, null if this Phylogeny is empty or if n is
-     *         internal
-     */
-    public static List<PhylogenyNode> getOrthologousNodes( final PhylogenyNode n ) {
-        PhylogenyNode node = n;
-        PhylogenyNode prev = null;
-        final List<PhylogenyNode> v = new ArrayList<PhylogenyNode>();
-        if ( !node.isExternal() ) {
-            return null;
-        }
-        // FIXME
-        while ( !node.isRoot() ) {
-            prev = node;
-            node = node.getParent();
-            if ( !node.isDuplication() ) {
-                if ( node.getChildNode1() == prev ) {
-                    v.addAll( node.getChildNode2().getAllExternalDescendants() );
-                }
-                else {
-                    v.addAll( node.getChildNode1().getAllExternalDescendants() );
+    static public int getMinimumDescendentsPerInternalNodes( final Phylogeny phy ) {
+        int min = Integer.MAX_VALUE;
+        int d = 0;
+        PhylogenyNode n;
+        for( final PhylogenyNodeIterator it = phy.iteratorPreorder(); it.hasNext(); ) {
+            n = it.next();
+            if ( n.isInternal() ) {
+                d = n.getNumberOfDescendants();
+                if ( d < min ) {
+                    min = d;
                 }
             }
         }
-        return v;
+        return min;
     }
 
     /**
@@ -448,42 +577,6 @@ public class PhylogenyMethods {
         else {
             return node.getNodeData().getTaxonomy().getCommonName();
         }
-    }
-
-    /**
-     * Returns all external nodes (except n) which are members of the 2nd
-     * smallest subtree containing PhylogenyNode n. In other words, this method
-     * returns all external descendants (except n itself) of n's parent's parent
-     * node (n.getParent().getParent()). We call these "subtree neighbors". This
-     * concept is not dependent on duplications and speciations. Nodes are
-     * returned as Vector of references to Nodes.
-     * <p>
-     * PRECONDITION: This tree must be binary and rooted.
-     * <p>
-     * Returns null if this Phylogeny is empty or if n is internal.
-     * <p>
-     * @param n
-     *            external PhylogenyNode whose "subtree neighbors" are to be
-     *            returned
-     * @return Vector of references to all "subtree neighbors" of PhylogenyNode
-     *         n of this Phylogeny, null if this Phylogeny is empty or if n is
-     *         internal
-     */
-    public static List<PhylogenyNode> getSubtreeNeighbors( final PhylogenyNode n ) {
-        // FIXME
-        PhylogenyNode node = n;
-        if ( !node.isExternal() ) {
-            return null;
-        }
-        if ( !node.isRoot() ) {
-            node = node.getParent();
-        }
-        if ( !node.isRoot() ) {
-            node = node.getParent();
-        }
-        final List<PhylogenyNode> v = node.getAllExternalDescendants();
-        v.remove( n );
-        return v;
     }
 
     /**
@@ -578,7 +671,7 @@ public class PhylogenyMethods {
      *         internal
      */
     public static List<PhylogenyNode> getUltraParalogousNodes( final PhylogenyNode n ) {
-        // FIXME
+        // FIXME test me
         PhylogenyNode node = n;
         if ( !node.isExternal() ) {
             return null;
@@ -586,9 +679,9 @@ public class PhylogenyMethods {
         while ( !node.isRoot() && node.getParent().isDuplication() && areAllChildrenDuplications( node.getParent() ) ) {
             node = node.getParent();
         }
-        final List<PhylogenyNode> v = node.getAllExternalDescendants();
-        v.remove( n );
-        return v;
+        final List<PhylogenyNode> nodes = node.getAllExternalDescendants();
+        nodes.remove( n );
+        return nodes;
     }
 
     public static String inferCommonPartOfScientificNameOfDescendants( final PhylogenyNode node ) {
@@ -636,6 +729,47 @@ public class PhylogenyMethods {
         return false;
     }
 
+    /*
+     * This is case insensitive.
+     * 
+     */
+    public synchronized static boolean isTaxonomyHasIdentifierOfGivenProvider( final Taxonomy tax,
+                                                                               final String[] providers ) {
+        if ( ( tax.getIdentifier() != null ) && !ForesterUtil.isEmpty( tax.getIdentifier().getProvider() ) ) {
+            final String my_tax_prov = tax.getIdentifier().getProvider();
+            for( final String provider : providers ) {
+                if ( provider.equalsIgnoreCase( my_tax_prov ) ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private static boolean match( final String s,
+                                  final String query,
+                                  final boolean case_sensitive,
+                                  final boolean partial ) {
+        if ( ForesterUtil.isEmpty( s ) || ForesterUtil.isEmpty( query ) ) {
+            return false;
+        }
+        String my_s = s.trim();
+        String my_query = query.trim();
+        if ( !case_sensitive ) {
+            my_s = my_s.toLowerCase();
+            my_query = my_query.toLowerCase();
+        }
+        if ( partial ) {
+            return my_s.indexOf( my_query ) >= 0;
+        }
+        else {
+            return my_s.equals( my_query );
+        }
+    }
+
     public static void midpointRoot( final Phylogeny phylogeny ) {
         if ( phylogeny.getNumberOfExternalNodes() < 2 ) {
             return;
@@ -653,7 +787,7 @@ public class PhylogenyMethods {
                 .getRoot() ) ) {
             n = f2;
         }
-        while ( x > n.getDistanceToParent() ) {
+        while ( ( x > n.getDistanceToParent() ) && !n.isRoot() ) {
             x -= n.getDistanceToParent();
             n = n.getParent();
         }
@@ -694,8 +828,7 @@ public class PhylogenyMethods {
             return nodes;
         }
         for( final PhylogenyNodeIterator iter = phy.iteratorPreorder(); iter.hasNext(); ) {
-            final PhylogenyNode node = iter.next();
-            nodes.add( node );
+            nodes.add( iter.next() );
         }
         return nodes;
     }
@@ -721,6 +854,28 @@ public class PhylogenyMethods {
                 setBranchColorValue( node, new Color( ForesterUtil.roundToInt( red / n ), ForesterUtil
                         .roundToInt( green / n ), ForesterUtil.roundToInt( blue / n ) ) );
             }
+        }
+    }
+
+    public static void removeNode( final PhylogenyNode remove_me, final Phylogeny phylogeny ) {
+        if ( remove_me.isRoot() ) {
+            throw new IllegalArgumentException( "ill advised attempt to remove root node" );
+        }
+        if ( remove_me.isExternal() ) {
+            phylogeny.deleteSubtree( remove_me, false );
+        }
+        else {
+            final PhylogenyNode parent = remove_me.getParent();
+            final List<PhylogenyNode> descs = remove_me.getDescendants();
+            parent.removeChildNode( remove_me );
+            for( final PhylogenyNode desc : descs ) {
+                parent.addAsChild( desc );
+                desc.setDistanceToParent( addPhylogenyDistances( remove_me.getDistanceToParent(), desc
+                        .getDistanceToParent() ) );
+            }
+            remove_me.setParent( null );
+            phylogeny.setIdHash( null );
+            phylogeny.externalNodesHaveChanged();
         }
     }
 
@@ -918,6 +1073,13 @@ public class PhylogenyMethods {
         c.setValue( confidence_value );
     }
 
+    public static void setScientificName( final PhylogenyNode node, final String scientific_name ) {
+        if ( !node.getNodeData().isHasTaxonomy() ) {
+            node.getNodeData().setTaxonomy( new Taxonomy() );
+        }
+        node.getNodeData().getTaxonomy().setScientificName( scientific_name );
+    }
+
     /**
      * Convenience method to set the taxonomy code of a phylogeny node.
      * 
@@ -955,67 +1117,8 @@ public class PhylogenyMethods {
             }
         }
         for( final PhylogenyNode phylogenyNode : nodes_to_delete ) {
-            to_be_stripped.deleteExternalNode( phylogenyNode );
+            to_be_stripped.deleteSubtree( phylogenyNode, true );
         }
         return nodes_to_delete.size();
-    }
-
-    /**
-     * Deep copies the phylogeny originating from this node.
-     */
-    static PhylogenyNode copySubTree( final PhylogenyNode source ) {
-        if ( source == null ) {
-            return null;
-        }
-        else {
-            final PhylogenyNode newnode = source.copyNodeData();
-            if ( !source.isExternal() ) {
-                for( int i = 0; i < source.getNumberOfDescendants(); ++i ) {
-                    newnode.setChildNode( i, PhylogenyMethods.copySubTree( source.getChildNode( i ) ) );
-                }
-            }
-            return newnode;
-        }
-    }
-
-    /**
-     * Calculates the distance between PhylogenyNodes n1 and n2.
-     * PRECONDITION: n1 is a descendant of n2.
-     * 
-     * @param n1
-     *            a descendant of n2
-     * @param n2
-     * @return distance between n1 and n2
-     */
-    private static double getDistance( PhylogenyNode n1, final PhylogenyNode n2 ) {
-        double d = 0.0;
-        while ( n1 != n2 ) {
-            if ( n1.getDistanceToParent() > 0.0 ) {
-                d += n1.getDistanceToParent();
-            }
-            n1 = n1.getParent();
-        }
-        return d;
-    }
-
-    private static boolean match( final String s,
-                                  final String query,
-                                  final boolean case_sensitive,
-                                  final boolean partial ) {
-        if ( ForesterUtil.isEmpty( s ) || ForesterUtil.isEmpty( query ) ) {
-            return false;
-        }
-        String my_s = s.trim();
-        String my_query = query.trim();
-        if ( !case_sensitive ) {
-            my_s = my_s.toLowerCase();
-            my_query = my_query.toLowerCase();
-        }
-        if ( partial ) {
-            return my_s.indexOf( my_query ) >= 0;
-        }
-        else {
-            return my_s.equals( my_query );
-        }
     }
 }

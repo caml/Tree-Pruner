@@ -1,4 +1,4 @@
-// $Id: PhyloXmlParser.java,v 1.5 2009/06/30 01:37:28 cmzmasek Exp $
+// $Id: PhyloXmlParser.java,v 1.13 2010/09/29 23:50:17 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URL;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -43,8 +44,9 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.forester.io.parsers.PhylogenyParser;
-import org.forester.io.parsers.PhylogenyParserException;
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.phylogeny.Phylogeny;
+import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -63,7 +65,7 @@ public class PhyloXmlParser implements PhylogenyParser {
     final public static String   APACHE_FEATURES_VALIDATION_SCHEMA          = "http://apache.org/xml/features/validation/schema";
     final public static String   APACHE_FEATURES_VALIDATION_SCHEMA_FULL     = "http://apache.org/xml/features/validation/schema-full-checking";
     final public static String   APACHE_PROPERTIES_SCHEMA_EXTERNAL_LOCATION = "http://apache.org/xml/properties/schema/external-schemaLocation";
-    final static private boolean TIME                                       = true;
+    final static private boolean TIME                                       = false;
     private Object               _source;
     private boolean              _valid;
     private boolean              _zipped_inputstream;
@@ -86,6 +88,29 @@ public class PhyloXmlParser implements PhylogenyParser {
         return _error_messages;
     }
 
+    private Reader getReaderFromZipFile() throws IOException {
+        Reader reader = null;
+        final ZipFile zip_file = new ZipFile( getSource().toString() );
+        final Enumeration<?> zip_file_entries = zip_file.entries();
+        while ( zip_file_entries.hasMoreElements() ) {
+            final ZipEntry zip_file_entry = ( ZipEntry ) zip_file_entries.nextElement();
+            if ( !zip_file_entry.isDirectory() && ( zip_file_entry.getSize() > 0 ) ) {
+                final InputStream is = zip_file.getInputStream( zip_file_entry );
+                reader = new InputStreamReader( is );
+                break;
+            }
+        }
+        return reader;
+    }
+
+    private String getSchemaLocation() {
+        return _schema_location;
+    }
+
+    private Object getSource() {
+        return _source;
+    }
+
     public int getWarningCount() {
         return _warning_count;
     }
@@ -94,8 +119,16 @@ public class PhyloXmlParser implements PhylogenyParser {
         return _warning_messages;
     }
 
+    private void init() {
+        setZippedInputstream( false );
+    }
+
     public boolean isValid() {
         return _valid;
+    }
+
+    private boolean isZippedInputstream() {
+        return _zipped_inputstream;
     }
 
     public Phylogeny[] parse() throws IOException, PhylogenyParserException {
@@ -183,7 +216,7 @@ public class PhyloXmlParser implements PhylogenyParser {
                 xml_reader.parse( new InputSource( string_reader ) );
             }
             else {
-                throw new PhylogenyParserException( "attempt to parse object of unsupported type: \""
+                throw new PhylogenyParserException( "phyloXML parser: attempt to parse object of unsupported type: \""
                         + getSource().getClass() + "\"" );
             }
             if ( TIME ) {
@@ -202,7 +235,7 @@ public class PhyloXmlParser implements PhylogenyParser {
             throw new PhylogenyParserException( "problem with input source: " + e.getLocalizedMessage() );
         }
         catch ( final Exception e ) {
-            throw new PhylogenyParserException( "problem with sax parsing: " + e.getLocalizedMessage() );
+            throw new PhylogenyParserException( e.getLocalizedMessage() );
         }
         catch ( final Error err ) {
             err.printStackTrace();
@@ -214,6 +247,14 @@ public class PhyloXmlParser implements PhylogenyParser {
             ps[ i++ ] = phylogeny;
         }
         return ps;
+    }
+
+    private void reset() {
+        _valid = true;
+        _error_count = 0;
+        _warning_count = 0;
+        _error_messages = new StringBuffer();
+        _warning_messages = new StringBuffer();
     }
 
     public void setSource( final Object source ) {
@@ -228,43 +269,18 @@ public class PhyloXmlParser implements PhylogenyParser {
         _zipped_inputstream = zipped_inputstream;
     }
 
-    private Reader getReaderFromZipFile() throws IOException {
-        Reader reader = null;
-        final ZipFile zip_file = new ZipFile( getSource().toString() );
-        final Enumeration<?> zip_file_entries = zip_file.entries();
-        while ( zip_file_entries.hasMoreElements() ) {
-            final ZipEntry zip_file_entry = ( ZipEntry ) zip_file_entries.nextElement();
-            if ( !zip_file_entry.isDirectory() && ( zip_file_entry.getSize() > 0 ) ) {
-                final InputStream is = zip_file.getInputStream( zip_file_entry );
-                reader = new InputStreamReader( is );
-                break;
-            }
+    public static PhyloXmlParser createPhyloXmlParserXsdValidating() {
+        final PhyloXmlParser xml_parser = new PhyloXmlParser();
+        final ClassLoader cl = PhyloXmlParser.class.getClassLoader();
+        final URL xsd_url = cl.getResource( ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE );
+        if ( xsd_url != null ) {
+            xml_parser.setValidateAgainstSchema( xsd_url.toString() );
         }
-        return reader;
-    }
-
-    private String getSchemaLocation() {
-        return _schema_location;
-    }
-
-    private Object getSource() {
-        return _source;
-    }
-
-    private void init() {
-        setZippedInputstream( false );
-    }
-
-    private boolean isZippedInputstream() {
-        return _zipped_inputstream;
-    }
-
-    private void reset() {
-        _valid = true;
-        _error_count = 0;
-        _warning_count = 0;
-        _error_messages = new StringBuffer();
-        _warning_messages = new StringBuffer();
+        else {
+            throw new IllegalStateException( "failed to get URL for phyloXML XSD from jar file from ["
+                    + ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE + "]" );
+        }
+        return xml_parser;
     }
 
     private class PhyloXmlParserErrorHandler extends DefaultHandler {
@@ -273,14 +289,16 @@ public class PhyloXmlParser implements PhylogenyParser {
         public void error( final SAXParseException e ) {
             ++_error_count;
             _valid = false;
-            throw new PhyloXmlException( "XML error at line " + e.getLineNumber() + ": \n" + e.getMessage() );
+            throw new PhyloXmlException( "phyloXML error at line " + e.getLineNumber() + ": \n"
+                    + e.getLocalizedMessage() );
         }
 
         @Override
         public void fatalError( final SAXParseException e ) {
             ++_error_count;
             _valid = false;
-            throw new PhyloXmlException( "Fatal XML error at line " + e.getLineNumber() + ": \n" + e.getMessage() );
+            throw new PhyloXmlException( "fatal XML error at line " + e.getLineNumber() + ": \n"
+                    + e.getLocalizedMessage() );
         }
 
         @Override

@@ -1,4 +1,4 @@
-// $Id: TolParser.java,v 1.9 2009/03/19 02:12:45 cmzmasek Exp $
+// $Id: TolParser.java,v 1.11 2010/09/29 23:50:18 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -42,7 +42,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.forester.io.parsers.PhylogenyParser;
-import org.forester.io.parsers.PhylogenyParserException;
+import org.forester.io.parsers.util.PhylogenyParserException;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 import org.xml.sax.InputSource;
@@ -84,6 +84,29 @@ public class TolParser implements PhylogenyParser {
         return _error_messages;
     }
 
+    private Reader getReaderFromZipFile() throws IOException {
+        Reader reader = null;
+        final ZipFile zip_file = new ZipFile( getSource().toString() );
+        final Enumeration<?> zip_file_entries = zip_file.entries();
+        while ( zip_file_entries.hasMoreElements() ) {
+            final ZipEntry zip_file_entry = ( ZipEntry ) zip_file_entries.nextElement();
+            if ( !zip_file_entry.isDirectory() && ( zip_file_entry.getSize() > 0 ) ) {
+                final InputStream is = zip_file.getInputStream( zip_file_entry );
+                reader = new InputStreamReader( is );
+                break;
+            }
+        }
+        return reader;
+    }
+
+    private String getSchemaLocation() {
+        return _schema_location;
+    }
+
+    private Object getSource() {
+        return _source;
+    }
+
     public int getWarningCount() {
         return _warning_count;
     }
@@ -92,8 +115,16 @@ public class TolParser implements PhylogenyParser {
         return _warning_messages;
     }
 
+    private void init() {
+        setZippedInputstream( false );
+    }
+
     public boolean isValid() {
         return _valid;
+    }
+
+    private boolean isZippedInputstream() {
+        return _zipped_inputstream;
     }
 
     public Phylogeny[] parse() throws IOException, PhylogenyParserException {
@@ -207,6 +238,14 @@ public class TolParser implements PhylogenyParser {
         return ps;
     }
 
+    private void reset() {
+        _valid = true;
+        _error_count = 0;
+        _warning_count = 0;
+        _error_messages = new StringBuffer();
+        _warning_messages = new StringBuffer();
+    }
+
     public void setSource( final Object source ) {
         _source = source;
     }
@@ -217,45 +256,6 @@ public class TolParser implements PhylogenyParser {
 
     public void setZippedInputstream( final boolean zipped_inputstream ) {
         _zipped_inputstream = zipped_inputstream;
-    }
-
-    private Reader getReaderFromZipFile() throws IOException {
-        Reader reader = null;
-        final ZipFile zip_file = new ZipFile( getSource().toString() );
-        final Enumeration<?> zip_file_entries = zip_file.entries();
-        while ( zip_file_entries.hasMoreElements() ) {
-            final ZipEntry zip_file_entry = ( ZipEntry ) zip_file_entries.nextElement();
-            if ( !zip_file_entry.isDirectory() && ( zip_file_entry.getSize() > 0 ) ) {
-                final InputStream is = zip_file.getInputStream( zip_file_entry );
-                reader = new InputStreamReader( is );
-                break;
-            }
-        }
-        return reader;
-    }
-
-    private String getSchemaLocation() {
-        return _schema_location;
-    }
-
-    private Object getSource() {
-        return _source;
-    }
-
-    private void init() {
-        setZippedInputstream( false );
-    }
-
-    private boolean isZippedInputstream() {
-        return _zipped_inputstream;
-    }
-
-    private void reset() {
-        _valid = true;
-        _error_count = 0;
-        _warning_count = 0;
-        _error_messages = new StringBuffer();
-        _warning_messages = new StringBuffer();
     }
 
     private class TolParserErrorHandler extends DefaultHandler {

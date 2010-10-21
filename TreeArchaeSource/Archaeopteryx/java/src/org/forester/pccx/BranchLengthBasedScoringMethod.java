@@ -39,6 +39,21 @@ public class BranchLengthBasedScoringMethod extends BranchCountingBasedScoringMe
     public static final double MIN_ALLOWED_BL_VALUE = 0.001;
 
     @Override
+    double calculateScoreContributionPerExternalNode( final PhylogenyNode external_node,
+                                                      final PhylogenyNode current_node ) {
+        double score_contribution = 0.0;
+        if ( current_node == external_node ) {
+            score_contribution = external_node.getDistanceToParent();
+            // This, of course, is completely /ad hoc/.
+        }
+        else {
+            score_contribution = ModelingUtils.calculateBranchLengthSum( external_node, current_node );
+        }
+        return 1.0 / ( score_contribution > BranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE ? score_contribution
+                : BranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE );
+    }
+
+    @Override
     public String getDesciption() {
         return "sum of 1/branch-length-sum [for self: 1/branch-length] [min branch length: "
                 + BranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE + "]";
@@ -54,20 +69,5 @@ public class BranchLengthBasedScoringMethod extends BranchCountingBasedScoringMe
                     : BranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE ) );
         }
         return 1.0 / s;
-    }
-
-    @Override
-    double calculateScoreContributionPerExternalNode( final PhylogenyNode external_node,
-                                                      final PhylogenyNode current_node ) {
-        double score_contribution = 0.0;
-        if ( current_node == external_node ) {
-            score_contribution = external_node.getDistanceToParent();
-            // This, of course, is completely /ad hoc/.
-        }
-        else {
-            score_contribution = ModelingUtils.calculateBranchLengthSum( external_node, current_node );
-        }
-        return 1.0 / ( score_contribution > BranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE ? score_contribution
-                : BranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE );
     }
 }

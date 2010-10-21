@@ -66,6 +66,22 @@ class PrintableSpeciesSpecificDomainSimilariyData implements SpeciesSpecificDoma
         return _combinable_domain_id_to_count_map;
     }
 
+    private int getCombinableDomainsCount() {
+        return _combinable_domains_count;
+    }
+
+    private DescriptiveStatistics getKeyDomainConfidenceDescriptiveStatistics() {
+        return _key_domain_confidence_descriptive_statistics;
+    }
+
+    private int getKeyDomainDomainsCount() {
+        return _key_domain_domains_count;
+    }
+
+    private int getKeyDomainProteinsCount() {
+        return _key_domain_proteins_count;
+    }
+
     public int getNumberOfProteinsExhibitingCombinationWith( final DomainId domain_id ) {
         if ( !getCombinableDomainIdToCountsMap().containsKey( domain_id ) ) {
             throw new IllegalArgumentException( "Domain with id " + domain_id + " not found" );
@@ -121,21 +137,5 @@ class PrintableSpeciesSpecificDomainSimilariyData implements SpeciesSpecificDoma
             }
         }
         return sb;
-    }
-
-    private int getCombinableDomainsCount() {
-        return _combinable_domains_count;
-    }
-
-    private DescriptiveStatistics getKeyDomainConfidenceDescriptiveStatistics() {
-        return _key_domain_confidence_descriptive_statistics;
-    }
-
-    private int getKeyDomainDomainsCount() {
-        return _key_domain_domains_count;
-    }
-
-    private int getKeyDomainProteinsCount() {
-        return _key_domain_proteins_count;
     }
 }

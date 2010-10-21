@@ -1,4 +1,4 @@
-// $Id: DomainLengths.java,v 1.5 2008/12/13 06:08:59 cmzmasek Exp $
+// $Id: DomainLengths.java,v 1.6 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -51,6 +51,13 @@ public class DomainLengths {
         getLengthStatistic( species ).addValue( domain_length );
     }
 
+    private void addLengthStatistics( final Species species, final DescriptiveStatistics length_statistic ) {
+        if ( getLengthStatistics().containsKey( species ) ) {
+            throw new IllegalArgumentException( "length statistics for [" + species.getSpeciesId() + "] already added" );
+        }
+        getLengthStatistics().put( species, length_statistic );
+    }
+
     /**
      * Returns descriptive statistics based on the arithmetic means
      * for each species.  
@@ -88,6 +95,10 @@ public class DomainLengths {
 
     public DescriptiveStatistics getLengthStatistic( final Species species ) {
         return getLengthStatistics().get( species );
+    }
+
+    private SortedMap<Species, DescriptiveStatistics> getLengthStatistics() {
+        return _length_statistics;
     }
 
     public List<DescriptiveStatistics> getLengthStatisticsList() {
@@ -128,16 +139,5 @@ public class DomainLengths {
 
     public boolean isHasLengthStatistic( final Species species ) {
         return getLengthStatistics().containsKey( species );
-    }
-
-    private void addLengthStatistics( final Species species, final DescriptiveStatistics length_statistic ) {
-        if ( getLengthStatistics().containsKey( species ) ) {
-            throw new IllegalArgumentException( "length statistics for [" + species.getSpeciesId() + "] already added" );
-        }
-        getLengthStatistics().put( species, length_statistic );
-    }
-
-    private SortedMap<Species, DescriptiveStatistics> getLengthStatistics() {
-        return _length_statistics;
     }
 }

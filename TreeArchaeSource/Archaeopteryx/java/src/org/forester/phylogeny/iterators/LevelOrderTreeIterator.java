@@ -1,4 +1,4 @@
-// $Id: LevelOrderTreeIterator.java,v 1.8 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: LevelOrderTreeIterator.java,v 1.9 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -79,6 +79,25 @@ public class LevelOrderTreeIterator implements PhylogenyNodeIterator {
         reset();
     }
 
+    // Private methods
+    // ---------------
+    /**
+     * Returns the queue upon which this iterator is based.
+     * 
+     */
+    private Queue getQueue() {
+        return _queue;
+    }
+
+    /**
+     * Returns the root of the phylogeny this iterators parses over.
+     * 
+     * @return the root of the phylogeny this iterators parses over.
+     */
+    private PhylogenyNode getRoot() {
+        return _root;
+    }
+
     // Public methods
     // --------------
     /**
@@ -124,24 +143,5 @@ public class LevelOrderTreeIterator implements PhylogenyNodeIterator {
     public void reset() {
         getQueue().clear();
         getQueue().enqueue( getRoot() );
-    }
-
-    // Private methods
-    // ---------------
-    /**
-     * Returns the queue upon which this iterator is based.
-     * 
-     */
-    private Queue getQueue() {
-        return _queue;
-    }
-
-    /**
-     * Returns the root of the phylogeny this iterators parses over.
-     * 
-     * @return the root of the phylogeny this iterators parses over.
-     */
-    private PhylogenyNode getRoot() {
-        return _root;
     }
 } // enod of class LevelOrderTreeIterator

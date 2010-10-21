@@ -1,4 +1,4 @@
-// $Id: AsciiHistogram.java,v 1.10 2008/03/09 00:11:16 cmzmasek Exp $
+// $Id: AsciiHistogram.java,v 1.11 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -39,44 +39,6 @@ public class AsciiHistogram {
     public AsciiHistogram( final DescriptiveStatistics stats, final String title ) {
         _stats = stats;
         _title = title;
-    }
-
-    public StringBuffer toStringBuffer( final double min,
-                                        final double max,
-                                        final int number_of_bins,
-                                        final char symbol,
-                                        final int size,
-                                        final int digits ) {
-        if ( min >= max ) {
-            throw new IllegalArgumentException( "min [" + min + "] is larger than or equal to max [" + max + "]" );
-        }
-        if ( number_of_bins < 3 ) {
-            throw new IllegalArgumentException( "number of bins is smaller than 3" );
-        }
-        if ( size < 2 ) {
-            throw new IllegalArgumentException( "size is smaller than 2" );
-        }
-        final StringBuffer sb = new StringBuffer();
-        int max_count = 0;
-        final double binning_factor = number_of_bins / ( max - min );
-        final int[] bins = BasicDescriptiveStatistics
-                .performBinning( getDescriptiveStatistics().getDataAsDoubleArray(), min, max, number_of_bins );
-        for( final int bin : bins ) {
-            if ( bin > max_count ) {
-                max_count = bin;
-            }
-        }
-        drawToStringBuffer( min, symbol, size, digits, sb, bins, max_count, 0, 0, binning_factor );
-        return sb;
-    }
-
-    public StringBuffer toStringBuffer( final int bins, final char symbol, final int size, final int digits ) {
-        return toStringBuffer( getDescriptiveStatistics().getMin(),
-                               getDescriptiveStatistics().getMax(),
-                               bins,
-                               symbol,
-                               size,
-                               digits );
     }
 
     private void drawToStringBuffer( final double min,
@@ -123,5 +85,43 @@ public class AsciiHistogram {
 
     private String getTitle() {
         return _title;
+    }
+
+    public StringBuffer toStringBuffer( final double min,
+                                        final double max,
+                                        final int number_of_bins,
+                                        final char symbol,
+                                        final int size,
+                                        final int digits ) {
+        if ( min >= max ) {
+            throw new IllegalArgumentException( "min [" + min + "] is larger than or equal to max [" + max + "]" );
+        }
+        if ( number_of_bins < 3 ) {
+            throw new IllegalArgumentException( "number of bins is smaller than 3" );
+        }
+        if ( size < 2 ) {
+            throw new IllegalArgumentException( "size is smaller than 2" );
+        }
+        final StringBuffer sb = new StringBuffer();
+        int max_count = 0;
+        final double binning_factor = number_of_bins / ( max - min );
+        final int[] bins = BasicDescriptiveStatistics
+                .performBinning( getDescriptiveStatistics().getDataAsDoubleArray(), min, max, number_of_bins );
+        for( final int bin : bins ) {
+            if ( bin > max_count ) {
+                max_count = bin;
+            }
+        }
+        drawToStringBuffer( min, symbol, size, digits, sb, bins, max_count, 0, 0, binning_factor );
+        return sb;
+    }
+
+    public StringBuffer toStringBuffer( final int bins, final char symbol, final int size, final int digits ) {
+        return toStringBuffer( getDescriptiveStatistics().getMin(),
+                               getDescriptiveStatistics().getMax(),
+                               bins,
+                               symbol,
+                               size,
+                               digits );
     }
 }

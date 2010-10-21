@@ -1,4 +1,4 @@
-// $Id: PhyloXmlMapping.java,v 1.2 2009/01/13 19:49:32 cmzmasek Exp $
+// $Id: PhyloXmlMapping.java,v 1.12 2010/06/09 17:58:31 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -59,6 +59,8 @@ public final class PhyloXmlMapping {
     public static final String TAXONOMY_COMMON_NAME                                = "common_name";
     public static final String TAXONOMY_CODE                                       = "code";
     public static final String TAXONOMY_RANK                                       = "rank";
+    public static final String TAXONOMY_SYNONYM                                    = "synonym";
+    public static final String TAXONOMY_AUTHORITY                                  = "authority";
     public static final String DISTRIBUTION                                        = "distribution";
     public static final String BINARY_CHARACTERS                                   = "binary_characters";
     public static final String BINARY_CHARACTERS_PRESENT                           = "present";
@@ -79,9 +81,9 @@ public final class PhyloXmlMapping {
     public final static String SEQUENCE_DOMAIN_ARCHITECTURE_PROT_DOMAIN_FROM       = "from";
     public final static String SEQUENCE_DOMAIN_ARCHITECTURE_PROT_DOMAIN_TO         = "to";
     public final static String SEQUENCE_DOMAIN_ARCHITECTURE_PROT_DOMAIN_CONFIDENCE = "confidence";
-    public final static String NODE_IDENTIFIER                                     = "node_id";
+    // public final static String NODE_IDENTIFIER                                     = "node_id";
     public final static String IDENTIFIER                                          = "id";
-    public final static String IDENTIFIER_TYPE_ATTR                                = "type";
+    public final static String IDENTIFIER_PROVIDER_ATTR                            = "provider";
     public static final String URI                                                 = "uri";
     public static final String WIDTH                                               = "width";
     public final static String EVENTS                                              = "events";
@@ -92,12 +94,12 @@ public final class PhyloXmlMapping {
     public final static String SEQUENCE_DOMAIN_ARCHITECURE                         = "domain_architecture";
     public final static String SEQUENCE_DOMAIN_ARCHITECTURE_LENGTH                 = "length";
     public final static String SEQUENCE_TYPE                                       = "type";
-    public final static String TAXONOMY_TYPE                                       = "type";
     public static final String BINARY_CHARACTER                                    = "bc";
     public static final String URI_DESC_ATTR                                       = "desc";
     public static final String TYPE_ATTR                                           = "type";
     public static final String REFERENCE                                           = "reference";
     public static final String REFERENCE_DOI_ATTR                                  = "doi";
+    public static final String REFERENCE_DESC                                      = "desc";
     public static final String PROPERTY                                            = "property";
     public static final String PROPERTY_REF                                        = "ref";
     public static final String PROPERTY_UNIT                                       = "unit";
@@ -107,15 +109,27 @@ public final class PhyloXmlMapping {
     public static final String ANNOTATION_SOURCE_ATTR                              = "source";
     public static final String DISTRIBUTION_DESC                                   = "desc";
     public static final String POINT                                               = "point";
-    public static final String POINT_LONGITUDE                                     = "longitude";
-    public static final String POINT_LATITUDE                                      = "latitude";
-    public static final String POINT_ALTITUDE                                      = "altitude";
+    public static final String POINT_LONGITUDE                                     = "long";
+    public static final String POINT_LATITUDE                                      = "lat";
+    public static final String POINT_ALTITUDE                                      = "alt";
+    public static final String POINT_ALTITUDE_UNIT_ATTR                            = "alt_unit";
     public static final String POINT_GEODETIC_DATUM                                = "geodetic_datum";
     public static final String CLADE_DATE                                          = "date";
-    public static final String CLADE_DATE_RANGE                                    = "range";
     public static final String CLADE_DATE_UNIT                                     = "unit";
     public static final String CLADE_DATE_DESC                                     = "desc";
+    public static final String CLADE_DATE_MIN                                      = "minimum";
+    public static final String CLADE_DATE_MAX                                      = "maximum";
+    public static final String CLADE_DATE_VALUE                                    = "value";
+    /* GUILHEM_BEG */
+    public final static String SEQUENCE_RELATION                                   = "sequence_relation";
+    public final static String SEQUENCE_RELATION_TYPE                              = "type";
+    public final static String SEQUENCE_RELATION_ID_REF0                           = "id_ref_0";
+    public final static String SEQUENCE_RELATION_ID_REF1                           = "id_ref_1";
+    public final static String SEQUENCE_RELATION_DISTANCE                          = "distance";
+    public final static String SEQUENCE_SOURCE_ID                                  = "id_source";
+    public final static String POLYGON                                             = "polygon";
 
+    /* GUILHEM_END */
     /**
      * 
      */

@@ -1,4 +1,4 @@
-// $Id: BasicCombinableDomains.java,v 1.13 2008/12/13 06:08:59 cmzmasek Exp $
+// $Id: BasicCombinableDomains.java,v 1.14 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -100,6 +100,10 @@ public class BasicCombinableDomains implements CombinableDomains {
         return sb;
     }
 
+    protected TreeMap<DomainId, Integer> getCombiningDomains() {
+        return _combining_domains;
+    }
+
     public DomainId getKeyDomain() {
         return _key_domain;
     }
@@ -133,6 +137,12 @@ public class BasicCombinableDomains implements CombinableDomains {
         return _species;
     }
 
+    private void init() {
+        _key_domain_count = 0;
+        _key_domain_proteins_count = 0;
+        _key_domain_confidence_statistics = null;
+    }
+
     public boolean isCombinable( final DomainId protein_domain ) {
         return getCombiningDomains().containsKey( protein_domain );
     }
@@ -149,6 +159,7 @@ public class BasicCombinableDomains implements CombinableDomains {
         _key_domain_proteins_count = key_domain_proteins_count;
     }
 
+    @Override
     public List<BinaryDomainCombination> toBinaryDomainCombinations() {
         final List<BinaryDomainCombination> binary_combinations = new ArrayList<BinaryDomainCombination>( getNumberOfCombinableDomains() );
         for( final DomainId domain : getCombiningDomains().keySet() ) {
@@ -170,15 +181,5 @@ public class BasicCombinableDomains implements CombinableDomains {
         sb.append( "]: " );
         sb.append( getCombiningDomainIdsAsStringBuilder() );
         return sb.toString();
-    }
-
-    protected TreeMap<DomainId, Integer> getCombiningDomains() {
-        return _combining_domains;
-    }
-
-    private void init() {
-        _key_domain_count = 0;
-        _key_domain_proteins_count = 0;
-        _key_domain_confidence_statistics = null;
     }
 }

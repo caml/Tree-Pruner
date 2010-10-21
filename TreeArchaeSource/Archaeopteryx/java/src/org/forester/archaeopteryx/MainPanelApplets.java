@@ -1,4 +1,4 @@
-// $Id: MainPanelApplets.java,v 1.6 2009/03/08 05:56:37 cmzmasek Exp $
+// $Id: MainPanelApplets.java,v 1.7 2010/09/08 23:30:58 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -79,7 +79,7 @@ final class MainPanelApplets extends MainPanel {
     }
 
     @Override
-    Options getOptions() {
+    public Options getOptions() {
         if ( _mainframe != null ) {
             return _mainframe.getOptions();
         }

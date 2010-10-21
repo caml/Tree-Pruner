@@ -1,4 +1,4 @@
-// $Id: PostorderTreeIterator.java,v 1.12 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: PostorderTreeIterator.java,v 1.13 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -55,6 +55,18 @@ public class PostorderTreeIterator implements PhylogenyNodeIterator {
         reset();
     }
 
+    private PhylogenyNode getRoot() {
+        return _root;
+    }
+
+    private Stack<PostOrderStackObject> getStack() {
+        return _stack;
+    }
+
+    private Phylogeny getTree() {
+        return _tree;
+    }
+
     /**
      * DOCUMENT ME!
      * 
@@ -108,18 +120,6 @@ public class PostorderTreeIterator implements PhylogenyNodeIterator {
         setHasNext( true );
         getStack().clear();
         getStack().push( new PostOrderStackObject( getTree().getRoot(), 1 ) );
-    }
-
-    private PhylogenyNode getRoot() {
-        return _root;
-    }
-
-    private Stack<PostOrderStackObject> getStack() {
-        return _stack;
-    }
-
-    private Phylogeny getTree() {
-        return _tree;
     }
 
     private void setHasNext( final boolean has_next ) {

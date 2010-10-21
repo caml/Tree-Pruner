@@ -1,4 +1,4 @@
-// $Id: PairwiseGenomeComparator.java,v 1.19 2009/01/21 20:52:47 cmzmasek Exp $
+// $Id: PairwiseGenomeComparator.java,v 1.21 2010/09/29 23:50:18 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -38,11 +38,11 @@ import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.forester.evoinference.matrix.distance.BasicSymmetricalDistanceMatrix;
+import org.forester.evoinference.matrix.distance.DistanceMatrix;
 import org.forester.go.GoId;
 import org.forester.go.GoNameSpace;
 import org.forester.go.GoTerm;
-import org.forester.phylogenyinference.BasicSymmetricalDistanceMatrix;
-import org.forester.phylogenyinference.DistanceMatrix;
 import org.forester.surfacing.DomainSimilarityCalculator.Detailedness;
 import org.forester.util.DescriptiveStatistics;
 import org.forester.util.ForesterUtil;
@@ -71,6 +71,13 @@ public class PairwiseGenomeComparator {
 
     public List<DistanceMatrix> getSharedDomainsBasedDistances() {
         return _shared_domains_based_distances;
+    }
+
+    private void init() {
+        //_histogram_datas = new ArrayList<HistogramData>();
+        _domain_distance_scores_means = new ArrayList<DistanceMatrix>();
+        _shared_domains_based_distances = new ArrayList<DistanceMatrix>();
+        _shared_binary_combinations_based_distances = new ArrayList<DistanceMatrix>();
     }
 
     public void performPairwiseComparisons( final StringBuilder html_desc,
@@ -312,13 +319,6 @@ public class PairwiseGenomeComparator {
         if ( verbose ) {
             System.out.println();
         }
-    }
-
-    private void init() {
-        //_histogram_datas = new ArrayList<HistogramData>();
-        _domain_distance_scores_means = new ArrayList<DistanceMatrix>();
-        _shared_domains_based_distances = new ArrayList<DistanceMatrix>();
-        _shared_binary_combinations_based_distances = new ArrayList<DistanceMatrix>();
     }
 
     static private DomainId[] getAllUniqueDomainIdAsArray( final List<GenomeWideCombinableDomains> list_of_genome_wide_combinable_domains ) {

@@ -1,4 +1,4 @@
-// $Id: printSameOrder.java,v 1.5 2008/03/09 00:11:18 cmzmasek Exp $
+// $Id: printSameOrder.java,v 1.6 2009/11/20 22:22:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -52,7 +52,7 @@ public class printSameOrder {
         outfile = new File( args[ 1 ] );
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( infile, true );
             tree = factory.create( infile, pp )[ 0 ];
         }
         catch ( final Exception e ) {

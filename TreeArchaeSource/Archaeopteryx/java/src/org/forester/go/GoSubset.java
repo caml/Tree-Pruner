@@ -1,4 +1,4 @@
-// $Id: GoSubset.java,v 1.2 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: GoSubset.java,v 1.3 2009/11/10 19:57:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -34,10 +34,11 @@ public interface GoSubset extends Comparable<GoSubset> {
     public static final String GOSLIM_CANDIDA_STR = "goslim_candida";
     public static final String GOSLIM_PLANT_STR   = "goslim_plant";
     public static final String GOSLIM_YEAST_STR   = "goslim_yeast";
+    public static final String GOSLIM_POMBE_STR   = "goslim_pombe";
 
     public Type getType();
 
     public static enum Type {
-        GOSLIM_GENERIC, GOSLIM_GOA, GOSLIM_PIR, GOSUBSET_PROK, GOSLIM_CANDIDA, GOSLIM_PLANT, GOSLIM_YEAST;
+        GOSLIM_GENERIC, GOSLIM_GOA, GOSLIM_PIR, GOSUBSET_PROK, GOSLIM_CANDIDA, GOSLIM_PLANT, GOSLIM_YEAST, GOSLIM_POMBE;
     }
 }

@@ -1,4 +1,4 @@
-// $Id: Accession.java,v 1.6 2008/09/29 05:26:14 cmzmasek Exp $
+// $Id: Accession.java,v 1.10 2009/11/25 01:18:19 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -61,6 +61,23 @@ public class Accession implements PhylogenyData {
         return new Accession( new String( getValue() ), new String( getSource() ) );
     }
 
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        else if ( o == null ) {
+            return false;
+        }
+        else if ( o.getClass() != this.getClass() ) {
+            throw new IllegalArgumentException( "attempt to check [" + this.getClass() + "] equality to " + o + " ["
+                    + o.getClass() + "]" );
+        }
+        else {
+            return isEqual( ( Accession ) o );
+        }
+    }
+
     public String getSource() {
         return _source;
     }
@@ -69,11 +86,26 @@ public class Accession implements PhylogenyData {
         return _value;
     }
 
+    @Override
+    public int hashCode() {
+        if ( getSource() != null ) {
+            return ( getSource() + getValue() ).hashCode();
+        }
+        return getValue().hashCode();
+    }
+
     public boolean isEqual( final PhylogenyData data ) {
+        if ( this == data ) {
+            return true;
+        }
         if ( ( data == null ) || ( getValue() == null ) ) {
             return false;
         }
-        return ( ( Accession ) data ).getValue().equals( getValue() );
+        final Accession a = ( Accession ) data;
+        if ( ( getSource() != null ) && ( a.getSource() != null ) ) {
+            return ( a.getValue().equals( getValue() ) && a.getSource().equals( getSource() ) );
+        }
+        return ( a.getValue().equals( getValue() ) );
     }
 
     public StringBuffer toNHX() {
@@ -85,12 +117,22 @@ public class Accession implements PhylogenyData {
     }
 
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
-        PhylogenyDataUtil.appendElement( writer,
-                                         PhyloXmlMapping.ACCESSION,
-                                         getValue(),
-                                         PhyloXmlMapping.ACCESSION_SOURCE_ATTR,
-                                         getSource(),
-                                         indentation );
+        if ( ForesterUtil.isEmpty( getSource() ) ) {
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.ACCESSION,
+                                             getValue(),
+                                             PhyloXmlMapping.ACCESSION_SOURCE_ATTR,
+                                             "unknown",
+                                             indentation );
+        }
+        else {
+            PhylogenyDataUtil.appendElement( writer,
+                                             PhyloXmlMapping.ACCESSION,
+                                             getValue(),
+                                             PhyloXmlMapping.ACCESSION_SOURCE_ATTR,
+                                             getSource(),
+                                             indentation );
+        }
     }
 
     @Override

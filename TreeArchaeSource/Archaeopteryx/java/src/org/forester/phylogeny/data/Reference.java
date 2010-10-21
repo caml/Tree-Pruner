@@ -1,4 +1,4 @@
-// $Id: Reference.java,v 1.5 2008/09/24 16:42:49 cmzmasek Exp $
+// $Id: Reference.java,v 1.10 2009/12/12 00:14:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -28,22 +28,24 @@ package org.forester.phylogeny.data;
 import java.io.IOException;
 import java.io.Writer;
 
+import org.forester.io.parsers.phyloxml.PhyloXmlDataFormatException;
 import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
+import org.forester.io.parsers.phyloxml.PhyloXmlUtil;
 import org.forester.util.ForesterUtil;
 
 public class Reference implements PhylogenyData {
 
-    final String _value;
-    final String _doig;
+    String _value;
+    String _doi;
 
     public Reference( final String value ) {
         _value = value;
-        _doig = "";
+        _doi = "";
     }
 
     public Reference( final String value, final String doi ) {
         _value = value;
-        _doig = doi;
+        _doi = doi;
     }
 
     public StringBuffer asSimpleText() {
@@ -66,7 +68,7 @@ public class Reference implements PhylogenyData {
     }
 
     public String getDoi() {
-        return _doig;
+        return _doi;
     }
 
     public String getValue() {
@@ -81,6 +83,17 @@ public class Reference implements PhylogenyData {
                 && ( ( Reference ) data ).getDoi().equals( getDoi() );
     }
 
+    public void setDoi( final String doi ) {
+        if ( !ForesterUtil.isEmpty( doi ) && !PhyloXmlUtil.LIT_REF_DOI_PATTERN.matcher( doi ).matches() ) {
+            throw new PhyloXmlDataFormatException( "illegal doi: [" + doi + "]" );
+        }
+        _doi = doi;
+    }
+
+    public void setValue( final String value ) {
+        _value = value;
+    }
+
     public StringBuffer toNHX() {
         throw new UnsupportedOperationException();
     }
@@ -88,11 +101,13 @@ public class Reference implements PhylogenyData {
     public void toPhyloXML( final Writer writer, final int level, final String indentation ) throws IOException {
         writer.write( ForesterUtil.LINE_SEPARATOR );
         writer.write( indentation );
-        PhylogenyDataUtil.appendElement( writer,
-                                         PhyloXmlMapping.REFERENCE,
-                                         getValue(),
-                                         PhyloXmlMapping.REFERENCE_DOI_ATTR,
-                                         getDoi() );
+        PhylogenyDataUtil.appendOpen( writer, PhyloXmlMapping.REFERENCE, PhyloXmlMapping.REFERENCE_DOI_ATTR, getDoi() );
+        if ( !ForesterUtil.isEmpty( getValue() ) ) {
+            PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.REFERENCE_DESC, getValue(), indentation );
+        }
+        writer.write( ForesterUtil.LINE_SEPARATOR );
+        writer.write( indentation );
+        PhylogenyDataUtil.appendClose( writer, PhyloXmlMapping.REFERENCE );
     }
 
     @Override

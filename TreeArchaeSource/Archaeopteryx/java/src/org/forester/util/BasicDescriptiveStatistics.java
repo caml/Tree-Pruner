@@ -149,6 +149,15 @@ public class BasicDescriptiveStatistics implements DescriptiveStatistics {
         return ( ( ( _data.get( index ) ) ).doubleValue() );
     }
 
+    private void init() {
+        _data = new ArrayList<Double>();
+        _sum = 0.0;
+        _min = Double.MAX_VALUE;
+        _max = -Double.MAX_VALUE;
+        _sigma = 0.0;
+        _recalc_sigma = true;
+    }
+
     /* (non-Javadoc)
      * @see org.forester.util.DescriptiveStatisticsI#median()
      */
@@ -277,15 +286,6 @@ public class BasicDescriptiveStatistics implements DescriptiveStatistics {
             sb.append( "pearsonian skewness     : " + pearsonianSkewness() );
         }
         return sb.toString();
-    }
-
-    private void init() {
-        _data = new ArrayList<Double>();
-        _sum = 0.0;
-        _min = Double.MAX_VALUE;
-        _max = -Double.MAX_VALUE;
-        _sigma = 0.0;
-        _recalc_sigma = true;
     }
 
     private void validate() throws ArithmeticException {

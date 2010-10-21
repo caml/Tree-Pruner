@@ -1,4 +1,4 @@
-// $Id: WebservicesManager.java,v 1.1 2009/02/22 01:03:30 cmzmasek Exp $
+// $Id: WebservicesManager.java,v 1.2 2009/10/28 19:11:22 cmzmasek Exp $
 // forester -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -58,6 +58,6 @@ public final class WebservicesManager {
     }
 
     public enum WsPhylogenyFormat {
-        NH, NHX, NEXUS, TOL_XML_RESPONSE, PHYLOXML, NH_EXTRACT_TAXONOMY
+        NH, NHX, NEXUS, TOL_XML_RESPONSE, PHYLOXML, NH_EXTRACT_TAXONOMY, PFAM
     }
 }

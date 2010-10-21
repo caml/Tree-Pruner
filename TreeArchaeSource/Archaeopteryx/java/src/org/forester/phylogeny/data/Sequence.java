@@ -1,4 +1,4 @@
-// $Id: Sequence.java,v 1.48 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: Sequence.java,v 1.60 2010/06/23 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -31,28 +31,39 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.forester.io.parsers.nhx.NHXtags;
+import org.forester.io.parsers.phyloxml.PhyloXmlDataFormatException;
 import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
+import org.forester.io.parsers.phyloxml.PhyloXmlUtil;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.util.ForesterUtil;
 
 public class Sequence implements PhylogenyData {
 
-    private String              _mol_sequence;
-    private String              _name;
-    private Accession           _accession;
-    private String              _symbol;
-    private String              _location;
-    private String              _type;
-    private List<PhylogenyData> _annotations;
-    private DomainArchitecture  _da;
-    private Uri                 _uri;
+    private String                       _mol_sequence;
+    private String                       _name;
+    private String                       _source_id;
+    private Accession                    _accession;
+    private String                       _symbol;
+    private String                       _location;
+    private String                       _type;
+    private List<PhylogenyData>          _annotations;
+    private DomainArchitecture           _da;
+    private Uri                          _uri;
+    /* GUILHEM_BEG */
+    private final List<SequenceRelation> _seq_relations = new ArrayList<SequenceRelation>();
 
+    /* GUILHEM_END */
     public Sequence() {
         init();
     }
 
     public void addAnnotation( final Annotation annotation ) {
         getAnnotations().add( annotation );
+    }
+
+    /* GUILHEM_BEG */
+    public void addSequenceRelation( final SequenceRelation sr ) {
+        _seq_relations.add( sr );
     }
 
     public StringBuffer asSimpleText() {
@@ -109,6 +120,23 @@ public class Sequence implements PhylogenyData {
         return seq;
     }
 
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        else if ( o == null ) {
+            return false;
+        }
+        else if ( o.getClass() != this.getClass() ) {
+            throw new IllegalArgumentException( "attempt to check [" + this.getClass() + "] equality to " + o + " ["
+                    + o.getClass() + "]" );
+        }
+        else {
+            return isEqual( ( Sequence ) o );
+        }
+    }
+
     public Accession getAccession() {
         return _accession;
     }
@@ -137,6 +165,15 @@ public class Sequence implements PhylogenyData {
         return _name;
     }
 
+    public List<SequenceRelation> getSequenceRelations() {
+        return _seq_relations;
+    }
+
+    /* GUILHEM_END */
+    public String getSourceId() {
+        return _source_id;
+    }
+
     public String getSymbol() {
         return _symbol;
     }
@@ -147,6 +184,25 @@ public class Sequence implements PhylogenyData {
 
     public Uri getUri() {
         return _uri;
+    }
+
+    @Override
+    public int hashCode() {
+        if ( getAccession() != null ) {
+            return getAccession().hashCode();
+        }
+        int result = getSymbol().hashCode();
+        if ( getName().length() > 0 ) {
+            result ^= getName().hashCode();
+        }
+        if ( getMolecularSequence().length() > 0 ) {
+            result ^= getMolecularSequence().hashCode();
+        }
+        return result;
+    }
+
+    public boolean hasSequenceRelations() {
+        return _seq_relations.size() > 0;
     }
 
     public void init() {
@@ -161,13 +217,31 @@ public class Sequence implements PhylogenyData {
         setUri( null );
     }
 
+    public boolean isEmpty() {
+        return ( getAccession() == null ) && ForesterUtil.isEmpty( getName() ) && ForesterUtil.isEmpty( getSymbol() )
+                && ForesterUtil.isEmpty( getType() ) && ForesterUtil.isEmpty( getLocation() )
+                && ForesterUtil.isEmpty( getMolecularSequence() ) && ( getDomainArchitecture() == null )
+                && getAnnotations().isEmpty() && ( getUri() == null );
+    }
+
     public boolean isEqual( final PhylogenyData data ) {
+        if ( this == data ) {
+            return true;
+        }
         final Sequence s = ( Sequence ) data;
-        return s.getMolecularSequence().equals( getMolecularSequence() ) && s.getName().equals( getName() );
+        if ( ( getAccession() != null ) && ( s.getAccession() != null ) ) {
+            return getAccession().isEqual( s.getAccession() );
+        }
+        return s.getMolecularSequence().equals( getMolecularSequence() ) && s.getName().equals( getName() )
+                && s.getSymbol().equals( getSymbol() );
     }
 
     public void setAccession( final Accession accession ) {
         _accession = accession;
+    }
+
+    private void setAnnotations( final List<PhylogenyData> annotations ) {
+        _annotations = annotations;
     }
 
     public void setDomainArchitecture( final DomainArchitecture ds ) {
@@ -186,11 +260,21 @@ public class Sequence implements PhylogenyData {
         _name = name;
     }
 
+    public void setSourceId( final String sourceId ) {
+        _source_id = sourceId;
+    }
+
     public void setSymbol( final String symbol ) {
+        if ( !ForesterUtil.isEmpty( symbol ) && !PhyloXmlUtil.SEQUENCE_SYMBOL_PATTERN.matcher( symbol ).matches() ) {
+            throw new PhyloXmlDataFormatException( "illegal sequence symbol: [" + symbol + "]" );
+        }
         _symbol = symbol;
     }
 
     public void setType( final String type ) {
+        if ( !ForesterUtil.isEmpty( type ) && !PhyloXmlUtil.SEQUENCE_TYPES.contains( type ) ) {
+            throw new PhyloXmlDataFormatException( "illegal sequence type: [" + type + "]" );
+        }
         _type = type;
     }
 
@@ -222,7 +306,7 @@ public class Sequence implements PhylogenyData {
         if ( !ForesterUtil.isEmpty( getSymbol() ) ) {
             PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.SEQUENCE_SYMBOL, getSymbol(), indentation );
         }
-        if ( getAccession() != null ) {
+        if ( ( getAccession() != null ) && !ForesterUtil.isEmpty( getAccession().getValue() ) ) {
             getAccession().toPhyloXML( writer, level, indentation );
         }
         if ( !ForesterUtil.isEmpty( getName() ) ) {
@@ -256,9 +340,5 @@ public class Sequence implements PhylogenyData {
     @Override
     public String toString() {
         return asText().toString();
-    }
-
-    private void setAnnotations( final List<PhylogenyData> annotations ) {
-        _annotations = annotations;
     }
 }

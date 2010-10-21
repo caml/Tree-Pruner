@@ -1,4 +1,4 @@
-// $Id: DomainId.java,v 1.7 2008/12/13 06:08:59 cmzmasek Exp $
+// $Id: DomainId.java,v 1.8 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -60,6 +60,7 @@ public class DomainId implements Comparable<DomainId> {
         getGoIds().add( go_id );
     }
 
+    @Override
     public int compareTo( final DomainId domain_id ) {
         if ( this == domain_id ) {
             return 0;
@@ -88,6 +89,21 @@ public class DomainId implements Comparable<DomainId> {
         return getGoIds().get( i );
     }
 
+    // Note.
+    // The fact that equals and compareTo do not behave the same in cases where ids only differ by their case
+    // is not ideal. From Sun regarding Interface SortedSet<E>:
+    // "Note that the ordering maintained by a sorted set (whether or not an explicit comparator is provided)
+    // must be consistent with equals if the sorted set is to correctly implement the Set interface.
+    // (See the Comparable interface or Comparator interface for a precise definition of consistent 
+    // with equals.) This is so because the Set interface is defined in terms of the equals  operation,
+    // but a sorted set performs all element comparisons using its compareTo (or compare) method, 
+    // so two elements that are deemed equal by this method are, from the standpoint of the sorted set,
+    // equal. The behavior of a sorted set is well-defined even if its ordering is inconsistent with equals; 
+    // it just fails to obey the general contract of the Set interface."
+    List<GoId> getGoIds() {
+        return _go_ids;
+    }
+
     public String getId() {
         return _id;
     }
@@ -104,27 +120,12 @@ public class DomainId implements Comparable<DomainId> {
         return getId().hashCode();
     }
 
+    private void setGoIds( final List<GoId> go_ids ) {
+        _go_ids = go_ids;
+    }
+
     @Override
     public String toString() {
         return getId();
-    }
-
-    // Note.
-    // The fact that equals and compareTo do not behave the same in cases where ids only differ by their case
-    // is not ideal. From Sun regarding Interface SortedSet<E>:
-    // "Note that the ordering maintained by a sorted set (whether or not an explicit comparator is provided)
-    // must be consistent with equals if the sorted set is to correctly implement the Set interface.
-    // (See the Comparable interface or Comparator interface for a precise definition of consistent 
-    // with equals.) This is so because the Set interface is defined in terms of the equals  operation,
-    // but a sorted set performs all element comparisons using its compareTo (or compare) method, 
-    // so two elements that are deemed equal by this method are, from the standpoint of the sorted set,
-    // equal. The behavior of a sorted set is well-defined even if its ordering is inconsistent with equals; 
-    // it just fails to obey the general contract of the Set interface."
-    List<GoId> getGoIds() {
-        return _go_ids;
-    }
-
-    private void setGoIds( final List<GoId> go_ids ) {
-        _go_ids = go_ids;
     }
 }

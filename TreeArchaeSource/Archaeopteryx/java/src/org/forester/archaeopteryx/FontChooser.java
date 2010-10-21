@@ -1,4 +1,4 @@
-// $Id: FontChooser.java,v 1.1 2009/02/22 00:56:05 cmzmasek Exp $
+// $Id: FontChooser.java,v 1.2 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -206,9 +206,26 @@ public class FontChooser extends JDialog implements ActionListener, ListSelectio
         return _font.getStyle();
     }
 
+    private void parseSize() {
+        try {
+            _size = ( Integer.parseInt( _size_tf.getText().trim() ) );
+        }
+        catch ( final Exception ex ) {
+            // Ignore.
+        }
+        if ( _size < 1 ) {
+            _size = 1;
+        }
+    }
+
     @Override
     public void setFont( final Font font ) {
         _font = font;
+    }
+
+    private void setScrollPos( final JScrollPane sp, final JList list, final int index ) {
+        final int unit_size = sp.getVerticalScrollBar().getMaximum() / list.getModel().getSize();
+        sp.getVerticalScrollBar().setValue( ( index - 2 ) * unit_size );
     }
 
     public int showDialog( final Component parent, final String title ) {
@@ -276,22 +293,5 @@ public class FontChooser extends JDialog implements ActionListener, ListSelectio
             _size = ( Integer.parseInt( _size_tf.getText().trim() ) );
             _test_tf.setFont( new Font( _type, _style, _size ) );
         }
-    }
-
-    private void parseSize() {
-        try {
-            _size = ( Integer.parseInt( _size_tf.getText().trim() ) );
-        }
-        catch ( final Exception ex ) {
-            // Ignore.
-        }
-        if ( _size < 1 ) {
-            _size = 1;
-        }
-    }
-
-    private void setScrollPos( final JScrollPane sp, final JList list, final int index ) {
-        final int unit_size = sp.getVerticalScrollBar().getMaximum() / list.getModel().getSize();
-        sp.getVerticalScrollBar().setValue( ( index - 2 ) * unit_size );
     }
 }

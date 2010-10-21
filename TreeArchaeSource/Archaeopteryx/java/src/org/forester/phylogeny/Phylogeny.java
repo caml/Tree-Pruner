@@ -1,4 +1,4 @@
-// $Id: Phylogeny.java,v 1.78 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: Phylogeny.java,v 1.96 2010/10/02 21:34:07 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -30,6 +30,7 @@ package org.forester.phylogeny;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,11 +38,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Vector;
 
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.data.BranchData;
 import org.forester.phylogeny.data.Confidence;
 import org.forester.phylogeny.data.Identifier;
+import org.forester.phylogeny.data.Sequence;
+import org.forester.phylogeny.data.SequenceRelation;
+import org.forester.phylogeny.data.SequenceRelation.SEQUENCE_RELATION_TYPE;
 import org.forester.phylogeny.iterators.ExternalForwardIterator;
 import org.forester.phylogeny.iterators.LevelOrderTreeIterator;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
@@ -51,19 +56,21 @@ import org.forester.util.ForesterUtil;
 
 public class Phylogeny {
 
-    public final static boolean             ALLOW_MULTIPLE_PARENTS_DEFAULT = false;
-    private PhylogenyNode                   _root;
-    private boolean                         _rooted;
-    private boolean                         _allow_multiple_parents;
-    private String                          _name;
-    private String                          _type;
-    private String                          _description;
-    private String                          _distance_unit;
-    private Confidence                      _confidence;
-    private Identifier                      _identifier;
-    private boolean                         _rerootable;
-    private HashMap<Integer, PhylogenyNode> _idhash;
-    private Set<PhylogenyNode>              _external_nodes_set;
+    public final static boolean                                 ALLOW_MULTIPLE_PARENTS_DEFAULT = false;
+    private PhylogenyNode                                       _root;
+    private boolean                                             _rooted;
+    private boolean                                             _allow_multiple_parents;
+    private String                                              _name;
+    private String                                              _type;
+    private String                                              _description;
+    private String                                              _distance_unit;
+    private Confidence                                          _confidence;
+    private Identifier                                          _identifier;
+    private boolean                                             _rerootable;
+    private HashMap<Integer, PhylogenyNode>                     _idhash;
+    private Set<PhylogenyNode>                                  _external_nodes_set;
+    private Collection<Sequence>                                _sequenceRelationQueries;
+    private Collection<SequenceRelation.SEQUENCE_RELATION_TYPE> _relevant_sequence_relation_types;
 
     /**
      * Default Phylogeny constructor. Constructs an empty Phylogeny.
@@ -87,6 +94,29 @@ public class Phylogeny {
             throw new IllegalArgumentException( "Attempt to add an unrooted tree." );
         }
         parent.addAsChild( getRoot() );
+        externalNodesHaveChanged();
+    }
+
+    public void addAsSibling( final PhylogenyNode sibling ) {
+        if ( isEmpty() ) {
+            throw new IllegalArgumentException( "Attempt to add an empty tree." );
+        }
+        if ( !isRooted() ) {
+            throw new IllegalArgumentException( "Attempt to add an unrooted tree." );
+        }
+        final int sibling_index = sibling.getChildNodeIndex();
+        final PhylogenyNode new_node = new PhylogenyNode();
+        final PhylogenyNode sibling_parent = sibling.getParent();
+        new_node.setChild1( sibling );
+        new_node.setChild2( getRoot() );
+        new_node.setParent( sibling_parent );
+        sibling.setParent( new_node );
+        sibling_parent.setChildNode( sibling_index, new_node );
+        final double new_dist = sibling.getDistanceToParent() == PhylogenyNode.DISTANCE_DEFAULT ? PhylogenyNode.DISTANCE_DEFAULT
+                : sibling.getDistanceToParent() / 2;
+        new_node.setDistanceToParent( new_dist );
+        sibling.setDistanceToParent( new_dist );
+        externalNodesHaveChanged();
     }
 
     /**
@@ -143,89 +173,64 @@ public class Phylogeny {
     }
 
     /**
-     * TODO this should eventually be unified with deleteSubtree.
-     * Removes external PhylogenyNode n from this Phylogeny. If this tree has
-     * only one node, a empty tree will be returned.
-     * Need to call 'recalculateNumberOfExternalDescendants(boolean)' after this 
-     * if tree is to be displayed.
-     * @param n
-     *            PhylogenyNode to remove
-     */
-    public void deleteExternalNode( final PhylogenyNode n ) {
-        if ( isEmpty() ) {
-            return;
-        }
-        if ( !n.isExternal() ) {
-            throw new IllegalArgumentException( "Attempt to delete non-external node as external node" );
-        }
-        // Returns an empty tree.
-        if ( ( getNumberOfExternalNodes() == 1 ) && ( n == getFirstExternalNode() ) ) {
-            init();
-            return;
-        }
-        final PhylogenyNode removed_node = n;
-        final PhylogenyNode p = n.getParent();
-        if ( p.isRoot() ) {
-            if ( p.getNumberOfDescendants() > 2 ) {
-                p.removeChildNode( removed_node.getChildNodeIndex() );
-            }
-            else {
-                if ( removed_node.isFirstChildNode() ) {
-                    setRoot( getRoot().getChildNode( 1 ) );
-                    getRoot().setParent( null );
-                }
-                else {
-                    setRoot( getRoot().getChildNode( 0 ) );
-                    getRoot().setParent( null );
-                }
-            }
-        }
-        else {
-            PhylogenyNode pp = removed_node.getParent().getParent();
-            if ( p.getNumberOfDescendants() > 2 ) {
-                p.removeChildNode( removed_node.getChildNodeIndex() );
-            }
-            else {
-                final int pi = p.getChildNodeIndex();
-                if ( removed_node.isFirstChildNode() ) {
-                    p.getChildNode( 1 ).setDistanceToParent( addDist( p.getDistanceToParent(), p.getChildNode( 1 )
-                            .getDistanceToParent() ) );
-                    pp.setChildNode( pi, p.getChildNode( 1 ) );
-                }
-                else {
-                    p.getChildNode( 0 ).setDistanceToParent( addDist( p.getDistanceToParent(), p.getChildNode( 0 )
-                            .getDistanceToParent() ) );
-                    pp.setChildNode( pi, p.getChildNode( 0 ) );
-                }
-            }
-            while ( pp != getRoot() ) {
-                pp.setSumExtNodes( pp.getNumberOfExternalNodes() - 1 );
-                pp = pp.getParent();
-            }
-            pp.setSumExtNodes( pp.getNumberOfExternalNodes() - 1 );
-        }
-        _idhash = null;
-        externalNodesHaveChanged();
-    }
-
-    /**
      * Need the delete and/or rehash _idhash (not done automatically
      * to allow client multiple deletions in linear time).
      * Need to call 'recalculateNumberOfExternalDescendants(boolean)' after this 
      * if tree is to be displayed.
-     * Possibly leaves nodes with one descendant.
      * 
-     * @param n the parent node of the subtree to be deleted
+     * @param remove_us the parent node of the subtree to be deleted
      */
-    public void deleteSubtree( final PhylogenyNode n ) {
+    public void deleteSubtree( final PhylogenyNode remove_us, final boolean collapse_resulting_node_with_one_desc ) {
         if ( isEmpty() ) {
             return;
         }
-        if ( n.isRoot() ) {
+        if ( remove_us.isRoot() ) {
             init();
             return;
         }
-        n.getParent().removeChildNode( n.getChildNodeIndex() );
+        if ( !collapse_resulting_node_with_one_desc ) {
+            remove_us.getParent().removeChildNode( remove_us );
+        }
+        else {
+            final PhylogenyNode removed_node = remove_us;
+            final PhylogenyNode p = remove_us.getParent();
+            if ( p.isRoot() ) {
+                if ( p.getNumberOfDescendants() == 2 ) {
+                    if ( removed_node.isFirstChildNode() ) {
+                        setRoot( getRoot().getChildNode( 1 ) );
+                        getRoot().setParent( null );
+                    }
+                    else {
+                        setRoot( getRoot().getChildNode( 0 ) );
+                        getRoot().setParent( null );
+                    }
+                }
+                else {
+                    p.removeChildNode( removed_node.getChildNodeIndex() );
+                }
+            }
+            else {
+                final PhylogenyNode pp = removed_node.getParent().getParent();
+                if ( p.getNumberOfDescendants() == 2 ) {
+                    final int pi = p.getChildNodeIndex();
+                    if ( removed_node.isFirstChildNode() ) {
+                        p.getChildNode( 1 ).setDistanceToParent( PhylogenyMethods.addPhylogenyDistances( p
+                                .getDistanceToParent(), p.getChildNode( 1 ).getDistanceToParent() ) );
+                        pp.setChildNode( pi, p.getChildNode( 1 ) );
+                    }
+                    else {
+                        p.getChildNode( 0 ).setDistanceToParent( PhylogenyMethods.addPhylogenyDistances( p
+                                .getDistanceToParent(), p.getChildNode( 0 ).getDistanceToParent() ) );
+                        pp.setChildNode( pi, p.getChildNode( 0 ) );
+                    }
+                }
+                else {
+                    p.removeChildNode( removed_node.getChildNodeIndex() );
+                }
+            }
+        }
+        remove_us.setParent( null );
+        setIdHash( null );
         externalNodesHaveChanged();
     }
 
@@ -233,12 +238,7 @@ public class Phylogeny {
         _external_nodes_set = null;
     }
 
-    /**
-     * Returns the sequence names of all external Nodes of this Phylogeny as
-     * array of Strings.
-     * @return all external sequence names as String[]
-     */
-    public String[] getAllExternalSeqNames() {
+    public String[] getAllExternalNodeNames() {
         int i = 0;
         if ( isEmpty() ) {
             return null;
@@ -337,6 +337,13 @@ public class Phylogeny {
         return _identifier;
     }
 
+    // ---------------------------------------------------------
+    // Modification of Phylogeny topology and Phylogeny appearance
+    // ---------------------------------------------------------
+    private HashMap<Integer, PhylogenyNode> getIdHash() {
+        return _idhash;
+    }
+
     /**
      * Returns the name of this Phylogeny.
      */
@@ -394,6 +401,26 @@ public class Phylogeny {
     }
 
     /**
+     * Return Node by TaxonomyId Olivier CHABROL :
+     * olivier.chabrol@univ-provence.fr
+     * 
+     * @param taxonomyID
+     *            search taxonomy identifier
+     * @param nodes
+     *            sublist node to search
+     * @return List node with the same taxonomy identifier
+     */
+    private List<PhylogenyNode> getNodeByTaxonomyID( final String taxonomyID, final List<PhylogenyNode> nodes ) {
+        final List<PhylogenyNode> retour = new ArrayList<PhylogenyNode>();
+        for( final PhylogenyNode node : nodes ) {
+            if ( taxonomyID.equals( PhylogenyMethods.getTaxonomyIdentifier( node ) ) ) {
+                retour.add( node );
+            }
+        }
+        return retour;
+    }
+
+    /**
      * Returns a List with references to all Nodes of this Phylogeny which have
      * a matching name.
      * 
@@ -411,6 +438,20 @@ public class Phylogeny {
         for( final PhylogenyNodeIterator iter = iteratorPreorder(); iter.hasNext(); ) {
             final PhylogenyNode n = iter.next();
             if ( n.getNodeName().equals( name ) ) {
+                nodes.add( n );
+            }
+        }
+        return nodes;
+    }
+
+    public List<PhylogenyNode> getNodesViaSequenceName( final String seq_name ) {
+        if ( isEmpty() ) {
+            return null;
+        }
+        final List<PhylogenyNode> nodes = new ArrayList<PhylogenyNode>();
+        for( final PhylogenyNodeIterator iter = iteratorPreorder(); iter.hasNext(); ) {
+            final PhylogenyNode n = iter.next();
+            if ( n.getNodeData().isHasSequence() && n.getNodeData().getSequence().getName().equals( seq_name ) ) {
                 nodes.add( n );
             }
         }
@@ -454,6 +495,20 @@ public class Phylogeny {
             }
         }
         return nodes;
+    }
+
+    public PhylogenyNode getNodeViaSequenceName( final String seq_name ) {
+        if ( isEmpty() ) {
+            return null;
+        }
+        final List<PhylogenyNode> nodes = getNodesViaSequenceName( seq_name );
+        if ( ( nodes == null ) || ( nodes.size() < 1 ) ) {
+            throw new IllegalArgumentException( "node with sequence named [" + seq_name + "] not found" );
+        }
+        if ( nodes.size() > 1 ) {
+            throw new IllegalArgumentException( "node with sequence named [" + seq_name + "] not unique" );
+        }
+        return nodes.get( 0 );
     }
 
     public PhylogenyNode getNodeViaTaxonomyCode( final String taxonomy_code ) {
@@ -545,11 +600,64 @@ public class Phylogeny {
         return v;
     }
 
+    public Collection<SequenceRelation.SEQUENCE_RELATION_TYPE> getRelevantSequenceRelationTypes() {
+        if ( _relevant_sequence_relation_types == null ) {
+            _relevant_sequence_relation_types = new Vector<SEQUENCE_RELATION_TYPE>();
+        }
+        return _relevant_sequence_relation_types;
+    }
+
     /**
      * Returns the root PhylogenyNode of this Phylogeny.
      */
     public PhylogenyNode getRoot() {
         return _root;
+    }
+
+    public Collection<Sequence> getSequenceRelationQueries() {
+        return _sequenceRelationQueries;
+    }
+
+    /**
+     * List all species contains in all leaf under a node Olivier CHABROL :
+     * olivier.chabrol@univ-provence.fr
+     * 
+     * @param node
+     *            PhylogenyNode whose sub node species are returned
+     * @return species contains in all leaf under the param node
+     */
+    private List<String> getSubNodeTaxonomy( final PhylogenyNode node ) {
+        final List<String> taxonomyList = new ArrayList<String>();
+        final List<PhylogenyNode> childs = node.getAllExternalDescendants();
+        String speciesId = null;
+        for( final PhylogenyNode phylogenyNode : childs ) {
+            // taxId = new Long(phylogenyNode.getTaxonomyID());
+            speciesId = PhylogenyMethods.getTaxonomyIdentifier( phylogenyNode );
+            if ( !taxonomyList.contains( speciesId ) ) {
+                taxonomyList.add( speciesId );
+            }
+        }
+        return taxonomyList;
+    }
+
+    /**
+     * Create a map [<PhylogenyNode, List<String>], the list contains the
+     * species contains in all leaf under phylogeny node Olivier CHABROL :
+     * olivier.chabrol@univ-provence.fr
+     * 
+     * @param node
+     *            the tree root node
+     * @param map
+     *            map to fill
+     */
+    private void getTaxonomyMap( final PhylogenyNode node, final Map<PhylogenyNode, List<String>> map ) {
+        // node is leaf
+        if ( node.isExternal() ) {
+            return;
+        }
+        map.put( node, getSubNodeTaxonomy( node ) );
+        getTaxonomyMap( node.getChildNode1(), map );
+        getTaxonomyMap( node.getChildNode2(), map );
     }
 
     public String getType() {
@@ -558,7 +666,7 @@ public class Phylogeny {
 
     /**
      * Hashes the ID number of each PhylogenyNode of this Phylogeny to its
-     * corresonding PhylogenyNode, in order to make method getNode( id ) run in
+     * corresponding PhylogenyNode, in order to make method getNode( id ) run in
      * constant time. Important: The user is responsible for calling this method
      * (again) after this Phylogeny has been changed/created/renumbered.
      */
@@ -590,6 +698,10 @@ public class Phylogeny {
         setAllowMultipleParents( Phylogeny.ALLOW_MULTIPLE_PARENTS_DEFAULT );
     }
 
+    private boolean isAllowMultipleParents() {
+        return _allow_multiple_parents;
+    }
+
     /**
      * Returns whether this is a completely binary tree (i.e. all internal nodes
      * are bifurcations).
@@ -602,6 +714,31 @@ public class Phylogeny {
         for( final PhylogenyNodeIterator iter = iteratorPreorder(); iter.hasNext(); ) {
             final PhylogenyNode node = iter.next();
             if ( node.isInternal() && ( node.getNumberOfDescendants() != 2 ) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Util method to check if all element of a list is contains in the
+     * rangeList. Olivier CHABROL : olivier.chabrol@univ-provence.fr
+     * 
+     * @param list
+     *            list to be check
+     * @param rangeList
+     *            the range list to compare
+     * @return <code>true</code> if all param list element are contains in param
+     *         rangeList, <code>false</code> otherwise.
+     */
+    private boolean isContains( final List<String> list, final List<String> rangeList ) {
+        if ( list.size() > rangeList.size() ) {
+            return false;
+        }
+        String l = null;
+        for( final Iterator<String> iterator = list.iterator(); iterator.hasNext(); ) {
+            l = iterator.next();
+            if ( !rangeList.contains( l ) ) {
                 return false;
             }
         }
@@ -701,6 +838,40 @@ public class Phylogeny {
         orderAppearanceHelper( getRoot(), order );
     }
 
+    // Helper method for "orderAppearance(boolean)".
+    // Traverses this Phylogeny recusively.
+    private void orderAppearanceHelper( final PhylogenyNode n, final boolean order ) {
+        if ( n.isExternal() ) {
+            return;
+        }
+        else {
+            PhylogenyNode temp = null;
+            // FIXME
+            if ( ( n.getNumberOfDescendants() == 2 )
+                    && ( n.getChildNode1().getNumberOfExternalNodes() != n.getChildNode2().getNumberOfExternalNodes() )
+                    && ( ( n.getChildNode1().getNumberOfExternalNodes() < n.getChildNode2().getNumberOfExternalNodes() ) == order ) ) {
+                temp = n.getChildNode1();
+                n.setChild1( n.getChildNode2() );
+                n.setChild2( temp );
+            }
+            for( int i = 0; i < n.getNumberOfDescendants(); ++i ) {
+                orderAppearanceHelper( n.getChildNode( i ), order );
+            }
+        }
+    }
+
+    public void preOrderReId() {
+        if ( isEmpty() ) {
+            return;
+        }
+        setIdHash( null );
+        int i = PhylogenyNode.getNodeCount() + 1;
+        for( final PhylogenyNodeIterator it = iteratorPreorder(); it.hasNext(); ) {
+            it.next().setNodeId( i++ );
+        }
+        PhylogenyNode.setNodeCount( i );
+    }
+
     /**
      * Resets the ID numbers of the Nodes of this Phylogeny in preorder,
      * starting with i.<br>
@@ -712,11 +883,11 @@ public class Phylogeny {
      * @return start_label plus the total number of Nodes of this Phylogeny
      *         (int)
      */
-    public int preorderReID( int start_label ) {
+    public int preOrderReId( int start_label ) {
         if ( isEmpty() ) {
             return start_label;
         }
-        _idhash = null;
+        setIdHash( null );
         for( final PhylogenyNodeIterator it = iteratorPreorder(); it.hasNext(); ) {
             it.next().setNodeId( start_label++ );
         }
@@ -990,6 +1161,10 @@ public class Phylogeny {
         }
     }
 
+    private void setAllowMultipleParents( final boolean allow_multiple_parents ) {
+        _allow_multiple_parents = allow_multiple_parents;
+    }
+
     public void setConfidence( final Confidence confidence ) {
         _confidence = confidence;
     }
@@ -1004,6 +1179,10 @@ public class Phylogeny {
 
     public void setIdentifier( final Identifier identifier ) {
         _identifier = identifier;
+    }
+
+    void setIdHash( final HashMap<Integer, PhylogenyNode> idhash ) {
+        _idhash = idhash;
     }
 
     /**
@@ -1025,6 +1204,10 @@ public class Phylogeny {
         _name = s;
     }
 
+    public void setRelevantSequenceRelationTypes( final Collection<SequenceRelation.SEQUENCE_RELATION_TYPE> types ) {
+        _relevant_sequence_relation_types = types;
+    }
+
     public void setRerootable( final boolean rerootable ) {
         _rerootable = rerootable;
     }
@@ -1040,38 +1223,36 @@ public class Phylogeny {
         _rooted = b;
     } // setRooted( boolean )
 
+    public void setSequenceRelationQueries( final Collection<Sequence> sequencesByName ) {
+        _sequenceRelationQueries = sequencesByName;
+    }
+
     public void setType( final String type ) {
         _type = type;
     }
 
-    /**
-     * Returns the subtree of this Phylogeny which has the PhylogenyNode with ID
-     * id as its root PhylogenyNode.
-     * 
-     * @param id
-     *            ID (int) of PhylogenyNode
-     */
-    public Phylogeny subTree( final int id ) throws IllegalStateException {
+    public Phylogeny subTree( final PhylogenyNode node ) throws IllegalStateException {
         if ( !isTree() ) {
-            throw new IllegalStateException( "Attempt to get sub tree on phylogeny which is not tree-like." );
+            throw new IllegalStateException( "attempt to get sub tree on phylogeny which is not tree-like." );
+        }
+        if ( ( node == null ) || isEmpty() ) {
+            return null;
         }
         Phylogeny sub_tree = null;
-        PhylogenyNode node = null;
-        if ( isEmpty() ) {
-            return null;
-        }
         sub_tree = copy();
-        node = sub_tree.getNode( id );
-        if ( ( node == null ) || node.isExternal() ) {
-            return null;
-        }
-        node.setParent( null );
-        node.setDistanceToParent( PhylogenyNode.DISTANCE_DEFAULT );
+        final PhylogenyNode new_root = sub_tree.getNode( node.getNodeId() );
+        new_root.setParent( null );
+        //node.setDistanceToParent( PhylogenyNode.DISTANCE_DEFAULT );
+        sub_tree.setName( "" );
+        sub_tree.setDescription( "" );
+        sub_tree.setIdHash( null );
+        sub_tree.setConfidence( null );
+        sub_tree.setIdentifier( null );
         sub_tree.setRooted( true );
-        sub_tree.setRoot( node );
+        sub_tree.setRoot( new_root );
         sub_tree.recalculateNumberOfExternalDescendants( true );
         return sub_tree;
-    } // subTree( int )
+    }
 
     /**
      * Swaps the the two childern of a PhylogenyNode node of this Phylogeny.
@@ -1095,12 +1276,16 @@ public class Phylogeny {
         node.setChildNode( node.getNumberOfDescendants() - 1, first );
     } // swapChildren( PhylogenyNode )
 
+    public String toNewHampshire() {
+        return toNewHampshire( false );
+    }
+
     public String toNewHampshire( final boolean simple_nh ) {
         try {
             return new PhylogenyWriter().toNewHampshire( this, simple_nh, true ).toString();
         }
         catch ( final IOException e ) {
-            throw new AssertionError( "this should not have happend: " + e.getMessage() );
+            throw new Error( "this should not have happend: " + e.getMessage() );
         }
     }
 
@@ -1109,7 +1294,7 @@ public class Phylogeny {
             return new PhylogenyWriter().toNewHampshireX( this ).toString();
         }
         catch ( final IOException e ) {
-            throw new AssertionError( "this should not have happend: " + e.getMessage() );
+            throw new Error( "this should not have happend: " + e.getMessage() );
         }
     }
 
@@ -1118,7 +1303,7 @@ public class Phylogeny {
             return new PhylogenyWriter().toNexus( this ).toString();
         }
         catch ( final IOException e ) {
-            throw new AssertionError( "this should not have happend: " + e.getMessage() );
+            throw new Error( "this should not have happend: " + e.getMessage() );
         }
     }
 
@@ -1127,7 +1312,7 @@ public class Phylogeny {
             return new PhylogenyWriter().toPhyloXML( this, phyloxml_level ).toString();
         }
         catch ( final IOException e ) {
-            throw new AssertionError( "this should not have happend: " + e.getMessage() );
+            throw new Error( "this should not have happend: " + e.getMessage() );
         }
     }
 
@@ -1162,146 +1347,4 @@ public class Phylogeny {
         setRooted( false );
         return;
     } // unRoot()
-
-    // ---------------------------------------------------------
-    // Modification of Phylogeny topology and Phylogeny appearance
-    // ---------------------------------------------------------
-    // Helper method for removeExtNode( PhylogenyNode ).
-    private double addDist( final double a, final double b ) {
-        if ( ( a >= 0.0 ) && ( b >= 0.0 ) ) {
-            return a + b;
-        }
-        else if ( a >= 0.0 ) {
-            return a;
-        }
-        else if ( b >= 0.0 ) {
-            return b;
-        }
-        return PhylogenyNode.DISTANCE_DEFAULT;
-    } // addDist( double, double )
-
-    private HashMap<Integer, PhylogenyNode> getIdHash() {
-        return _idhash;
-    }
-
-    /**
-     * Return Node by TaxonomyId Olivier CHABROL :
-     * olivier.chabrol@univ-provence.fr
-     * 
-     * @param taxonomyID
-     *            search taxonomy identifier
-     * @param nodes
-     *            sublist node to search
-     * @return List node with the same taxonomy identifier
-     */
-    private List<PhylogenyNode> getNodeByTaxonomyID( final String taxonomyID, final List<PhylogenyNode> nodes ) {
-        final List<PhylogenyNode> retour = new ArrayList<PhylogenyNode>();
-        for( final PhylogenyNode node : nodes ) {
-            if ( taxonomyID.equals( PhylogenyMethods.getTaxonomyIdentifier( node ) ) ) {
-                retour.add( node );
-            }
-        }
-        return retour;
-    }
-
-    /**
-     * List all species contains in all leaf under a node Olivier CHABROL :
-     * olivier.chabrol@univ-provence.fr
-     * 
-     * @param node
-     *            PhylogenyNode whose sub node species are returned
-     * @return species contains in all leaf under the param node
-     */
-    private List<String> getSubNodeTaxonomy( final PhylogenyNode node ) {
-        final List<String> taxonomyList = new ArrayList<String>();
-        final List<PhylogenyNode> childs = node.getAllExternalDescendants();
-        String speciesId = null;
-        for( final PhylogenyNode phylogenyNode : childs ) {
-            // taxId = new Long(phylogenyNode.getTaxonomyID());
-            speciesId = PhylogenyMethods.getTaxonomyIdentifier( phylogenyNode );
-            if ( !taxonomyList.contains( speciesId ) ) {
-                taxonomyList.add( speciesId );
-            }
-        }
-        return taxonomyList;
-    }
-
-    /**
-     * Create a map [<PhylogenyNode, List<String>], the list contains the
-     * species contains in all leaf under phylogeny node Olivier CHABROL :
-     * olivier.chabrol@univ-provence.fr
-     * 
-     * @param node
-     *            the tree root node
-     * @param map
-     *            map to fill
-     */
-    private void getTaxonomyMap( final PhylogenyNode node, final Map<PhylogenyNode, List<String>> map ) {
-        // node is leaf
-        if ( node.isExternal() ) {
-            return;
-        }
-        map.put( node, getSubNodeTaxonomy( node ) );
-        getTaxonomyMap( node.getChildNode1(), map );
-        getTaxonomyMap( node.getChildNode2(), map );
-    }
-
-    private boolean isAllowMultipleParents() {
-        return _allow_multiple_parents;
-    }
-
-    /**
-     * Util method to check if all element of a list is contains in the
-     * rangeList. Olivier CHABROL : olivier.chabrol@univ-provence.fr
-     * 
-     * @param list
-     *            list to be check
-     * @param rangeList
-     *            the range list to compare
-     * @return <code>true</code> if all param list element are contains in param
-     *         rangeList, <code>false</code> otherwise.
-     */
-    private boolean isContains( final List<String> list, final List<String> rangeList ) {
-        if ( list.size() > rangeList.size() ) {
-            return false;
-        }
-        String l = null;
-        for( final Iterator<String> iterator = list.iterator(); iterator.hasNext(); ) {
-            l = iterator.next();
-            if ( !rangeList.contains( l ) ) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // Helper method for "orderAppearance(boolean)".
-    // Traverses this Phylogeny recusively.
-    private void orderAppearanceHelper( final PhylogenyNode n, final boolean order ) {
-        if ( n.isExternal() ) {
-            return;
-        }
-        else {
-            PhylogenyNode temp = null;
-            // FIXME
-            if ( ( n.getNumberOfDescendants() == 2 )
-                    && ( n.getChildNode1().getNumberOfExternalNodes() != n.getChildNode2().getNumberOfExternalNodes() )
-                    && ( ( n.getChildNode1().getNumberOfExternalNodes() < n.getChildNode2().getNumberOfExternalNodes() ) == order ) ) {
-                temp = n.getChildNode1();
-                n.setChild1( n.getChildNode2() );
-                n.setChild2( temp );
-            }
-            for( int i = 0; i < n.getNumberOfDescendants(); ++i ) {
-                orderAppearanceHelper( n.getChildNode( i ), order );
-            }
-        }
-    }
-
-    private void setAllowMultipleParents( final boolean allow_multiple_parents ) {
-        _allow_multiple_parents = allow_multiple_parents;
-    }
-
-    private void setIdHash( final HashMap<Integer, PhylogenyNode> idhash ) {
-        _idhash = idhash;
-    }
 }

@@ -1,4 +1,4 @@
-// $Id: phyloxml_converter.java,v 1.12 2009/04/15 17:17:52 cmzmasek Exp $
+// $Id: phyloxml_converter.java,v 1.20 2010/10/02 21:34:07 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -34,12 +34,10 @@ import java.util.List;
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
 import org.forester.io.parsers.nhx.NHXParser;
-import org.forester.io.parsers.nhx.NHXParser.TAXONOMY_EXTRACTION;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
 import org.forester.phylogeny.PhylogenyNode;
-import org.forester.phylogeny.data.Taxonomy;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
@@ -67,8 +65,8 @@ public class phyloxml_converter {
     final static private String  NO_TREE_LEVEL_INDENDATION        = "ni";
     final static private String  REPLACE_UNDER_SCORES             = "ru";
     final static private String  PRG_NAME                         = "phyloxml_converter";
-    final static private String  PRG_VERSION                      = "1.10";
-    final static private String  PRG_DATE                         = "2009.04.15";
+    final static private String  PRG_VERSION                      = "1.21";
+    final static private String  PRG_DATE                         = "2010.10.02";
     final static private String  E_MAIL                           = "czmasek@burnham.org";
     final static private String  WWW                              = "www.phylosoft.org/forester/";
     final static private boolean SPECIAL                          = false;
@@ -189,27 +187,30 @@ public class phyloxml_converter {
         Phylogeny[] phys = null;
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser parser = ForesterUtil.createParserDependingOnFileType( infile );
+            final PhylogenyParser parser = ForesterUtil.createParserDependingOnFileType( infile, true );
             if ( parser instanceof NHXParser ) {
                 if ( ( field != PhylogenyNodeField.TAXONOMY_CODE )
                         && ( field != PhylogenyNodeField.TAXONOMY_COMMON_NAME )
                         && ( field != PhylogenyNodeField.TAXONOMY_SCIENTIFIC_NAME ) ) {
                     if ( extr_taxonomy_pf_only ) {
-                        ( ( NHXParser ) parser ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
+                        ( ( NHXParser ) parser )
+                                .setTaxonomyExtraction( ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
                         replace_underscores = false;
                     }
                     else if ( extr_taxonomy ) {
-                        ( ( NHXParser ) parser ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.YES );
+                        ( ( NHXParser ) parser ).setTaxonomyExtraction( ForesterUtil.TAXONOMY_EXTRACTION.YES );
                         replace_underscores = false;
                     }
                 }
                 else {
-                    ( ( NHXParser ) parser ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.NO );
+                    ( ( NHXParser ) parser ).setTaxonomyExtraction( ForesterUtil.TAXONOMY_EXTRACTION.NO );
                 }
                 ( ( NHXParser ) parser ).setReplaceUnderscores( replace_underscores );
+                ( ( NHXParser ) parser ).setIgnoreQuotes( false );
             }
             else if ( parser instanceof NexusPhylogeniesParser ) {
                 ( ( NexusPhylogeniesParser ) parser ).setReplaceUnderscores( replace_underscores );
+                ( ( NexusPhylogeniesParser ) parser ).setIgnoreQuotes( false );
             }
             phys = factory.create( infile, parser );
         }
@@ -296,32 +297,41 @@ public class phyloxml_converter {
             final PhylogenyNode node = it.next();
             final String name = node.getNodeName();
             if ( !ForesterUtil.isEmpty( name ) ) {
-                final Taxonomy taxo = new Taxonomy();
-                if ( name.indexOf( "BF" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "BACFR" );
-                }
-                else if ( name.indexOf( "BT" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "BACTN" );
-                }
-                else if ( name.indexOf( "MXAN" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "MYXXD" );
-                }
-                else if ( name.indexOf( "STIAU" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "STIAU" );
-                }
-                else if ( name.indexOf( "BOVA" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "BACOV" );
-                }
-                else if ( name.indexOf( "BUNI" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "BACUN" );
-                }
-                else if ( name.indexOf( "Pgin" ) >= 0 ) {
-                    taxo.setTaxonomyCode( "PORGI" );
-                }
-                else if ( name.equals( "3CGH" ) || name.equals( "3CK7" ) ) {
-                    taxo.setTaxonomyCode( "BACTN" );
-                }
-                node.getNodeData().setTaxonomy( taxo );
+                //                final Taxonomy taxo = new Taxonomy();
+                //                if ( node.isExternal() ) {
+                //                    taxo.setTaxonomyCode( name );
+                //                    node.getNodeData().setTaxonomy( taxo );
+                //                }
+                //                else if ( name.indexOf( '_' ) == -1 || name.length() > 6 ) {
+                //                    taxo.setScientificName( name );
+                //                    node.getNodeData().setTaxonomy( taxo );
+                //                }
+                //                node.setName( "" );
+                //                if ( name.indexOf( "BF" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "BACFR" );
+                //                }
+                //                else if ( name.indexOf( "BT" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "BACTN" );
+                //                }
+                //                else if ( name.indexOf( "MXAN" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "MYXXD" );
+                //                }
+                //                else if ( name.indexOf( "STIAU" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "STIAU" );
+                //                }
+                //                else if ( name.indexOf( "BOVA" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "BACOV" );
+                //                }
+                //                else if ( name.indexOf( "BUNI" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "BACUN" );
+                //                }
+                //                else if ( name.indexOf( "Pgin" ) >= 0 ) {
+                //                    taxo.setTaxonomyCode( "PORGI" );
+                //                }
+                //                else if ( name.equals( "3CGH" ) || name.equals( "3CK7" ) ) {
+                //                    taxo.setTaxonomyCode( "BACTN" );
+                //                }
+                // node.getNodeData().setTaxonomy( taxo );
             }
         }
     }
@@ -333,7 +343,7 @@ public class phyloxml_converter {
                 .println( PRG_NAME
                         + " -"
                         + FIELD_OPTION
-                        + "=<field option> [options] <infile in New Hamphshire, Newick, NHX, Nexus, or ToL XML format> <outfile>" );
+                        + "=<field option> [options] <infile in New Hamphshire, NHX, Nexus, ToL XML, or phyloXML format> <outfile>" );
         System.out.println();
         System.out.println( " field options: " );
         System.out.println();
@@ -347,7 +357,7 @@ public class phyloxml_converter {
         System.out.println( " options: " );
         System.out.println( " -" + INTERNAL_NAMES_ARE_BOOT_SUPPPORT
                 + " : internal names in NH or NHX tree are bootstrap support values" );
-        System.out.println( " -" + REPLACE_UNDER_SCORES + ": replace all under scores with spaces" );
+        System.out.println( " -" + REPLACE_UNDER_SCORES + ": replace all underscores with spaces" );
         System.out.println( " -" + MIDPOINT_REROOT + " : midpoint reroot" );
         System.out.println( " -" + ORDER_SUBTREES + " : order subtrees" );
         System.out

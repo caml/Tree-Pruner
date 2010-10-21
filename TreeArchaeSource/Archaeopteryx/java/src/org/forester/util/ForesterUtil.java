@@ -1,4 +1,4 @@
-// $Id: ForesterUtil.java,v 1.94 2009/04/28 01:59:46 cmzmasek Exp $
+// $Id: ForesterUtil.java,v 1.113 2010/10/02 21:34:07 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -29,7 +29,9 @@ import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,6 +41,10 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,6 +56,8 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
@@ -60,25 +68,41 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.data.Confidence;
+import org.forester.phylogeny.data.Distribution;
 import org.forester.phylogeny.data.Sequence;
 import org.forester.phylogeny.data.Taxonomy;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
 
 public final class ForesterUtil {
 
-    public final static String FILE_SEPARATOR = System.getProperty( "file.separator" );
-    public final static String LINE_SEPARATOR = System.getProperty( "line.separator" );
-    public final static String JAVA_VENDOR    = System.getProperty( "java.vendor" );
-    public final static String JAVA_VERSION   = System.getProperty( "java.version" );
-    public final static String OS_ARCH        = System.getProperty( "os.arch" );
-    public final static String OS_NAME        = System.getProperty( "os.name" );
-    public final static String OS_VERSION     = System.getProperty( "os.version" );
-    public final static double ZERO_DIFF      = 1.0E-9;
+    public final static String       FILE_SEPARATOR                   = System.getProperty( "file.separator" );
+    public final static String       LINE_SEPARATOR                   = System.getProperty( "line.separator" );
+    public final static String       JAVA_VENDOR                      = System.getProperty( "java.vendor" );
+    public final static String       JAVA_VERSION                     = System.getProperty( "java.version" );
+    public final static String       OS_ARCH                          = System.getProperty( "os.arch" );
+    public final static String       OS_NAME                          = System.getProperty( "os.name" );
+    public final static String       OS_VERSION                       = System.getProperty( "os.version" );
+    public final static Pattern      PARANTHESESABLE_NH_CHARS_PATTERN = Pattern.compile( "[(),;\\s]" );
+    public final static double       ZERO_DIFF                        = 1.0E-9;
+    public static final BigDecimal   NULL_BD                          = new BigDecimal( 0 );
+    public static final NumberFormat FORMATTER_9;
+    public static final NumberFormat FORMATTER_6;
+    public static final NumberFormat FORMATTER_06;
+    public static final NumberFormat FORMATTER_3;
+    static {
+        final DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+        dfs.setDecimalSeparator( '.' );
+        // dfs.setGroupingSeparator( ( char ) 0 );
+        FORMATTER_9 = new DecimalFormat( "#.#########", dfs );
+        FORMATTER_6 = new DecimalFormat( "#.######", dfs );
+        FORMATTER_06 = new DecimalFormat( "0.######", dfs );
+        FORMATTER_3 = new DecimalFormat( "#.###", dfs );
+    }
 
     private ForesterUtil() {
     }
 
-    public static void appendSeparatorIfNotEmpty( final StringBuffer sb, final char separator ) {
+    final public static void appendSeparatorIfNotEmpty( final StringBuffer sb, final char separator ) {
         if ( sb.length() > 0 ) {
             sb.append( separator );
         }
@@ -90,22 +114,22 @@ public final class ForesterUtil {
      * otherwise a color 'proportional' to value is returned.
      * 
      * @param value
-     *            the value of this well
+     *            the value 
      * @param min
-     *            the smallest value of the plate/screen
+     *            the smallest value 
      * @param max
-     *            the largest value of the plate/screen
+     *            the largest value 
      * @param minColor
      *            the color for min
      * @param maxColor
      *            the color for max
      * @return a Color
      */
-    public static Color calcColor( double value,
-                                   final double min,
-                                   final double max,
-                                   final Color minColor,
-                                   final Color maxColor ) {
+    final public static Color calcColor( double value,
+                                         final double min,
+                                         final double max,
+                                         final Color minColor,
+                                         final Color maxColor ) {
         if ( value < min ) {
             value = min;
         }
@@ -127,13 +151,13 @@ public final class ForesterUtil {
      * mean-max
      * 
      * @param value
-     *            the value of this well
+     *            the value
      * @param min
-     *            the smallest value of the plate/screen
+     *            the smallest value
      * @param max
-     *            the largest value of the plate/screen
+     *            the largest value 
      * @param mean
-     *            the mean/median value of the plate/screen
+     *            the mean/median value 
      * @param minColor
      *            the color for min
      * @param maxColor
@@ -142,13 +166,13 @@ public final class ForesterUtil {
      *            the color for mean
      * @return a Color
      */
-    public static Color calcColor( double value,
-                                   final double min,
-                                   final double max,
-                                   final double mean,
-                                   final Color minColor,
-                                   final Color maxColor,
-                                   final Color meanColor ) {
+    final public static Color calcColor( double value,
+                                         final double min,
+                                         final double max,
+                                         final double mean,
+                                         final Color minColor,
+                                         final Color maxColor,
+                                         final Color meanColor ) {
         if ( value < min ) {
             value = min;
         }
@@ -174,16 +198,72 @@ public final class ForesterUtil {
         }
     }
 
-    public static String collapseWhiteSpace( final String s ) {
+    /**
+     * Helper method for calcColor methods.
+     * 
+     * @param smallercolor_component_x
+     *            color component the smaller color
+     * @param largercolor_component_x
+     *            color component the larger color
+     * @param x
+     *            factor
+     * @return an int representing a color component
+     */
+    final private static int calculateColorComponent( final double smallercolor_component_x,
+                                                      final double largercolor_component_x,
+                                                      final double x ) {
+        return ( int ) ( smallercolor_component_x + ( ( x * ( largercolor_component_x - smallercolor_component_x ) ) / 255.0 ) );
+    }
+
+    /**
+     * Helper method for calcColor methods.
+     * 
+     * 
+     * @param value
+     *            the value
+     * @param larger
+     *            the largest value
+     * @param smaller
+     *            the smallest value
+     * @return a normalized value between larger and smaller
+     */
+    final private static double calculateColorFactor( final double value, final double larger, final double smaller ) {
+        return ( 255.0 * ( value - smaller ) ) / ( larger - smaller );
+    }
+
+    final public static String collapseWhiteSpace( final String s ) {
         return s.replaceAll( "[\\s]+", " " );
     }
 
-    public static String colorToHex( final Color color ) {
+    final public static String colorToHex( final Color color ) {
         final String rgb = Integer.toHexString( color.getRGB() );
         return rgb.substring( 2, rgb.length() );
     }
 
-    public static int countChars( final String str, final char c ) {
+    synchronized public static void copyFile( final File in, final File out ) throws IOException {
+        final FileInputStream in_s = new FileInputStream( in );
+        final FileOutputStream out_s = new FileOutputStream( out );
+        try {
+            final byte[] buf = new byte[ 1024 ];
+            int i = 0;
+            while ( ( i = in_s.read( buf ) ) != -1 ) {
+                out_s.write( buf, 0, i );
+            }
+        }
+        catch ( final IOException e ) {
+            throw e;
+        }
+        finally {
+            if ( in_s != null ) {
+                in_s.close();
+            }
+            if ( out_s != null ) {
+                out_s.close();
+            }
+        }
+    }
+
+    final public static int countChars( final String str, final char c ) {
         int count = 0;
         for( int i = 0; i < str.length(); ++i ) {
             if ( str.charAt( i ) == c ) {
@@ -193,18 +273,18 @@ public final class ForesterUtil {
         return count;
     }
 
-    public static BufferedWriter createBufferedWriter( final File file ) throws IOException {
+    final public static BufferedWriter createBufferedWriter( final File file ) throws IOException {
         if ( file.exists() ) {
             throw new IOException( "[" + file + "] already exists" );
         }
         return new BufferedWriter( new FileWriter( file ) );
     }
 
-    public static BufferedWriter createBufferedWriter( final String name ) throws IOException {
+    final public static BufferedWriter createBufferedWriter( final String name ) throws IOException {
         return new BufferedWriter( new FileWriter( createFileForWriting( name ) ) );
     }
 
-    public static File createFileForWriting( final String name ) throws IOException {
+    final public static File createFileForWriting( final String name ) throws IOException {
         final File file = new File( name );
         if ( file.exists() ) {
             throw new IOException( "[" + name + "] already exists" );
@@ -212,12 +292,26 @@ public final class ForesterUtil {
         return file;
     }
 
-    public static PhylogenyParser createParserDependingFileContents( final File file ) throws FileNotFoundException,
-            IOException {
+    final public static PhylogenyParser createParserDependingFileContents( final File file,
+                                                                           final boolean phyloxml_validate_against_xsd )
+            throws FileNotFoundException, IOException {
         PhylogenyParser parser = null;
         final String first_line = ForesterUtil.getFirstLine( file ).trim().toLowerCase();
         if ( first_line.startsWith( "<" ) ) {
             parser = new PhyloXmlParser();
+            if ( phyloxml_validate_against_xsd ) {
+                final ClassLoader cl = PhyloXmlParser.class.getClassLoader();
+                final URL xsd_url = cl.getResource( ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE );
+                if ( xsd_url != null ) {
+                    ( ( PhyloXmlParser ) parser ).setValidateAgainstSchema( xsd_url.toString() );
+                }
+                else {
+                    if ( ForesterConstants.RELEASE ) {
+                        throw new IllegalStateException( "failed to get URL for phyloXML XSD from jar file from ["
+                                + ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE + "]" );
+                    }
+                }
+            }
         }
         else if ( ( first_line.startsWith( "nexus" ) ) || ( first_line.startsWith( "#nexus" ) )
                 || ( first_line.startsWith( "# nexus" ) ) || ( first_line.startsWith( "begin" ) ) ) {
@@ -229,12 +323,13 @@ public final class ForesterUtil {
         return parser;
     }
 
-    public static PhylogenyParser createParserDependingOnFileType( final File file ) throws FileNotFoundException,
-            IOException {
+    final public static PhylogenyParser createParserDependingOnFileType( final File file,
+                                                                         final boolean phyloxml_validate_against_xsd )
+            throws FileNotFoundException, IOException {
         PhylogenyParser parser = null;
-        parser = createParserDependingOnSuffix( file.getName() );
+        parser = createParserDependingOnSuffix( file.getName(), phyloxml_validate_against_xsd );
         if ( parser == null ) {
-            parser = createParserDependingFileContents( file );
+            parser = createParserDependingFileContents( file, phyloxml_validate_against_xsd );
         }
         return parser;
     }
@@ -245,7 +340,8 @@ public final class ForesterUtil {
      * @param filename
      * @return
      */
-    public static PhylogenyParser createParserDependingOnSuffix( final String filename ) {
+    final public static PhylogenyParser createParserDependingOnSuffix( final String filename,
+                                                                       final boolean phyloxml_validate_against_xsd ) {
         PhylogenyParser parser = null;
         final String filename_lc = filename.toLowerCase();
         if ( filename_lc.endsWith( ".tol" ) || filename_lc.endsWith( ".tolxml" ) || filename_lc.endsWith( ".tol.zip" ) ) {
@@ -254,6 +350,19 @@ public final class ForesterUtil {
         else if ( filename_lc.endsWith( ".xml" ) || filename_lc.endsWith( ".px" ) || filename_lc.endsWith( "phyloxml" )
                 || filename_lc.endsWith( ".zip" ) ) {
             parser = new PhyloXmlParser();
+            if ( phyloxml_validate_against_xsd ) {
+                final ClassLoader cl = PhyloXmlParser.class.getClassLoader();
+                final URL xsd_url = cl.getResource( ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE );
+                if ( xsd_url != null ) {
+                    ( ( PhyloXmlParser ) parser ).setValidateAgainstSchema( xsd_url.toString() );
+                }
+                else {
+                    if ( ForesterConstants.RELEASE ) {
+                        throw new IllegalStateException( "failed to get URL for phyloXML XSD from jar file from ["
+                                + ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE + "]" );
+                    }
+                }
+            }
         }
         else if ( filename_lc.endsWith( ".nexus" ) || filename_lc.endsWith( ".nex" ) || filename_lc.endsWith( ".nx" ) ) {
             parser = new NexusPhylogeniesParser();
@@ -264,10 +373,11 @@ public final class ForesterUtil {
         return parser;
     }
 
-    public static PhylogenyParser createParserDependingOnUrlContents( final URL url ) throws FileNotFoundException,
-            IOException {
+    final public static PhylogenyParser createParserDependingOnUrlContents( final URL url,
+                                                                            final boolean phyloxml_validate_against_xsd )
+            throws FileNotFoundException, IOException {
         final String lc_filename = url.getFile().toString().toLowerCase();
-        PhylogenyParser parser = createParserDependingOnSuffix( lc_filename );
+        PhylogenyParser parser = createParserDependingOnSuffix( lc_filename, phyloxml_validate_against_xsd );
         if ( ( parser != null ) && lc_filename.endsWith( ".zip" ) ) {
             if ( parser instanceof PhyloXmlParser ) {
                 ( ( PhyloXmlParser ) parser ).setZippedInputstream( true );
@@ -280,6 +390,17 @@ public final class ForesterUtil {
             final String first_line = getFirstLine( url ).trim().toLowerCase();
             if ( first_line.startsWith( "<" ) ) {
                 parser = new PhyloXmlParser();
+                if ( phyloxml_validate_against_xsd ) {
+                    final ClassLoader cl = PhyloXmlParser.class.getClassLoader();
+                    final URL xsd_url = cl.getResource( ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE );
+                    if ( xsd_url != null ) {
+                        ( ( PhyloXmlParser ) parser ).setValidateAgainstSchema( xsd_url.toString() );
+                    }
+                    else {
+                        throw new IllegalStateException( "failed to get URL for phyloXML XSD from jar file from ["
+                                + ForesterConstants.LOCAL_PHYLOXML_XSD_RESOURCE + "]" );
+                    }
+                }
             }
             else if ( ( first_line.startsWith( "nexus" ) ) || ( first_line.startsWith( "#nexus" ) )
                     || ( first_line.startsWith( "# nexus" ) ) || ( first_line.startsWith( "begin" ) ) ) {
@@ -290,6 +411,82 @@ public final class ForesterUtil {
             }
         }
         return parser;
+    }
+
+    final public static void ensurePresenceOfDate( final PhylogenyNode node ) {
+        if ( !node.getNodeData().isHasDate() ) {
+            node.getNodeData().setDate( new org.forester.phylogeny.data.Date() );
+        }
+    }
+
+    final public static void ensurePresenceOfDistribution( final PhylogenyNode node ) {
+        if ( !node.getNodeData().isHasDistribution() ) {
+            node.getNodeData().setDistribution( new Distribution( "" ) );
+        }
+    }
+
+    public static void ensurePresenceOfSequence( final PhylogenyNode node ) {
+        if ( !node.getNodeData().isHasSequence() ) {
+            node.getNodeData().setSequence( new Sequence() );
+        }
+    }
+
+    public static void ensurePresenceOfTaxonomy( final PhylogenyNode node ) {
+        if ( !node.getNodeData().isHasTaxonomy() ) {
+            node.getNodeData().setTaxonomy( new Taxonomy() );
+        }
+    }
+
+    /**
+     * Extracts a code if and only if:
+     * one and only one _, 
+     * shorter than 25, 
+     * no |, 
+     * no ., 
+     * if / present it has to be after the _, 
+     * if PFAM_STYLE_ONLY: / must be present,
+     * tax code can only contain uppercase letters and numbers,
+     * and must contain at least one uppercase letter.
+     * Return null if no code extractable.
+     * 
+     * @param name
+     * @param limit_to_five
+     * @return
+     */
+    public static String extractTaxonomyCodeFromNodeName( final String name,
+                                                          final boolean limit_to_five,
+                                                          final ForesterUtil.TAXONOMY_EXTRACTION taxonomy_extraction ) {
+        if ( ( name.indexOf( "_" ) > 0 )
+                && ( name.length() < 25 )
+                && ( name.lastIndexOf( "_" ) == name.indexOf( "_" ) )
+                && ( name.indexOf( "|" ) < 0 )
+                && ( name.indexOf( "." ) < 0 )
+                && ( ( taxonomy_extraction != ForesterUtil.TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY ) || ( name
+                        .indexOf( "/" ) >= 0 ) )
+                && ( ( ( name.indexOf( "/" ) ) < 0 ) || ( name.indexOf( "/" ) > name.indexOf( "_" ) ) ) ) {
+            final String[] s = name.split( "[_/]" );
+            if ( s.length > 1 ) {
+                String str = s[ 1 ];
+                if ( limit_to_five ) {
+                    if ( str.length() > 5 ) {
+                        str = str.substring( 0, 5 );
+                    }
+                    else if ( ( str.length() < 5 ) && ( str.startsWith( "RAT" ) || str.startsWith( "PIG" ) ) ) {
+                        str = str.substring( 0, 3 );
+                    }
+                }
+                final Matcher letters_and_numbers = NHXParser.UC_LETTERS_NUMBERS_PATTERN.matcher( str );
+                if ( !letters_and_numbers.matches() ) {
+                    return null;
+                }
+                final Matcher numbers_only = NHXParser.NUMBERS_ONLY_PATTERN.matcher( str );
+                if ( numbers_only.matches() ) {
+                    return null;
+                }
+                return str;
+            }
+        }
+        return null;
     }
 
     public static void fatalError( final String prg_name, final String message ) {
@@ -309,7 +506,7 @@ public final class ForesterUtil {
         return ary;
     }
 
-    public static List<String> file2list( final File file ) throws IOException {
+    final public static List<String> file2list( final File file ) throws IOException {
         final List<String> list = new ArrayList<String>();
         final BufferedReader in = new BufferedReader( new FileReader( file ) );
         String str;
@@ -325,7 +522,7 @@ public final class ForesterUtil {
         return list;
     }
 
-    public static SortedSet<String> file2set( final File file ) throws IOException {
+    final public static SortedSet<String> file2set( final File file ) throws IOException {
         final SortedSet<String> set = new TreeSet<String>();
         final BufferedReader in = new BufferedReader( new FileReader( file ) );
         String str;
@@ -341,16 +538,16 @@ public final class ForesterUtil {
         return set;
     }
 
-    public static String getCurrentDateTime() {
+    final public static String getCurrentDateTime() {
         final DateFormat format = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
         return format.format( new Date() );
     }
 
-    public static String getFileSeparator() {
+    final public static String getFileSeparator() {
         return ForesterUtil.FILE_SEPARATOR;
     }
 
-    public static String getFirstLine( final Object source ) throws FileNotFoundException, IOException {
+    final public static String getFirstLine( final Object source ) throws FileNotFoundException, IOException {
         BufferedReader reader = null;
         if ( source instanceof File ) {
             final File f = ( File ) source;
@@ -396,7 +593,7 @@ public final class ForesterUtil {
         return line;
     }
 
-    public static String getLineSeparator() {
+    final public static String getLineSeparator() {
         return ForesterUtil.LINE_SEPARATOR;
     }
 
@@ -404,7 +601,7 @@ public final class ForesterUtil {
      * Returns all custom data tag names of this Phylogeny as Hashtable. Tag
      * names are keys, values are Boolean set to false.
      */
-    public static Hashtable<String, Boolean> getPropertyRefs( final Phylogeny phylogeny ) {
+    final public static Hashtable<String, Boolean> getPropertyRefs( final Phylogeny phylogeny ) {
         final Hashtable<String, Boolean> ht = new Hashtable<String, Boolean>();
         if ( phylogeny.isEmpty() ) {
             return ht;
@@ -421,7 +618,7 @@ public final class ForesterUtil {
         return ht;
     }
 
-    public static void increaseCountingMap( final Map<String, Integer> counting_map, final String item_name ) {
+    final public static void increaseCountingMap( final Map<String, Integer> counting_map, final String item_name ) {
         if ( !counting_map.containsKey( item_name ) ) {
             counting_map.put( item_name, 1 );
         }
@@ -430,7 +627,7 @@ public final class ForesterUtil {
         }
     }
 
-    static public boolean isAllNonEmptyInternalLabelsArePositiveNumbers( final Phylogeny phy ) {
+    final static public boolean isAllNonEmptyInternalLabelsArePositiveNumbers( final Phylogeny phy ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             final PhylogenyNode n = it.next();
@@ -452,19 +649,19 @@ public final class ForesterUtil {
         return true;
     }
 
-    public static boolean isEmpty( final String s ) {
-        return ( ( s == null ) || ( s.trim().length() < 1 ) );
+    final public static boolean isEmpty( final String s ) {
+        return ( ( s == null ) || ( s.length() < 1 ) );
     }
 
-    public static boolean isEqual( final double a, final double b ) {
+    final public static boolean isEqual( final double a, final double b ) {
         return ( ( Math.abs( a - b ) ) < ZERO_DIFF );
     }
 
-    public static boolean isEven( final int n ) {
+    final public static boolean isEven( final int n ) {
         return n % 2 == 0;
     }
 
-    static public boolean isHasAtLeastNodeWithEvent( final Phylogeny phy ) {
+    final static public boolean isHasAtLeastNodeWithEvent( final Phylogeny phy ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             if ( it.next().getNodeData().isHasEvent() ) {
@@ -480,7 +677,7 @@ public final class ForesterUtil {
      * 
      * @param phy
      */
-    static public boolean isHasAtLeastOneBranchLengthLargerThanZero( final Phylogeny phy ) {
+    final static public boolean isHasAtLeastOneBranchLengthLargerThanZero( final Phylogeny phy ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             if ( it.next().getDistanceToParent() > 0.0 ) {
@@ -490,7 +687,7 @@ public final class ForesterUtil {
         return false;
     }
 
-    static public boolean isHasAtLeastOneBranchWithSupportValues( final Phylogeny phy ) {
+    final static public boolean isHasAtLeastOneBranchWithSupportValues( final Phylogeny phy ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             if ( it.next().getBranchData().isHasConfidences() ) {
@@ -510,7 +707,7 @@ public final class ForesterUtil {
      * @return true if both a and b or not empty or null and contain at least
      *         one element in common false otherwise
      */
-    public static boolean isIntersecting( final String[] a, final String[] b ) {
+    final public static boolean isIntersecting( final String[] a, final String[] b ) {
         if ( ( a == null ) || ( b == null ) ) {
             return false;
         }
@@ -528,7 +725,7 @@ public final class ForesterUtil {
         return false;
     }
 
-    public static double isLargerOrEqualToZero( final double d ) {
+    final public static double isLargerOrEqualToZero( final double d ) {
         if ( d > 0.0 ) {
             return d;
         }
@@ -537,7 +734,11 @@ public final class ForesterUtil {
         }
     }
 
-    public static String isReadableFile( final File f ) {
+    final public static boolean isNull( final BigDecimal s ) {
+        return ( ( s == null ) || ( s.compareTo( NULL_BD ) == 0 ) );
+    }
+
+    final public static String isReadableFile( final File f ) {
         if ( !f.exists() ) {
             return "file [" + f + "] does not exist";
         }
@@ -556,7 +757,11 @@ public final class ForesterUtil {
         return null;
     }
 
-    public static String isWritableFile( final File f ) {
+    final public static String isReadableFile( final String s ) {
+        return isReadableFile( new File( s ) );
+    }
+
+    final public static String isWritableFile( final File f ) {
         if ( f.isDirectory() ) {
             return "[" + f + "] is a directory";
         }
@@ -571,7 +776,7 @@ public final class ForesterUtil {
      * <p>
      * (Last modified: 12/20/03)
      */
-    public static int limitRangeForColor( int i ) {
+    final public static int limitRangeForColor( int i ) {
         if ( i > 255 ) {
             i = 255;
         }
@@ -581,7 +786,7 @@ public final class ForesterUtil {
         return i;
     }
 
-    public static SortedMap<Object, Integer> listToSortedCountsMap( final List list ) {
+    final public static SortedMap<Object, Integer> listToSortedCountsMap( final List list ) {
         final SortedMap<Object, Integer> map = new TreeMap<Object, Integer>();
         for( final Object key : list ) {
             if ( !map.containsKey( key ) ) {
@@ -594,7 +799,7 @@ public final class ForesterUtil {
         return map;
     }
 
-    public static StringBuffer mapToStringBuffer( final Map map, final String key_value_separator ) {
+    final public static StringBuffer mapToStringBuffer( final Map map, final String key_value_separator ) {
         final StringBuffer sb = new StringBuffer();
         for( final Iterator iter = map.keySet().iterator(); iter.hasNext(); ) {
             final Object key = iter.next();
@@ -606,7 +811,10 @@ public final class ForesterUtil {
         return sb;
     }
 
-    public static String normalizeString( final String s, final int length, final boolean left_pad, final char pad_char ) {
+    final public static String normalizeString( final String s,
+                                                final int length,
+                                                final boolean left_pad,
+                                                final char pad_char ) {
         if ( s.length() > length ) {
             return s.substring( 0, length );
         }
@@ -624,7 +832,7 @@ public final class ForesterUtil {
         }
     }
 
-    public static BufferedReader obtainReader( final Object source ) throws IOException, FileNotFoundException {
+    final public static BufferedReader obtainReader( final Object source ) throws IOException, FileNotFoundException {
         BufferedReader reader = null;
         if ( source instanceof File ) {
             final File f = ( File ) source;
@@ -655,15 +863,18 @@ public final class ForesterUtil {
         return reader;
     }
 
-    public static StringBuffer pad( final double number, final int size, final char pad, final boolean left_pad ) {
+    final public static StringBuffer pad( final double number, final int size, final char pad, final boolean left_pad ) {
         return pad( new StringBuffer( number + "" ), size, pad, left_pad );
     }
 
-    public static StringBuffer pad( final String string, final int size, final char pad, final boolean left_pad ) {
+    final public static StringBuffer pad( final String string, final int size, final char pad, final boolean left_pad ) {
         return pad( new StringBuffer( string ), size, pad, left_pad );
     }
 
-    public static StringBuffer pad( final StringBuffer string, final int size, final char pad, final boolean left_pad ) {
+    final public static StringBuffer pad( final StringBuffer string,
+                                          final int size,
+                                          final char pad,
+                                          final boolean left_pad ) {
         final StringBuffer padding = new StringBuffer();
         final int s = size - string.length();
         if ( s < 1 ) {
@@ -680,7 +891,21 @@ public final class ForesterUtil {
         }
     }
 
-    public static void postOrderRelabelInternalNodes( final Phylogeny phylogeny, final int starting_number ) {
+    final public static double parseDouble( final String str ) throws ParseException {
+        if ( ForesterUtil.isEmpty( str ) ) {
+            return 0.0;
+        }
+        return Double.parseDouble( str );
+    }
+
+    final public static int parseInt( final String str ) throws ParseException {
+        if ( ForesterUtil.isEmpty( str ) ) {
+            return 0;
+        }
+        return Integer.parseInt( str );
+    }
+
+    final public static void postOrderRelabelInternalNodes( final Phylogeny phylogeny, final int starting_number ) {
         int i = starting_number;
         for( final PhylogenyNodeIterator it = phylogeny.iteratorPostorder(); it.hasNext(); ) {
             final PhylogenyNode node = it.next();
@@ -690,23 +915,23 @@ public final class ForesterUtil {
         }
     }
 
-    public static void printArray( final Object[] a ) {
+    final public static void printArray( final Object[] a ) {
         for( int i = 0; i < a.length; ++i ) {
             System.out.println( "[" + i + "]=" + a[ i ] );
         }
     }
 
-    public static void printCountingMap( final Map<String, Integer> counting_map ) {
+    final public static void printCountingMap( final Map<String, Integer> counting_map ) {
         for( final String key : counting_map.keySet() ) {
             System.out.println( key + ": " + counting_map.get( key ) );
         }
     }
 
-    public static void printErrorMessage( final String prg_name, final String message ) {
+    final public static void printErrorMessage( final String prg_name, final String message ) {
         System.out.println( "[" + prg_name + "] > error: " + message );
     }
 
-    public static void printProgramInformation( final String prg_name, final String prg_version, final String date ) {
+    final public static void printProgramInformation( final String prg_name, final String prg_version, final String date ) {
         final int l = prg_name.length() + prg_version.length() + date.length() + 4;
         System.out.println();
         System.out.println( prg_name + " " + prg_version + " (" + date + ")" );
@@ -716,11 +941,11 @@ public final class ForesterUtil {
         System.out.println();
     }
 
-    public static void printProgramInformation( final String prg_name,
-                                                final String prg_version,
-                                                final String date,
-                                                final String email,
-                                                final String www ) {
+    final public static void printProgramInformation( final String prg_name,
+                                                      final String prg_version,
+                                                      final String date,
+                                                      final String email,
+                                                      final String www ) {
         final int l = prg_name.length() + prg_version.length() + date.length() + 4;
         System.out.println();
         System.out.println( prg_name + " " + prg_version + " (" + date + ")" );
@@ -738,15 +963,15 @@ public final class ForesterUtil {
         System.out.println();
     }
 
-    public static void printWarningMessage( final String prg_name, final String message ) {
+    final public static void printWarningMessage( final String prg_name, final String message ) {
         System.out.println( "[" + prg_name + "] > warning: " + message );
     }
 
-    public static void programMessage( final String prg_name, final String message ) {
+    final public static void programMessage( final String prg_name, final String message ) {
         System.out.println( "[" + prg_name + "] > " + message );
     }
 
-    public static String removeSuffix( final String file_name ) {
+    final public static String removeSuffix( final String file_name ) {
         final int i = file_name.lastIndexOf( '.' );
         if ( i > 1 ) {
             return file_name.substring( 0, i );
@@ -759,7 +984,7 @@ public final class ForesterUtil {
      * 
      * @return String s with white space removed
      */
-    public static String removeWhiteSpace( String s ) {
+    final public static String removeWhiteSpace( String s ) {
         int i;
         for( i = 0; i <= s.length() - 1; i++ ) {
             if ( ( s.charAt( i ) == ' ' ) || ( s.charAt( i ) == '\t' ) || ( s.charAt( i ) == '\n' )
@@ -771,21 +996,25 @@ public final class ForesterUtil {
         return s;
     }
 
-    public static String replaceIllegalNhCharacters( final String nh ) {
+    final public static boolean isContainsParanthesesableNhCharacter( final String nh ) {
+        return PARANTHESESABLE_NH_CHARS_PATTERN.matcher( nh ).find();
+    }
+
+    final public static String replaceIllegalNhCharacters( final String nh ) {
         if ( nh == null ) {
             return "";
         }
-        return nh.trim().replaceAll( "[\\[\\](),:;\\s]+", "_" );
+        return nh.trim().replaceAll( "[\\[\\]:]+", "_" );
     }
 
-    public static String replaceIllegalNhxCharacters( final String nhx ) {
+    final public static String replaceIllegalNhxCharacters( final String nhx ) {
         if ( nhx == null ) {
             return "";
         }
         return nhx.trim().replaceAll( "[\\[\\](),:;\\s]+", "_" );
     }
 
-    public static double round( final double value, final int decimal_place ) {
+    final public static double round( final double value, final int decimal_place ) {
         BigDecimal bd = new BigDecimal( value );
         bd = bd.setScale( decimal_place, BigDecimal.ROUND_HALF_UP );
         return bd.doubleValue();
@@ -794,15 +1023,15 @@ public final class ForesterUtil {
     /**
      * Rounds d to an int.
      */
-    public static int roundToInt( final double d ) {
+    final public static int roundToInt( final double d ) {
         return ( int ) ( d + 0.5 );
     }
 
-    public static int roundToInt( final float f ) {
+    final public static int roundToInt( final float f ) {
         return ( int ) ( f + 0.5f );
     }
 
-    public static String sanitizeString( final String s ) {
+    final public static String sanitizeString( final String s ) {
         if ( s == null ) {
             return "";
         }
@@ -811,7 +1040,12 @@ public final class ForesterUtil {
         }
     }
 
-    public static String stringArrayToString( final String[] a ) {
+    final private static String[] splitString( final String str ) {
+        final String regex = "[\\s;,]+";
+        return str.split( regex );
+    }
+
+    final public static String stringArrayToString( final String[] a ) {
         final StringBuffer sb = new StringBuffer();
         if ( ( a != null ) && ( a.length > 0 ) ) {
             for( int i = 0; i < a.length - 1; ++i ) {
@@ -822,7 +1056,7 @@ public final class ForesterUtil {
         return sb.toString();
     }
 
-    static public void transferInternalNamesToBootstrapSupport( final Phylogeny phy ) {
+    final static public void transferInternalNamesToBootstrapSupport( final Phylogeny phy ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             final PhylogenyNode n = it.next();
@@ -843,7 +1077,7 @@ public final class ForesterUtil {
         }
     }
 
-    static public void transferInternalNodeNamesToConfidence( final Phylogeny phy ) {
+    final static public void transferInternalNodeNamesToConfidence( final Phylogeny phy ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             final PhylogenyNode n = it.next();
@@ -865,7 +1099,7 @@ public final class ForesterUtil {
         }
     }
 
-    static public void transferNodeNameToField( final Phylogeny phy, final PhylogenyNodeField field ) {
+    final static public void transferNodeNameToField( final Phylogeny phy, final PhylogenyNodeField field ) {
         final PhylogenyNodeIterator it = phy.iteratorPostorder();
         while ( it.hasNext() ) {
             final PhylogenyNode n = it.next();
@@ -873,6 +1107,16 @@ public final class ForesterUtil {
             if ( !ForesterUtil.isEmpty( name ) ) {
                 switch ( field ) {
                     case TAXONOMY_CODE:
+                        //temp hack
+                        //                        if ( name.length() > 5 ) {
+                        //                            n.setName( "" );
+                        //                            if ( !n.getNodeData().isHasTaxonomy() ) {
+                        //                                n.getNodeData().setTaxonomy( new Taxonomy() );
+                        //                            }
+                        //                            n.getNodeData().getTaxonomy().setScientificName( name );
+                        //                            break;
+                        //                        }
+                        //
                         n.setName( "" );
                         PhylogenyMethods.setTaxonomyCode( n, name );
                         break;
@@ -909,7 +1153,7 @@ public final class ForesterUtil {
         }
     }
 
-    public static void unexpectedFatalError( final String prg_name, final Exception e ) {
+    final public static void unexpectedFatalError( final String prg_name, final Exception e ) {
         System.err.println();
         System.err.println( "[" + prg_name
                 + "] > unexpected error (Should not have occured! Please contact program author(s).)" );
@@ -918,7 +1162,7 @@ public final class ForesterUtil {
         System.exit( -1 );
     }
 
-    public static void unexpectedFatalError( final String prg_name, final String message ) {
+    final public static void unexpectedFatalError( final String prg_name, final String message ) {
         System.err.println();
         System.err.println( "[" + prg_name
                 + "] > unexpected error. Should not have occured! Please contact program author(s)." );
@@ -927,7 +1171,7 @@ public final class ForesterUtil {
         System.exit( -1 );
     }
 
-    public static void unexpectedFatalError( final String prg_name, final String message, final Exception e ) {
+    final public static void unexpectedFatalError( final String prg_name, final String message, final Exception e ) {
         System.err.println();
         System.err.println( "[" + prg_name
                 + "] > unexpected error. Should not have occured! Please contact program author(s)." );
@@ -937,45 +1181,40 @@ public final class ForesterUtil {
         System.exit( -1 );
     }
 
-    /**
-     * Helper method for calcColor methods.
-     * 
-     * @param smallercolor_component_x
-     *            color component the smaller color
-     * @param largercolor_component_x
-     *            color component the larger color
-     * @param x
-     *            factor
-     * @return an int representing a color component
-     */
-    private static int calculateColorComponent( final double smallercolor_component_x,
-                                                final double largercolor_component_x,
-                                                final double x ) {
-        return ( int ) ( smallercolor_component_x + ( ( x * ( largercolor_component_x - smallercolor_component_x ) ) / 255.0 ) );
-    }
-
-    /**
-     * Helper method for calcColor methods.
-     * 
-     * 
-     * @param value
-     *            the value
-     * @param larger
-     *            the largest value
-     * @param smaller
-     *            the smallest value
-     * @return a normalized value between larger and smaller
-     */
-    private static double calculateColorFactor( final double value, final double larger, final double smaller ) {
-        return ( 255.0 * ( value - smaller ) ) / ( larger - smaller );
-    }
-
-    private static String[] splitString( final String str ) {
-        final String regex = "[\\s;,]+";
-        return str.split( regex );
+    public final static String wordWrap( final String str, final int width ) {
+        final StringBuilder sb = new StringBuilder( str );
+        int start = 0;
+        int ls = -1;
+        int i = 0;
+        while ( i < sb.length() ) {
+            if ( sb.charAt( i ) == ' ' ) {
+                ls = i;
+            }
+            if ( sb.charAt( i ) == '\n' ) {
+                ls = -1;
+                start = i + 1;
+            }
+            if ( i > start + width - 1 ) {
+                if ( ls != -1 ) {
+                    sb.setCharAt( ls, '\n' );
+                    start = ls + 1;
+                    ls = -1;
+                }
+                else {
+                    sb.insert( i, '\n' );
+                    start = i + 1;
+                }
+            }
+            i++;
+        }
+        return sb.toString();
     }
 
     public static enum PhylogenyNodeField {
         CLADE_NAME, TAXONOMY_CODE, TAXONOMY_SCIENTIFIC_NAME, TAXONOMY_COMMON_NAME, SEQUENCE_SYMBOL, SEQUENCE_NAME;
+    }
+
+    public static enum TAXONOMY_EXTRACTION {
+        NO, YES, PFAM_STYLE_ONLY;
     }
 }

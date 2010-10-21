@@ -1,4 +1,4 @@
-// $Id: count_support.java,v 1.11 2008/03/19 01:15:10 cmzmasek Exp $
+// $Id: count_support.java,v 1.13 2010/09/29 23:50:17 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.forester.development.SupportCount;
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.Phylogeny;
@@ -41,6 +40,7 @@ import org.forester.phylogeny.data.Confidence;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
+import org.forester.tools.SupportCount;
 import org.forester.util.CommandLineArguments;
 import org.forester.util.ForesterUtil;
 
@@ -104,7 +104,7 @@ public class count_support {
         Phylogeny[] ev = null;
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogeny_infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogeny_infile, true );
             p = factory.create( phylogeny_infile, pp )[ 0 ];
         }
         catch ( final Exception e ) {
@@ -113,7 +113,7 @@ public class count_support {
         }
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( evaluators_infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( evaluators_infile, true );
             ev = factory.create( evaluators_infile, pp );
         }
         catch ( final Exception e ) {

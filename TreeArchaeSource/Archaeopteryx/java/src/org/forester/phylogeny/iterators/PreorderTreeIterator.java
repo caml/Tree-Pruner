@@ -1,4 +1,4 @@
-// $Id: PreorderTreeIterator.java,v 1.12 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: PreorderTreeIterator.java,v 1.13 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -62,6 +62,14 @@ public class PreorderTreeIterator implements PhylogenyNodeIterator {
         reset( node );
     }
 
+    private Stack<PhylogenyNode> getStack() {
+        return _stack;
+    }
+
+    private Phylogeny getTree() {
+        return _tree;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -98,14 +106,6 @@ public class PreorderTreeIterator implements PhylogenyNodeIterator {
     public void reset() {
         getStack().clear();
         getStack().push( getTree().getRoot() );
-    }
-
-    private Stack<PhylogenyNode> getStack() {
-        return _stack;
-    }
-
-    private Phylogeny getTree() {
-        return _tree;
     }
 
     private void reset( final PhylogenyNode node ) {

@@ -30,11 +30,11 @@ package org.forester.io.parsers.nexus;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import org.forester.io.parsers.ParserUtils;
-import org.forester.io.parsers.PhylogenyParserException;
-import org.forester.phylogenyinference.BasicCharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix.BinaryStates;
+import org.forester.evoinference.matrix.character.BasicCharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.BinaryStates;
+import org.forester.io.parsers.util.ParserUtils;
+import org.forester.io.parsers.util.PhylogenyParserException;
 
 public class NexusBinaryStatesMatrixParser {
 
@@ -49,6 +49,10 @@ public class NexusBinaryStatesMatrixParser {
 
     public int getNChar() {
         return _nchar;
+    }
+
+    private Object getNexusSource() {
+        return _nexus_source;
     }
 
     public int getNTax() {
@@ -136,17 +140,6 @@ public class NexusBinaryStatesMatrixParser {
         }
     }
 
-    public void setSource( final Object nexus_source ) throws PhylogenyParserException, IOException {
-        if ( nexus_source == null ) {
-            throw new PhylogenyParserException( getClass() + ": attempt to parse null object." );
-        }
-        _nexus_source = nexus_source;
-    }
-
-    private Object getNexusSource() {
-        return _nexus_source;
-    }
-
     private void reset() {
         setMatrix( null );
         setNChar( -1 );
@@ -163,5 +156,12 @@ public class NexusBinaryStatesMatrixParser {
 
     private void setNTax( final int ntax ) {
         _ntax = ntax;
+    }
+
+    public void setSource( final Object nexus_source ) throws PhylogenyParserException, IOException {
+        if ( nexus_source == null ) {
+            throw new PhylogenyParserException( getClass() + ": attempt to parse null object." );
+        }
+        _nexus_source = nexus_source;
     }
 }

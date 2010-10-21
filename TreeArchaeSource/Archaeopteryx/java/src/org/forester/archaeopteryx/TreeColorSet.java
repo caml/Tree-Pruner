@@ -1,4 +1,4 @@
-// $Id: TreeColorSet.java,v 1.11 2009/06/17 19:50:46 cmzmasek Exp $
+// $Id: TreeColorSet.java,v 1.17 2009/12/09 20:13:51 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -38,11 +38,12 @@ final class TreeColorSet {
 
     static final String[]   SCHEME_NAMES   = { "Default", "Black", "Black & White", "Silver", "The Matrix",
             "White & Blue", "Cyan", "Clockwork", "Blue", "Blue & White", "Neon" };
-    static final String[]   COLOR_FIELDS   = { "Background", "Sequence", "Taxonomy", "Confidence", "Branch Length",
-            "Branch", "Node Box", "Collapsed", "Matching Nodes", "Duplication", "Speciation",
-            "Duplication or Specation", "Domains", "Binary Domain Combinations", "Annotation", "Overview" };
+    static final String[]   COLOR_FIELDS   = { "Background", "Background Gradient Bottom", "Sequence", "Taxonomy",
+            "Confidence", "Branch Length", "Branch", "Node Box", "Collapsed", "Matching Nodes", "Duplication",
+            "Speciation", "Duplication or Specation", "Domains", "Binary Domain Combinations", "Annotation", "Overview" };
     // All the color sets; better be the same # of sets as there are names!
     private final Color[][] _color_schemes = { { new Color( 0, 0, 0 ), // background_color
+            new Color( 0, 100, 100 ), // background_color_gradient_bottom
             new Color( 220, 220, 220 ), // sequence  __ Default (same as Black)
             new Color( 180, 180, 180 ), // taxonomy
             new Color( 56, 176, 222 ), // support  
@@ -59,6 +60,7 @@ final class TreeColorSet {
             new Color( 173, 255, 47 ) // annotation
             , new Color( 130, 130, 130 )  // overview
             }, { new Color( 0, 0, 0 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom    
             new Color( 220, 220, 220 ), // sequence  __ Black
             new Color( 180, 180, 180 ), // taxonomy
             new Color( 56, 176, 222 ), // support  
@@ -75,6 +77,7 @@ final class TreeColorSet {
             new Color( 173, 255, 47 ) // annotation
             , new Color( 130, 130, 130 ) // ov
             }, { new Color( 255, 255, 255 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 0, 0, 0 ), // sequence  __ Black & White
             new Color( 0, 0, 0 ), // taxonomy
             new Color( 0, 0, 0 ), // support 
@@ -89,8 +92,9 @@ final class TreeColorSet {
             new Color( 0, 0, 0 ), // domains_color
             new Color( 0, 0, 0 ), // binary_domain_combinations_color
             new Color( 0, 0, 0 ) // annotation
-            , new Color( 160, 160, 160 ) // ov
+            , new Color( 220, 220, 220 ) // ov
             }, { new Color( 0, 0, 0 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 220, 220, 220 ), // sequence __ Silver
             new Color( 180, 180, 180 ), // taxonomy
             new Color( 140, 140, 140 ), // support 
@@ -105,8 +109,9 @@ final class TreeColorSet {
             new Color( 180, 180, 180 ), // domains_color
             new Color( 180, 180, 180 ), // binary_domain_combinations_color
             new Color( 140, 140, 140 ) // annotation
-            , new Color( 160, 160, 160 ) // ov
+            , new Color( 40, 40, 40 ) // ov
             }, { new Color( 0, 10, 0 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 0, 255, 0 ), // sequence __ the Matrix
             new Color( 30, 200, 30 ), // taxonomy
             new Color( 0, 155, 0 ), // support 
@@ -121,8 +126,9 @@ final class TreeColorSet {
             new Color( 0, 235, 0 ), // domains_color
             new Color( 0, 235, 0 ), // binary_domain_combinations_color
             new Color( 0, 235, 0 ) // annotation
-            , new Color( 0, 80, 0 ) // ov
+            , new Color( 40, 40, 40 ) // ov
             }, { new Color( 255, 255, 255 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 0, 0, 0 ), //sequence __ White & Blue
             new Color( 40, 40, 40 ), // taxonomy
             new Color( 0, 125, 0 ), // support 
@@ -137,8 +143,9 @@ final class TreeColorSet {
             new Color( 123, 104, 238 ), // domains_color
             new Color( 65, 105, 225 ), // binary_domain_combinations_color
             new Color( 173, 255, 47 ) // annotation
-            , new Color( 0, 10, 100 ) // ov
+            , new Color( 220, 220, 220 ) // ov
             }, { new Color( 0, 0, 0 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 255, 255, 255 ), // sequence __ Cyan
             new Color( 200, 200, 200 ), // taxonomy
             new Color( 255, 255, 255 ), // support 
@@ -155,6 +162,7 @@ final class TreeColorSet {
             new Color( 173, 255, 47 ) // annotation
             , new Color( 0, 120, 120 ) // ov
             }, { new Color( 0, 0, 0 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 255, 200, 0 ), // sequence __ Clockwork
             new Color( 255, 200, 0 ), // taxonomy
             new Color( 255, 200, 0 ), // support 
@@ -171,6 +179,7 @@ final class TreeColorSet {
             new Color( 150, 150, 150 ) // annotation
             , new Color( 150, 150, 150 ) // ov
             }, { new Color( 0, 0, 100 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 255, 255, 255 ), // sequence __ Blue
             new Color( 255, 255, 255 ), // taxonomy
             new Color( 255, 0, 0 ), // support 
@@ -187,6 +196,7 @@ final class TreeColorSet {
             new Color( 255, 255, 255 ) // annotation
             , new Color( 77, 77, 255 ) // ov
             }, { new Color( 0, 0, 0 ), // background_color
+            new Color( 0, 255, 255 ), // background_color_gradient_bottom
             new Color( 255, 255, 255 ), // sequence __ blue &  white
             new Color( 255, 255, 255 ), // taxonomy
             new Color( 255, 255, 255 ), // support 
@@ -194,7 +204,7 @@ final class TreeColorSet {
             new Color( 0, 191, 255 ), // branch_color
             new Color( 0, 191, 255 ), // box_color
             new Color( 255, 255, 255 ), // collapesed_fill_color
-            new Color( 0, 206, 209 ), // found_color
+            new Color( 255, 0, 0 ), // found_color
             new Color( 255, 0, 0 ), // duplication_box_color
             new Color( 0, 255, 0 ), // speciation_box_color
             new Color( 255, 255, 0 ), // duplication_speciation_color
@@ -203,6 +213,7 @@ final class TreeColorSet {
             new Color( 255, 255, 255 ) // annotation
             , new Color( 170, 187, 204 ) // ov
             }, { new Color( 0, 0, 0 ), // background_color
+            new Color( 255, 255, 0 ), // background_color_gradient_bottom
             new Color( 127, 255, 0 ), // sequence __ Neon
             new Color( 255, 110, 199 ), // taxonomy
             new Color( 234, 173, 234 ), // support 
@@ -220,7 +231,7 @@ final class TreeColorSet {
             , new Color( 77, 77, 255 ) // ov
             }                             };
     // Color schemes:
-    private int             color_scheme;
+    private int             _color_scheme;
     // The drawing colors
     private Color           seq_color;
     private Color           taxonomy_color;
@@ -229,6 +240,7 @@ final class TreeColorSet {
     private Color           branch_color;
     private Color           box_color;
     private Color           background_color;
+    private Color           background_color_gradient_bottom;
     private Color           dup_box_color;
     private Color           spec_box_color;
     private Color           collapse_fill_color;
@@ -243,12 +255,25 @@ final class TreeColorSet {
         // Hidden constructor.
     }
 
+    void cycleColorScheme() {
+        if ( getCurrentColorScheme() >= _color_schemes.length - 1 ) {
+            setColorSchema( 0 );
+        }
+        else {
+            setColorSchema( getCurrentColorScheme() + 1 );
+        }
+    }
+
     Color getAnnotationColor() {
         return annotation_color;
     }
 
     Color getBackgroundColor() {
         return background_color;
+    }
+
+    Color getBackgroundColorGradientBottom() {
+        return background_color_gradient_bottom;
     }
 
     Color getBinaryDomainCombinationsColor() {
@@ -278,10 +303,6 @@ final class TreeColorSet {
         return collapse_fill_color;
     }
 
-    int getColorSchema() {
-        return color_scheme;
-    }
-
     Color[][] getColorSchemes() {
         return _color_schemes;
     }
@@ -291,7 +312,7 @@ final class TreeColorSet {
     }
 
     int getCurrentColorScheme() {
-        return color_scheme;
+        return _color_scheme;
     }
 
     String getCurrentColorSchemeName() {
@@ -355,31 +376,36 @@ final class TreeColorSet {
         }
     }
 
+    private void setColorForDefault( final int i, final Color color ) {
+        _color_schemes[ 0 ][ i ] = color;
+    }
+
     /**
      * Switches colors between different schemes.
      */
     void setColorSchema( final int scheme ) {
-        color_scheme = scheme;
+        _color_scheme = scheme;
         background_color = _color_schemes[ scheme ][ 0 ];
-        seq_color = _color_schemes[ scheme ][ 1 ];
-        taxonomy_color = _color_schemes[ scheme ][ 2 ];
-        bootstrap_color = _color_schemes[ scheme ][ 3 ];
-        branch_length_color = _color_schemes[ scheme ][ 4 ];
-        branch_color = _color_schemes[ scheme ][ 5 ];
-        box_color = _color_schemes[ scheme ][ 6 ];
-        collapse_fill_color = _color_schemes[ scheme ][ 7 ];
-        found_color = _color_schemes[ scheme ][ 8 ];
-        dup_box_color = _color_schemes[ scheme ][ 9 ];
-        spec_box_color = _color_schemes[ scheme ][ 10 ];
-        duplication_or_specation_color = _color_schemes[ scheme ][ 11 ];
-        domains_color = _color_schemes[ scheme ][ 12 ];
-        binary_domain_combinations_color = _color_schemes[ scheme ][ 13 ];
-        annotation_color = _color_schemes[ scheme ][ 14 ];
-        ov_color = _color_schemes[ scheme ][ 15 ];
+        background_color_gradient_bottom = _color_schemes[ scheme ][ 1 ];
+        seq_color = _color_schemes[ scheme ][ 2 ];
+        taxonomy_color = _color_schemes[ scheme ][ 3 ];
+        bootstrap_color = _color_schemes[ scheme ][ 4 ];
+        branch_length_color = _color_schemes[ scheme ][ 5 ];
+        branch_color = _color_schemes[ scheme ][ 6 ];
+        box_color = _color_schemes[ scheme ][ 7 ];
+        collapse_fill_color = _color_schemes[ scheme ][ 8 ];
+        found_color = _color_schemes[ scheme ][ 9 ];
+        dup_box_color = _color_schemes[ scheme ][ 10 ];
+        spec_box_color = _color_schemes[ scheme ][ 11 ];
+        duplication_or_specation_color = _color_schemes[ scheme ][ 12 ];
+        domains_color = _color_schemes[ scheme ][ 13 ];
+        binary_domain_combinations_color = _color_schemes[ scheme ][ 14 ];
+        annotation_color = _color_schemes[ scheme ][ 15 ];
+        ov_color = _color_schemes[ scheme ][ 16 ];
     }
 
-    private void setColorForDefault( final int i, final Color color ) {
-        _color_schemes[ 0 ][ i ] = color;
+    void setCurrentColorScheme( final int color_scheme ) {
+        _color_scheme = color_scheme;
     }
 
     static TreeColorSet createInstance() {

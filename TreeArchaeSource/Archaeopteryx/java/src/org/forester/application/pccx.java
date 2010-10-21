@@ -1,4 +1,4 @@
-// $Id: pccx.java,v 1.9 2009/01/13 19:49:32 cmzmasek Exp $
+// $Id: pccx.java,v 1.11 2009/11/20 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -144,7 +144,7 @@ public class pccx {
         Phylogeny[] phylogenies = null;
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogenies_infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( phylogenies_infile, true );
             phylogenies = factory.create( phylogenies_infile, pp );
         }
         catch ( final IOException e ) {
@@ -167,7 +167,7 @@ public class pccx {
             }
         }
         File infile = null;
-        BasicTable intable = null;
+        BasicTable<String> intable = null;
         if ( cla.isOptionSet( pccx.INPUT_OPTION ) ) {
             try {
                 infile = new File( cla.getOptionValue( pccx.INPUT_OPTION ) );

@@ -4,7 +4,7 @@
 # Copyright::  Copyright (C) 2006-2007 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: phylogeny_factory.rb,v 1.19 2008/09/16 23:31:39 cmzmasek Exp $
+# $Id: phylogeny_factory.rb,v 1.31 2010/10/07 21:26:16 cmzmasek Exp $
 
 require 'lib/evo/util/constants'
 require 'lib/evo/util/util'
@@ -18,10 +18,10 @@ module Evoruby
     class PhylogenyFactory
 
         PRG_NAME       = "phylogeny_factory"
-        PRG_DATE       = "2008.09.16"
+        PRG_DATE       = "2010.05.26"
         PRG_DESC       = "automated phylogeny reconstruction using queing system"
         PRG_VERSION    = "1.1"
-        COPYRIGHT      = "2007 Christian M Zmasek"
+        COPYRIGHT      = "2010 Christian M Zmasek"
         CONTACT        = "cmzmasek@yahoo.com"
         WWW            = "www.phylosoft.org"
 
@@ -30,6 +30,8 @@ module Evoruby
         TEMPLATE_FILE                     = '00_phylogeny_factory.template'
         PBS_O_WORKDIR                     = '$PBS_O_WORKDIR/'
         MIN_LENGTH_DEFAULT                = 40
+        WALLTIME                          = '100:00:00'
+        QUEUE                             = 'default'
 
         TMP_CMD_FILE_SUFFIX = '_QSUB'
 
@@ -146,6 +148,7 @@ module Evoruby
                          file !~ /#{TEMPLATE_FILE}/ &&
                          file !~ /.bck$/ &&
                          file !~ /.log$/ &&
+                         file !~ /nohup/ &&
                          file !~ /^00/ )
                     aln_name = file.to_str
                     id = get_id( aln_name )
@@ -183,7 +186,7 @@ module Evoruby
                             log << cmd + NL
 
                             if use_job_submission_system
-                                IO.popen( 'qsub ' + tmp_cmd_file , 'r+' ) do | pipe |
+                                IO.popen( 'qsub -q ' + QUEUE  + ' -l walltime=' + WALLTIME + ' ' + tmp_cmd_file , 'r+' ) do | pipe |
                                     pipe.close_write
                                 end
                             else

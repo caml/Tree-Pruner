@@ -1,4 +1,4 @@
-// $Id: BasicTable.java,v 1.13 2009/01/13 19:49:31 cmzmasek Exp $
+// $Id: BasicTable.java,v 1.15 2009/11/11 01:36:50 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -25,6 +25,7 @@
 
 package org.forester.util;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,12 +54,42 @@ public class BasicTable<E> {
         return map;
     }
 
+    public Map<String, Double> getColumnsAsMapDouble( final int key_col, final int value_col )
+            throws IllegalArgumentException, IOException {
+        final Map<String, Double> map = new HashMap<String, Double>();
+        for( int row = 0; row < getNumberOfRows(); ++row ) {
+            final String key = ( String ) getValue( key_col, row );
+            double value = 0;
+            try {
+                value = Double.parseDouble( getValueAsString( value_col, row ) );
+            }
+            catch ( final NumberFormatException e ) {
+                throw new IOException( e );
+            }
+            if ( key != null ) {
+                if ( map.containsKey( key ) ) {
+                    throw new IllegalArgumentException( "attempt to use non-unique table value as key [" + key + "]" );
+                }
+                map.put( key, value );
+            }
+        }
+        return map;
+    }
+
     public int getNumberOfColumns() {
         return _max_col + 1;
     }
 
     public int getNumberOfRows() {
         return _max_row + 1;
+    }
+
+    private Map<String, E> getRow( final int row ) {
+        return getRows().get( "" + row );
+    }
+
+    private Map<String, Map<String, E>> getRows() {
+        return _rows;
     }
 
     public E getValue( final int col, final int row ) throws IllegalArgumentException {
@@ -84,8 +115,22 @@ public class BasicTable<E> {
         return null;
     }
 
+    private void init() {
+        _rows = new HashMap<String, Map<String, E>>();
+        setMaxCol( -1 );
+        setMaxRow( -1 );
+    }
+
     public boolean isEmpty() {
         return getNumberOfRows() <= 0;
+    }
+
+    private void setMaxCol( final int max_col ) {
+        _max_col = max_col;
+    }
+
+    private void setMaxRow( final int max_row ) {
+        _max_row = max_row;
     }
 
     public void setValue( final int col, final int row, final E value ) {
@@ -125,27 +170,5 @@ public class BasicTable<E> {
             }
         }
         return sb.toString();
-    }
-
-    private Map<String, E> getRow( final int row ) {
-        return getRows().get( "" + row );
-    }
-
-    private Map<String, Map<String, E>> getRows() {
-        return _rows;
-    }
-
-    private void init() {
-        _rows = new HashMap<String, Map<String, E>>();
-        setMaxCol( -1 );
-        setMaxRow( -1 );
-    }
-
-    private void setMaxCol( final int max_col ) {
-        _max_col = max_col;
-    }
-
-    private void setMaxRow( final int max_row ) {
-        _max_row = max_row;
     }
 }

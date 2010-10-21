@@ -1,4 +1,4 @@
-// $Id: surfacing.java,v 1.153 2009/01/21 20:52:47 cmzmasek Exp $
+// $Id: surfacing.java,v 1.165 2010/09/29 23:50:17 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -42,6 +42,9 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.forester.evoinference.distance.NeighborJoining;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.Format;
+import org.forester.evoinference.matrix.distance.DistanceMatrix;
 import org.forester.go.GoId;
 import org.forester.go.GoNameSpace;
 import org.forester.go.GoTerm;
@@ -49,14 +52,12 @@ import org.forester.go.GoUtils;
 import org.forester.go.OBOparser;
 import org.forester.go.PfamToGoMapping;
 import org.forester.go.PfamToGoParser;
-import org.forester.io.parsers.HmmPfamOutputParser;
+import org.forester.io.parsers.HmmscanPerDomainTableParser;
+import org.forester.io.parsers.HmmscanPerDomainTableParser.INDIVIDUAL_SCORE_CUTOFF;
 import org.forester.io.writers.PhylogenyWriter;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyMethods;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
-import org.forester.phylogenyinference.DistanceMatrix;
-import org.forester.phylogenyinference.NeighborJoining;
-import org.forester.phylogenyinference.CharacterStateMatrix.Format;
 import org.forester.surfacing.BasicDomainSimilarityCalculator;
 import org.forester.surfacing.BasicGenomeWideCombinableDomains;
 import org.forester.surfacing.BasicSpecies;
@@ -90,14 +91,6 @@ import org.forester.util.DescriptiveStatistics;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
-// TODO new possibi: pwc but w/o wrting out all he .pwc files...
-// TODO related:
-// TODO: list of domains specific to one species
-// TODO: list of domains found in all species
-// TODO: list of domains combinations specific to one species?
-// TODO: list of domains domains combinations found in all species?
-// TODO: 'matrix' domains number shared between species??
-// TODO: 'matrix' domains combinations number shared between species??
 public class surfacing {
 
     public final static String                                DOMAIN_COMBINITONS_OUTPUT_OPTION_FOR_GRAPH_ANALYSIS                    = "graph_analysis_out";
@@ -244,8 +237,8 @@ public class surfacing {
     final static private String                               INPUT_SPECIES_TREE_OPTION                                              = "species_tree";
     final static private String                               SEQ_EXTRACT_OPTION                                                     = "prot_extract";
     final static private char                                 SEPARATOR_FOR_INPUT_VALUES                                             = '#';
-    final static private String                               PRG_VERSION                                                            = "1.00";
-    final static private String                               PRG_DATE                                                               = "2008.12.16";
+    final static private String                               PRG_VERSION                                                            = "2.002";
+    final static private String                               PRG_DATE                                                               = "2010.07.27";
     final static private String                               E_MAIL                                                                 = "czmasek@burnham.org";
     final static private String                               WWW                                                                    = "www.phylosoft.org/forester/applications/surfacing";
     final static private boolean                              IGNORE_DUFS_DEFAULT                                                    = true;
@@ -253,7 +246,6 @@ public class surfacing {
     final static private double                               MAX_E_VALUE_DEFAULT                                                    = -1;
     final static private int                                  MAX_ALLOWED_OVERLAP_DEFAULT                                            = -1;
     final static private String                               DEFAULT_SEARCH_PARAMETER                                               = "ls";
-    final private static boolean                              ALLOW_NON_UNIQUE_QUERY_IN_HMMPFAM_OUTPUT_DEFAULT                       = true;
     final private static boolean                              VERBOSE_DEFAULT                                                        = true;
     private static final String                               RANDOM_SEED_FOR_FITCH_PARSIMONY_OPTION                                 = "random_seed";
     private static final String                               CONSIDER_DOMAIN_COMBINATION_DIRECTEDNESS                               = "consider_bdc_direction";
@@ -282,6 +274,294 @@ public class surfacing {
     public static final String                                ALL_PFAMS_LOST_AS_DC_SUFFIX                                            = "_all_pfams_lost_as_dc";
     public static final String                                BASE_DIRECTORY_PER_NODE_DOMAIN_GAIN_LOSS_FILES                         = "PER_NODE_EVENTS";
     public static final String                                BASE_DIRECTORY_PER_SUBTREE_DOMAIN_GAIN_LOSS_FILES                      = "PER_SUBTREE_EVENTS";
+    public static final String                                D_PROMISCUITY_FILE_SUFFIX                                              = "_domain_promiscuities";
+    private static final String                               LOG_FILE_SUFFIX                                                        = "_log.txt";
+    private static final String                               DATA_FILE_SUFFIX                                                       = "_domain_combination_data.txt";
+    private static final String                               DATA_FILE_DESC                                                         = "#SPECIES\tPRTEIN_ID\tN_TERM_DOMAIN\tC_TERM_DOMAIN\tN_TERM_DOMAIN_PER_DOMAIN_E_VALUE\tC_TERM_DOMAIN_PER_DOMAIN_E_VALUE\tN_TERM_DOMAIN_COUNTS_PER_PROTEIN\tC_TERM_DOMAIN_COUNTS_PER_PROTEIN";
+    private static final INDIVIDUAL_SCORE_CUTOFF              INDIVIDUAL_SCORE_CUTOFF_DEFAULT                                        = INDIVIDUAL_SCORE_CUTOFF.FULL_SEQUENCE;
+
+    // final String error = ForesterUtil.isReadableFile( new File(
+    // input_file_properties[ i ][ 0 ] ) );
+    // if ( !ForesterUtil.isEmpty( error ) ) {
+    // ForesterUtil.fatalError( surfacing.PRG_NAME, error );
+    // }
+    private static void checkWriteabilityForPairwiseComparisons( final PrintableDomainSimilarity.PRINT_OPTION domain_similarity_print_option,
+                                                                 final String[][] input_file_properties,
+                                                                 final String automated_pairwise_comparison_suffix,
+                                                                 final File outdir ) {
+        for( int i = 0; i < input_file_properties.length; ++i ) {
+            for( int j = 0; j < i; ++j ) {
+                final String species_i = input_file_properties[ i ][ 1 ];
+                final String species_j = input_file_properties[ j ][ 1 ];
+                String pairwise_similarities_output_file_str = PAIRWISE_DOMAIN_COMPARISONS_PREFIX + species_i + "_"
+                        + species_j + automated_pairwise_comparison_suffix;
+                switch ( domain_similarity_print_option ) {
+                    case HTML:
+                        if ( !pairwise_similarities_output_file_str.endsWith( ".html" ) ) {
+                            pairwise_similarities_output_file_str += ".html";
+                        }
+                        break;
+                }
+                final String error = ForesterUtil
+                        .isWritableFile( new File( outdir == null ? pairwise_similarities_output_file_str : outdir
+                                + ForesterUtil.FILE_SEPARATOR + pairwise_similarities_output_file_str ) );
+                if ( !ForesterUtil.isEmpty( error ) ) {
+                    ForesterUtil.fatalError( surfacing.PRG_NAME, error );
+                }
+            }
+        }
+    }
+
+    private static StringBuilder createParametersAsString( final boolean ignore_dufs,
+                                                           final double e_value_max,
+                                                           final int max_allowed_overlap,
+                                                           final boolean no_engulfing_overlaps,
+                                                           final File cutoff_scores_file,
+                                                           final BinaryDomainCombination.DomainCombinationType dc_type ) {
+        final StringBuilder parameters_sb = new StringBuilder();
+        parameters_sb.append( "E-value: " + e_value_max );
+        if ( cutoff_scores_file != null ) {
+            parameters_sb.append( ", Cutoff-scores-file: " + cutoff_scores_file );
+        }
+        else {
+            parameters_sb.append( ", Cutoff-scores-file: not-set" );
+        }
+        if ( max_allowed_overlap != surfacing.MAX_ALLOWED_OVERLAP_DEFAULT ) {
+            parameters_sb.append( ", Max-overlap: " + max_allowed_overlap );
+        }
+        else {
+            parameters_sb.append( ", Max-overlap: not-set" );
+        }
+        if ( no_engulfing_overlaps ) {
+            parameters_sb.append( ", Engulfing-overlaps: not-allowed" );
+        }
+        else {
+            parameters_sb.append( ", Engulfing-overlaps: allowed" );
+        }
+        if ( ignore_dufs ) {
+            parameters_sb.append( ", Ignore-dufs: true" );
+        }
+        else {
+            parameters_sb.append( ", Ignore-dufs: false" );
+        }
+        parameters_sb.append( ", DC type (if applicable): " + dc_type );
+        return parameters_sb;
+    }
+
+    /**
+     * Warning: This sideeffects 'all_bin_domain_combinations_encountered'!
+     * 
+     * 
+     * @param output_file
+     * @param all_bin_domain_combinations_changed
+     * @param sum_of_all_domains_encountered
+     * @param all_bin_domain_combinations_encountered
+     * @param is_gains_analysis
+     * @throws IOException
+     */
+    private static void executeFitchGainsAnalysis( final File output_file,
+                                                   final List<BinaryDomainCombination> all_bin_domain_combinations_changed,
+                                                   final int sum_of_all_domains_encountered,
+                                                   final SortedSet<BinaryDomainCombination> all_bin_domain_combinations_encountered,
+                                                   final boolean is_gains_analysis ) throws IOException {
+        SurfacingUtil.checkForOutputFileWriteability( output_file );
+        final Writer out = ForesterUtil.createBufferedWriter( output_file );
+        final SortedMap<Object, Integer> bdc_to_counts = ForesterUtil
+                .listToSortedCountsMap( all_bin_domain_combinations_changed );
+        final SortedSet<DomainId> all_domains_in_combination_changed_more_than_once = new TreeSet<DomainId>();
+        final SortedSet<DomainId> all_domains_in_combination_changed_only_once = new TreeSet<DomainId>();
+        int above_one = 0;
+        int one = 0;
+        for( final Object bdc_object : bdc_to_counts.keySet() ) {
+            final BinaryDomainCombination bdc = ( BinaryDomainCombination ) bdc_object;
+            final int count = bdc_to_counts.get( bdc_object );
+            if ( count < 1 ) {
+                ForesterUtil.unexpectedFatalError( PRG_NAME, "count < 1 " );
+            }
+            out.write( bdc + "\t" + count + ForesterUtil.LINE_SEPARATOR );
+            if ( count > 1 ) {
+                all_domains_in_combination_changed_more_than_once.add( bdc.getId0() );
+                all_domains_in_combination_changed_more_than_once.add( bdc.getId1() );
+                above_one++;
+            }
+            else if ( count == 1 ) {
+                all_domains_in_combination_changed_only_once.add( bdc.getId0() );
+                all_domains_in_combination_changed_only_once.add( bdc.getId1() );
+                one++;
+            }
+        }
+        final int all = all_bin_domain_combinations_encountered.size();
+        int never_lost = -1;
+        if ( !is_gains_analysis ) {
+            all_bin_domain_combinations_encountered.removeAll( all_bin_domain_combinations_changed );
+            never_lost = all_bin_domain_combinations_encountered.size();
+            for( final BinaryDomainCombination bdc : all_bin_domain_combinations_encountered ) {
+                out.write( bdc + "\t" + "0" + ForesterUtil.LINE_SEPARATOR );
+            }
+        }
+        if ( is_gains_analysis ) {
+            out.write( "Sum of all distinct domain combinations appearing once               : " + one
+                    + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domain combinations appearing more than once     : " + above_one
+                    + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domains in combinations apppearing only once     : "
+                    + all_domains_in_combination_changed_only_once.size() + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domains in combinations apppearing more than once: "
+                    + all_domains_in_combination_changed_more_than_once.size() + ForesterUtil.LINE_SEPARATOR );
+        }
+        else {
+            out.write( "Sum of all distinct domain combinations never lost                   : " + never_lost
+                    + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domain combinations lost once                    : " + one
+                    + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domain combinations lost more than once          : " + above_one
+                    + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domains in combinations lost only once           : "
+                    + all_domains_in_combination_changed_only_once.size() + ForesterUtil.LINE_SEPARATOR );
+            out.write( "Sum of all distinct domains in combinations lost more than once: "
+                    + all_domains_in_combination_changed_more_than_once.size() + ForesterUtil.LINE_SEPARATOR );
+        }
+        out.write( "All binary combinations                                              : " + all
+                + ForesterUtil.LINE_SEPARATOR );
+        out.write( "All domains                                                          : "
+                + sum_of_all_domains_encountered );
+        out.close();
+        ForesterUtil.programMessage( surfacing.PRG_NAME,
+                                     "Wrote fitch domain combination dynamics counts analysis to \"" + output_file
+                                             + "\"" );
+    }
+
+    private static void executePlusMinusAnalysis( final File output_file,
+                                                  final List<String> plus_minus_analysis_high_copy_base,
+                                                  final List<String> plus_minus_analysis_high_copy_target,
+                                                  final List<String> plus_minus_analysis_low_copy,
+                                                  final List<GenomeWideCombinableDomains> gwcd_list,
+                                                  final SortedMap<Species, List<Protein>> protein_lists_per_species,
+                                                  final Map<DomainId, List<GoId>> domain_id_to_go_ids_map,
+                                                  final Map<GoId, GoTerm> go_id_to_term_map,
+                                                  final List<Object> plus_minus_analysis_numbers ) {
+        final Set<String> all_spec = new HashSet<String>();
+        for( final GenomeWideCombinableDomains gwcd : gwcd_list ) {
+            all_spec.add( gwcd.getSpecies().getSpeciesId() );
+        }
+        final File html_out_dom = new File( output_file + PLUS_MINUS_DOM_SUFFIX_HTML );
+        final File plain_out_dom = new File( output_file + PLUS_MINUS_DOM_SUFFIX );
+        final File html_out_dc = new File( output_file + PLUS_MINUS_DC_SUFFIX_HTML );
+        final File all_domains_go_ids_out_dom = new File( output_file + PLUS_MINUS_ALL_GO_IDS_DOM_SUFFIX );
+        final File passing_domains_go_ids_out_dom = new File( output_file + PLUS_MINUS_PASSING_GO_IDS_DOM_SUFFIX );
+        final File proteins_file_base = new File( output_file + "" );
+        final int min_diff = ( ( Integer ) plus_minus_analysis_numbers.get( 0 ) ).intValue();
+        final double factor = ( ( Double ) plus_minus_analysis_numbers.get( 1 ) ).doubleValue();
+        try {
+            DomainCountsDifferenceUtil.calculateCopyNumberDifferences( gwcd_list,
+                                                                       protein_lists_per_species,
+                                                                       plus_minus_analysis_high_copy_base,
+                                                                       plus_minus_analysis_high_copy_target,
+                                                                       plus_minus_analysis_low_copy,
+                                                                       min_diff,
+                                                                       factor,
+                                                                       plain_out_dom,
+                                                                       html_out_dom,
+                                                                       html_out_dc,
+                                                                       domain_id_to_go_ids_map,
+                                                                       go_id_to_term_map,
+                                                                       all_domains_go_ids_out_dom,
+                                                                       passing_domains_go_ids_out_dom,
+                                                                       proteins_file_base );
+        }
+        catch ( final IOException e ) {
+            ForesterUtil.fatalError( surfacing.PRG_NAME, e.getLocalizedMessage() );
+        }
+        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis results to \""
+                + html_out_dom + "\"" );
+        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis results to \""
+                + plain_out_dom + "\"" );
+        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis results to \"" + html_out_dc
+                + "\"" );
+        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis based passing GO ids to \""
+                + passing_domains_go_ids_out_dom + "\"" );
+        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis based all GO ids to \""
+                + all_domains_go_ids_out_dom + "\"" );
+    }
+
+    private static Phylogeny[] getIntrees( final File[] intree_files,
+                                           final int number_of_genomes,
+                                           final String[][] input_file_properties ) {
+        final Phylogeny[] intrees = new Phylogeny[ intree_files.length ];
+        int i = 0;
+        for( final File intree_file : intree_files ) {
+            Phylogeny intree = null;
+            final String error = ForesterUtil.isReadableFile( intree_file );
+            if ( !ForesterUtil.isEmpty( error ) ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "cannot read input tree file [" + intree_file + "]: "
+                        + error );
+            }
+            try {
+                final Phylogeny[] p_array = ParserBasedPhylogenyFactory.getInstance()
+                        .create( intree_file, ForesterUtil.createParserDependingOnFileType( intree_file, true ) );
+                if ( p_array.length < 1 ) {
+                    ForesterUtil.fatalError( surfacing.PRG_NAME, "file [" + intree_file
+                            + "] does not contain any phylogeny in phyloXML format" );
+                }
+                else if ( p_array.length > 1 ) {
+                    ForesterUtil.fatalError( surfacing.PRG_NAME, "file [" + intree_file
+                            + "] contains more than one phylogeny in phyloXML format" );
+                }
+                intree = p_array[ 0 ];
+            }
+            catch ( final Exception e ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "failed to read input tree from file [" + intree_file
+                        + "]: " + error );
+            }
+            if ( ( intree == null ) || intree.isEmpty() ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "input tree [" + intree_file + "] is empty" );
+            }
+            if ( !intree.isRooted() ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "input tree [" + intree_file + "] is not rooted" );
+            }
+            if ( intree.getNumberOfExternalNodes() < number_of_genomes ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "number of external nodes ["
+                        + intree.getNumberOfExternalNodes() + "] of input tree [" + intree_file
+                        + "] is smaller than the number of genomes the be analyzed [" + number_of_genomes + "]" );
+            }
+            final StringBuilder parent_names = new StringBuilder();
+            final int nodes_lacking_name = SurfacingUtil.getNumberOfNodesLackingName( intree, parent_names );
+            if ( nodes_lacking_name > 0 ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "input tree [" + intree_file + "] has "
+                        + nodes_lacking_name + " node(s) lacking a name [parent names:" + parent_names + "]" );
+            }
+            preparePhylogenyForParsimonyAnalyses( intree, input_file_properties );
+            if ( !intree.isCompletelyBinary() ) {
+                ForesterUtil.printWarningMessage( surfacing.PRG_NAME, "input tree [" + intree_file
+                        + "] is not completely binary" );
+            }
+            intrees[ i++ ] = intree;
+        }
+        return intrees;
+    }
+
+    private static List<Phylogeny> inferSpeciesTrees( final File outfile, final List<DistanceMatrix> distances_list ) {
+        final NeighborJoining nj = NeighborJoining.createInstance();
+        final List<Phylogeny> phylogenies = nj.execute( distances_list );
+        final PhylogenyWriter w = new PhylogenyWriter();
+        try {
+            w.toNewHampshire( phylogenies, true, true, outfile, ";" );
+        }
+        catch ( final IOException e ) {
+            ForesterUtil.fatalError( PRG_NAME, "failed to write to outfile [" + outfile + "]: " + e.getMessage() );
+        }
+        return phylogenies;
+    }
+
+    private static void log( final String msg, final Writer w ) {
+        try {
+            w.write( msg );
+            w.write( ForesterUtil.LINE_SEPARATOR );
+        }
+        catch ( final IOException e ) {
+            ForesterUtil.fatalError( surfacing.PRG_NAME, e.getLocalizedMessage() );
+        }
+    }
 
     public static void main( final String args[] ) {
         final long start_time = new Date().getTime();
@@ -415,7 +695,7 @@ public class surfacing {
             SurfacingUtil.checkForOutputFileWriteability( output_file );
         }
         File cutoff_scores_file = null;
-        Map<String, String> individual_domain_score_cutoffs = null;
+        Map<String, Double> individual_score_cutoffs = null;
         if ( cla.isOptionSet( surfacing.CUTOFF_SCORE_FILE_OPTION ) ) {
             if ( !cla.isOptionValueSet( surfacing.CUTOFF_SCORE_FILE_OPTION ) ) {
                 ForesterUtil.fatalError( surfacing.PRG_NAME, "no value for individual domain score cutoffs file: -"
@@ -429,11 +709,10 @@ public class surfacing {
             }
             try {
                 final BasicTable<String> scores_table = BasicTableParser.parse( cutoff_scores_file, " " );
-                individual_domain_score_cutoffs = scores_table.getColumnsAsMap( 0, 1 );
+                individual_score_cutoffs = scores_table.getColumnsAsMapDouble( 0, 1 );
             }
             catch ( final IOException e ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "cannot read from individual domain score cutoffs file: "
-                        + e );
+                ForesterUtil.fatalError( surfacing.PRG_NAME, "cannot read from individual score cutoffs file: " + e );
             }
         }
         BinaryDomainCombination.DomainCombinationType dc_type = BinaryDomainCombination.DomainCombinationType.BASIC;
@@ -1287,6 +1566,10 @@ public class surfacing {
         }
         System.out.print( "  Species matrix            : " + species_matrix );
         System.out.println();
+        final File dc_data_file = new File( out_dir + ForesterUtil.FILE_SEPARATOR + output_file + DATA_FILE_SUFFIX );
+        System.out.println( "Domain comb data output     : " + dc_data_file );
+        html_desc.append( "<tr><td>Domain combination data output:</td><td> " + dc_data_file + " </td></tr>" );
+        System.out.println();
         if ( perform_pwc ) {
             System.out.println( "Pairwise comparisons: " );
             html_desc.append( "<tr><td>Pairwise comparisons:</td><td></td></tr>" );
@@ -1415,33 +1698,74 @@ public class surfacing {
             all_bin_domain_combinations_lost_fitch = new ArrayList<BinaryDomainCombination>();
         }
         final DomainLengthsTable domain_lengths_table = new DomainLengthsTable();
+        final File per_genome_domain_promiscuity_statistics_file = new File( out_dir + ForesterUtil.FILE_SEPARATOR
+                + output_file + D_PROMISCUITY_FILE_SUFFIX );
+        BufferedWriter per_genome_domain_promiscuity_statistics_writer = null;
+        try {
+            per_genome_domain_promiscuity_statistics_writer = new BufferedWriter( new FileWriter( per_genome_domain_promiscuity_statistics_file ) );
+            per_genome_domain_promiscuity_statistics_writer.write( "Species:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "Mean:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "SD:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "Median:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "Min:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "Max:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "N:\t" );
+            per_genome_domain_promiscuity_statistics_writer.write( "Max Promiscuous Domains:"
+                    + ForesterUtil.LINE_SEPARATOR );
+        }
+        catch ( final IOException e2 ) {
+            ForesterUtil.fatalError( surfacing.PRG_NAME, e2.getMessage() );
+        }
+        final File log_file = new File( out_dir + ForesterUtil.FILE_SEPARATOR + output_file + LOG_FILE_SUFFIX );
+        BufferedWriter log_writer = null;
+        try {
+            log_writer = new BufferedWriter( new FileWriter( log_file ) );
+        }
+        catch ( final IOException e2 ) {
+            ForesterUtil.fatalError( surfacing.PRG_NAME, e2.getMessage() );
+        }
+        BufferedWriter dc_data_writer = null;
+        try {
+            dc_data_writer = new BufferedWriter( new FileWriter( dc_data_file ) );
+            dc_data_writer.write( DATA_FILE_DESC );
+            dc_data_writer.write( ForesterUtil.LINE_SEPARATOR );
+        }
+        catch ( final IOException e2 ) {
+            ForesterUtil.fatalError( surfacing.PRG_NAME, e2.getMessage() );
+        }
         for( int i = 0; i < number_of_genomes; ++i ) {
             System.out.println();
             System.out.println( ( i + 1 ) + "/" + number_of_genomes );
+            log( ( i + 1 ) + "/" + number_of_genomes, log_writer );
             System.out.println( "Processing                                     : " + input_file_properties[ i ][ 0 ] );
-            HmmPfamOutputParser parser = null;
+            log( "Genome                                         : " + input_file_properties[ i ][ 0 ], log_writer );
+            HmmscanPerDomainTableParser parser = null;
+            INDIVIDUAL_SCORE_CUTOFF ind_score_cutoff = INDIVIDUAL_SCORE_CUTOFF.NONE;
+            if ( individual_score_cutoffs != null ) {
+                ind_score_cutoff = INDIVIDUAL_SCORE_CUTOFF_DEFAULT;
+            }
             if ( ( positive_filter_file != null ) || ( negative_filter_file != null )
                     || ( negative_domains_filter_file != null ) ) {
-                HmmPfamOutputParser.FilterType filter_type = HmmPfamOutputParser.FilterType.NONE;
+                HmmscanPerDomainTableParser.FilterType filter_type = HmmscanPerDomainTableParser.FilterType.NONE;
                 if ( positive_filter_file != null ) {
-                    filter_type = HmmPfamOutputParser.FilterType.POSITIVE_PROTEIN;
+                    filter_type = HmmscanPerDomainTableParser.FilterType.POSITIVE_PROTEIN;
                 }
                 else if ( negative_filter_file != null ) {
-                    filter_type = HmmPfamOutputParser.FilterType.NEGATIVE_PROTEIN;
+                    filter_type = HmmscanPerDomainTableParser.FilterType.NEGATIVE_PROTEIN;
                 }
                 else if ( negative_domains_filter_file != null ) {
-                    filter_type = HmmPfamOutputParser.FilterType.NEGATIVE_DOMAIN;
+                    filter_type = HmmscanPerDomainTableParser.FilterType.NEGATIVE_DOMAIN;
                 }
-                parser = new HmmPfamOutputParser( new File( input_file_properties[ i ][ 0 ] ),
-                                                  input_file_properties[ i ][ 1 ],
-                                                  input_file_properties[ i ][ 2 ],
-                                                  filter,
-                                                  filter_type );
+                parser = new HmmscanPerDomainTableParser( new File( input_file_properties[ i ][ 0 ] ),
+                                                          input_file_properties[ i ][ 1 ],
+                                                          filter,
+                                                          filter_type,
+                                                          ind_score_cutoff );
             }
             else {
-                parser = new HmmPfamOutputParser( new File( input_file_properties[ i ][ 0 ] ),
-                                                  input_file_properties[ i ][ 1 ],
-                                                  input_file_properties[ i ][ 2 ] );
+                parser = new HmmscanPerDomainTableParser( new File( input_file_properties[ i ][ 0 ] ),
+                                                          input_file_properties[ i ][ 1 ],
+                                                          ind_score_cutoff );
             }
             if ( e_value_max >= 0.0 ) {
                 parser.setEValueMaximum( e_value_max );
@@ -1452,12 +1776,11 @@ public class surfacing {
             if ( max_allowed_overlap != surfacing.MAX_ALLOWED_OVERLAP_DEFAULT ) {
                 parser.setMaxAllowedOverlap( max_allowed_overlap );
             }
-            parser.setReturnType( HmmPfamOutputParser.ReturnType.UNORDERED_PROTEIN_DOMAIN_COLLECTION_PER_PROTEIN );
-            if ( individual_domain_score_cutoffs != null ) {
-                parser.setIndividualDomainScoreCutoffs( individual_domain_score_cutoffs );
+            parser
+                    .setReturnType( HmmscanPerDomainTableParser.ReturnType.UNORDERED_PROTEIN_DOMAIN_COLLECTION_PER_PROTEIN );
+            if ( individual_score_cutoffs != null ) {
+                parser.setIndividualScoreCutoffs( individual_score_cutoffs );
             }
-            parser.setAllowNonUniqueQuery( ALLOW_NON_UNIQUE_QUERY_IN_HMMPFAM_OUTPUT_DEFAULT );
-            parser.setVerbose( VERBOSE_DEFAULT );
             List<Protein> protein_list = null;
             try {
                 protein_list = parser.parse();
@@ -1475,34 +1798,54 @@ public class surfacing {
                 ForesterUtil.printCountingMap( parser.getDomainsIgnoredDueToVirusLikeIdCountsMap() );
             }
             System.out.println( "Number of proteins encountered                 : " + parser.getProteinsEncountered() );
+            log( "Number of proteins encountered                 : " + parser.getProteinsEncountered(), log_writer );
             System.out.println( "Number of proteins stored                      : " + protein_list.size() );
+            log( "Number of proteins stored                      : " + protein_list.size(), log_writer );
             System.out.println( "Domains encountered                            : " + parser.getDomainsEncountered() );
+            log( "Domains encountered                            : " + parser.getDomainsEncountered(), log_writer );
             System.out.println( "Domains stored                                 : " + parser.getDomainsStored() );
+            log( "Domains stored                                 : " + parser.getDomainsStored(), log_writer );
             System.out.println( "Distinct domains stored                        : "
                     + parser.getDomainsStoredSet().size() );
+            log( "Distinct domains stored                        : " + parser.getDomainsStoredSet().size(), log_writer );
             System.out.println( "Domains ignored due to individual score cutoffs: "
                     + parser.getDomainsIgnoredDueToIndividualScoreCutoff() );
+            log( "Domains ignored due to individual score cutoffs: "
+                    + parser.getDomainsIgnoredDueToIndividualScoreCutoff(), log_writer );
             System.out.println( "Domains ignored due to E-value                 : "
                     + parser.getDomainsIgnoredDueToEval() );
+            log( "Domains ignored due to E-value                 : " + parser.getDomainsIgnoredDueToEval(), log_writer );
             System.out.println( "Domains ignored due to DUF designation         : "
                     + parser.getDomainsIgnoredDueToDuf() );
+            log( "Domains ignored due to DUF designation         : " + parser.getDomainsIgnoredDueToDuf(), log_writer );
             if ( ignore_virus_like_ids ) {
                 System.out.println( "Domains ignored due virus like ids             : "
                         + parser.getDomainsIgnoredDueToVirusLikeIds() );
+                log( "Domains ignored due virus like ids             : " + parser.getDomainsIgnoredDueToVirusLikeIds(),
+                     log_writer );
             }
             System.out.println( "Domains ignored due negative domain filter     : "
                     + parser.getDomainsIgnoredDueToNegativeDomainFilter() );
+            log( "Domains ignored due negative domain filter     : "
+                    + parser.getDomainsIgnoredDueToNegativeDomainFilter(), log_writer );
             System.out.println( "Domains ignored due to overlap                 : "
                     + parser.getDomainsIgnoredDueToOverlap() );
+            log( "Domains ignored due to overlap                 : " + parser.getDomainsIgnoredDueToOverlap(),
+                 log_writer );
             if ( negative_filter_file != null ) {
                 System.out.println( "Proteins ignored due to negative filter        : "
                         + parser.getProteinsIgnoredDueToFilter() );
+                log( "Proteins ignored due to negative filter        : " + parser.getProteinsIgnoredDueToFilter(),
+                     log_writer );
             }
             if ( positive_filter_file != null ) {
                 System.out.println( "Proteins ignored due to positive filter        : "
                         + parser.getProteinsIgnoredDueToFilter() );
+                log( "Proteins ignored due to positive filter        : " + parser.getProteinsIgnoredDueToFilter(),
+                     log_writer );
             }
             System.out.println( "Time for processing                            : " + parser.getTime() + "ms" );
+            log( "", log_writer );
             html_desc.append( "<tr><td>" + input_file_properties[ i ][ 0 ] + " [species: "
                     + input_file_properties[ i ][ 1 ] + "]" + ":</td><td>domains analyzed: "
                     + parser.getDomainsStored() + "; domains ignored: [ind score cutoffs: "
@@ -1524,6 +1867,17 @@ public class surfacing {
             // Methods.getDomainPartnerCounts( protein_domain_collections_array[
             // i ],
             // false, input_file_properties[ i ][ 1 ] );
+            try {
+                int count = 0;
+                for( final Protein protein : protein_list ) {
+                    dc_data_writer.write( SurfacingUtil.proteinToDomainCombinations( protein, count + "", "\t" )
+                            .toString() );
+                    ++count;
+                }
+            }
+            catch ( final IOException e ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, e.toString() );
+            }
             gwcd_list.add( BasicGenomeWideCombinableDomains
                     .createInstance( protein_list,
                                      ignore_combination_with_same,
@@ -1534,6 +1888,7 @@ public class surfacing {
             if ( gwcd_list.get( i ).getSize() > 0 ) {
                 SurfacingUtil.writeDomainCombinationsCountsFile( input_file_properties,
                                                                  out_dir,
+                                                                 per_genome_domain_promiscuity_statistics_writer,
                                                                  gwcd_list.get( i ),
                                                                  i,
                                                                  dc_sort_order );
@@ -1565,8 +1920,27 @@ public class surfacing {
             if ( need_protein_lists_per_species ) {
                 protein_lists_per_species.put( new BasicSpecies( input_file_properties[ i ][ 1 ] ), protein_list );
             }
+            try {
+                log_writer.flush();
+            }
+            catch ( final IOException e2 ) {
+                ForesterUtil.fatalError( surfacing.PRG_NAME, e2.getLocalizedMessage() );
+            }
             System.gc();
-        } // for( int i = 0; i < number_of_hmmpfam_files_to_analyze; ++i ) {
+        } // for( int i = 0; i < number_of_genomes; ++i ) {
+        try {
+            per_genome_domain_promiscuity_statistics_writer.flush();
+            per_genome_domain_promiscuity_statistics_writer.close();
+            dc_data_writer.flush();
+            dc_data_writer.close();
+            log_writer.flush();
+            log_writer.close();
+        }
+        catch ( final IOException e2 ) {
+            ForesterUtil.fatalError( surfacing.PRG_NAME, e2.getLocalizedMessage() );
+        }
+        ForesterUtil.programMessage( PRG_NAME, "Wrote domain promiscuities to: "
+                + per_genome_domain_promiscuity_statistics_file );
         if ( query_domains_writer_ary != null ) {
             for( int j = 0; j < query_domain_ids_array.length; j++ ) {
                 try {
@@ -1833,8 +2207,13 @@ public class surfacing {
                                 System.out.print( spec + ":" );
                                 System.out.print( " mapped domains = " + mapping_results.getSumOfSuccesses() );
                                 System.out.print( ", not mapped domains = " + mapping_results.getSumOfFailures() );
-                                System.out.println( ", mapped ratio = "
-                                        + ( 100 * mapping_results.getSumOfSuccesses() / total_domains ) + "%" );
+                                if ( total_domains > 0 ) {
+                                    System.out.println( ", mapped ratio = "
+                                            + ( 100 * mapping_results.getSumOfSuccesses() / total_domains ) + "%" );
+                                }
+                                else {
+                                    System.out.println( ", mapped ratio = n/a (total domains = 0 )" );
+                                }
                             }
                         }
                     }
@@ -1926,279 +2305,6 @@ public class surfacing {
         System.out.println();
         ForesterUtil.programMessage( PRG_NAME, "OK" );
         System.out.println();
-    }
-
-    // final String error = ForesterUtil.isReadableFile( new File(
-    // input_file_properties[ i ][ 0 ] ) );
-    // if ( !ForesterUtil.isEmpty( error ) ) {
-    // ForesterUtil.fatalError( surfacing.PRG_NAME, error );
-    // }
-    private static void checkWriteabilityForPairwiseComparisons( final PrintableDomainSimilarity.PRINT_OPTION domain_similarity_print_option,
-                                                                 final String[][] input_file_properties,
-                                                                 final String automated_pairwise_comparison_suffix,
-                                                                 final File outdir ) {
-        for( int i = 0; i < input_file_properties.length; ++i ) {
-            for( int j = 0; j < i; ++j ) {
-                final String species_i = input_file_properties[ i ][ 1 ];
-                final String species_j = input_file_properties[ j ][ 1 ];
-                String pairwise_similarities_output_file_str = PAIRWISE_DOMAIN_COMPARISONS_PREFIX + species_i + "_"
-                        + species_j + automated_pairwise_comparison_suffix;
-                switch ( domain_similarity_print_option ) {
-                    case HTML:
-                        if ( !pairwise_similarities_output_file_str.endsWith( ".html" ) ) {
-                            pairwise_similarities_output_file_str += ".html";
-                        }
-                        break;
-                }
-                final String error = ForesterUtil
-                        .isWritableFile( new File( outdir == null ? pairwise_similarities_output_file_str : outdir
-                                + ForesterUtil.FILE_SEPARATOR + pairwise_similarities_output_file_str ) );
-                if ( !ForesterUtil.isEmpty( error ) ) {
-                    ForesterUtil.fatalError( surfacing.PRG_NAME, error );
-                }
-            }
-        }
-    }
-
-    private static StringBuilder createParametersAsString( final boolean ignore_dufs,
-                                                           final double e_value_max,
-                                                           final int max_allowed_overlap,
-                                                           final boolean no_engulfing_overlaps,
-                                                           final File cutoff_scores_file,
-                                                           final BinaryDomainCombination.DomainCombinationType dc_type ) {
-        final StringBuilder parameters_sb = new StringBuilder();
-        parameters_sb.append( "E-value: " + e_value_max );
-        if ( cutoff_scores_file != null ) {
-            parameters_sb.append( ", Cutoff-scores-file: " + cutoff_scores_file );
-        }
-        else {
-            parameters_sb.append( ", Cutoff-scores-file: not-set" );
-        }
-        if ( max_allowed_overlap != surfacing.MAX_ALLOWED_OVERLAP_DEFAULT ) {
-            parameters_sb.append( ", Max-overlap: " + max_allowed_overlap );
-        }
-        else {
-            parameters_sb.append( ", Max-overlap: not-set" );
-        }
-        if ( no_engulfing_overlaps ) {
-            parameters_sb.append( ", Engulfing-overlaps: not-allowed" );
-        }
-        else {
-            parameters_sb.append( ", Engulfing-overlaps: allowed" );
-        }
-        if ( ignore_dufs ) {
-            parameters_sb.append( ", Ignore-dufs: true" );
-        }
-        else {
-            parameters_sb.append( ", Ignore-dufs: false" );
-        }
-        parameters_sb.append( ", DC type (if applicable): " + dc_type );
-        return parameters_sb;
-    }
-
-    /**
-     * Warning: This sideeffects 'all_bin_domain_combinations_encountered'!
-     * 
-     * 
-     * @param output_file
-     * @param all_bin_domain_combinations_changed
-     * @param sum_of_all_domains_encountered
-     * @param all_bin_domain_combinations_encountered
-     * @param is_gains_analysis
-     * @throws IOException
-     */
-    private static void executeFitchGainsAnalysis( final File output_file,
-                                                   final List<BinaryDomainCombination> all_bin_domain_combinations_changed,
-                                                   final int sum_of_all_domains_encountered,
-                                                   final SortedSet<BinaryDomainCombination> all_bin_domain_combinations_encountered,
-                                                   final boolean is_gains_analysis ) throws IOException {
-        SurfacingUtil.checkForOutputFileWriteability( output_file );
-        final Writer out = ForesterUtil.createBufferedWriter( output_file );
-        final SortedMap<Object, Integer> bdc_to_counts = ForesterUtil
-                .listToSortedCountsMap( all_bin_domain_combinations_changed );
-        final SortedSet<DomainId> all_domains_in_combination_changed_more_than_once = new TreeSet<DomainId>();
-        final SortedSet<DomainId> all_domains_in_combination_changed_only_once = new TreeSet<DomainId>();
-        int above_one = 0;
-        int one = 0;
-        for( final Object bdc_object : bdc_to_counts.keySet() ) {
-            final BinaryDomainCombination bdc = ( BinaryDomainCombination ) bdc_object;
-            final int count = bdc_to_counts.get( bdc_object );
-            if ( count < 1 ) {
-                ForesterUtil.unexpectedFatalError( PRG_NAME, "count < 1 " );
-            }
-            out.write( bdc + "\t" + count + ForesterUtil.LINE_SEPARATOR );
-            if ( count > 1 ) {
-                all_domains_in_combination_changed_more_than_once.add( bdc.getId0() );
-                all_domains_in_combination_changed_more_than_once.add( bdc.getId1() );
-                above_one++;
-            }
-            else if ( count == 1 ) {
-                all_domains_in_combination_changed_only_once.add( bdc.getId0() );
-                all_domains_in_combination_changed_only_once.add( bdc.getId1() );
-                one++;
-            }
-        }
-        final int all = all_bin_domain_combinations_encountered.size();
-        int never_lost = -1;
-        if ( !is_gains_analysis ) {
-            all_bin_domain_combinations_encountered.removeAll( all_bin_domain_combinations_changed );
-            never_lost = all_bin_domain_combinations_encountered.size();
-            for( final BinaryDomainCombination bdc : all_bin_domain_combinations_encountered ) {
-                out.write( bdc + "\t" + "0" + ForesterUtil.LINE_SEPARATOR );
-            }
-        }
-        if ( is_gains_analysis ) {
-            out.write( "Sum of all distinct domain combinations appearing once               : " + one
-                    + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domain combinations appearing more than once     : " + above_one
-                    + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domains in combinations apppearing only once     : "
-                    + all_domains_in_combination_changed_only_once.size() + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domains in combinations apppearing more than once: "
-                    + all_domains_in_combination_changed_more_than_once.size() + ForesterUtil.LINE_SEPARATOR );
-        }
-        else {
-            out.write( "Sum of all distinct domain combinations never lost                   : " + never_lost
-                    + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domain combinations lost once                    : " + one
-                    + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domain combinations lost more than once          : " + above_one
-                    + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domains in combinations lost only once           : "
-                    + all_domains_in_combination_changed_only_once.size() + ForesterUtil.LINE_SEPARATOR );
-            out.write( "Sum of all distinct domains in combinations lost more than once: "
-                    + all_domains_in_combination_changed_more_than_once.size() + ForesterUtil.LINE_SEPARATOR );
-        }
-        out.write( "All binary combinations                                              : " + all
-                + ForesterUtil.LINE_SEPARATOR );
-        out.write( "All domains                                                          : "
-                + sum_of_all_domains_encountered );
-        out.close();
-        ForesterUtil.programMessage( surfacing.PRG_NAME,
-                                     "Wrote fitch domain combination dynamics counts analysis to \"" + output_file
-                                             + "\"" );
-    }
-
-    private static void executePlusMinusAnalysis( final File output_file,
-                                                  final List<String> plus_minus_analysis_high_copy_base,
-                                                  final List<String> plus_minus_analysis_high_copy_target,
-                                                  final List<String> plus_minus_analysis_low_copy,
-                                                  final List<GenomeWideCombinableDomains> gwcd_list,
-                                                  final SortedMap<Species, List<Protein>> protein_lists_per_species,
-                                                  final Map<DomainId, List<GoId>> domain_id_to_go_ids_map,
-                                                  final Map<GoId, GoTerm> go_id_to_term_map,
-                                                  final List<Object> plus_minus_analysis_numbers ) {
-        final Set<String> all_spec = new HashSet<String>();
-        for( final GenomeWideCombinableDomains gwcd : gwcd_list ) {
-            all_spec.add( gwcd.getSpecies().getSpeciesId() );
-        }
-        final File html_out_dom = new File( output_file + PLUS_MINUS_DOM_SUFFIX_HTML );
-        final File plain_out_dom = new File( output_file + PLUS_MINUS_DOM_SUFFIX );
-        final File html_out_dc = new File( output_file + PLUS_MINUS_DC_SUFFIX_HTML );
-        final File all_domains_go_ids_out_dom = new File( output_file + PLUS_MINUS_ALL_GO_IDS_DOM_SUFFIX );
-        final File passing_domains_go_ids_out_dom = new File( output_file + PLUS_MINUS_PASSING_GO_IDS_DOM_SUFFIX );
-        final File proteins_file_base = new File( output_file + "" );
-        final int min_diff = ( ( Integer ) plus_minus_analysis_numbers.get( 0 ) ).intValue();
-        final double factor = ( ( Double ) plus_minus_analysis_numbers.get( 1 ) ).doubleValue();
-        try {
-            DomainCountsDifferenceUtil.calculateCopyNumberDifferences( gwcd_list,
-                                                                       protein_lists_per_species,
-                                                                       plus_minus_analysis_high_copy_base,
-                                                                       plus_minus_analysis_high_copy_target,
-                                                                       plus_minus_analysis_low_copy,
-                                                                       min_diff,
-                                                                       factor,
-                                                                       plain_out_dom,
-                                                                       html_out_dom,
-                                                                       html_out_dc,
-                                                                       domain_id_to_go_ids_map,
-                                                                       go_id_to_term_map,
-                                                                       all_domains_go_ids_out_dom,
-                                                                       passing_domains_go_ids_out_dom,
-                                                                       proteins_file_base );
-        }
-        catch ( final IOException e ) {
-            ForesterUtil.fatalError( surfacing.PRG_NAME, e.getLocalizedMessage() );
-        }
-        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis results to \""
-                + html_out_dom + "\"" );
-        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis results to \""
-                + plain_out_dom + "\"" );
-        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis results to \"" + html_out_dc
-                + "\"" );
-        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis based passing GO ids to \""
-                + passing_domains_go_ids_out_dom + "\"" );
-        ForesterUtil.programMessage( surfacing.PRG_NAME, "Wrote plus minus domain analysis based all GO ids to \""
-                + all_domains_go_ids_out_dom + "\"" );
-    }
-
-    private static Phylogeny[] getIntrees( final File[] intree_files,
-                                           final int number_of_genomes,
-                                           final String[][] input_file_properties ) {
-        final Phylogeny[] intrees = new Phylogeny[ intree_files.length ];
-        int i = 0;
-        for( final File intree_file : intree_files ) {
-            Phylogeny intree = null;
-            final String error = ForesterUtil.isReadableFile( intree_file );
-            if ( !ForesterUtil.isEmpty( error ) ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "cannot read input tree file [" + intree_file + "]: "
-                        + error );
-            }
-            try {
-                final Phylogeny[] p_array = ParserBasedPhylogenyFactory.getInstance()
-                        .create( intree_file, ForesterUtil.createParserDependingOnFileType( intree_file ) );
-                if ( p_array.length < 1 ) {
-                    ForesterUtil.fatalError( surfacing.PRG_NAME, "file [" + intree_file
-                            + "] does not contain any phylogeny in phyloXML format" );
-                }
-                else if ( p_array.length > 1 ) {
-                    ForesterUtil.fatalError( surfacing.PRG_NAME, "file [" + intree_file
-                            + "] contains more than one phylogeny in phyloXML format" );
-                }
-                intree = p_array[ 0 ];
-            }
-            catch ( final Exception e ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "failed to read input tree from file [" + intree_file
-                        + "]: " + error );
-            }
-            if ( ( intree == null ) || intree.isEmpty() ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "input tree [" + intree_file + "] is empty" );
-            }
-            if ( !intree.isRooted() ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "input tree [" + intree_file + "] is not rooted" );
-            }
-            if ( intree.getNumberOfExternalNodes() < number_of_genomes ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "number of external nodes ["
-                        + intree.getNumberOfExternalNodes() + "] of input tree [" + intree_file
-                        + "] is smaller than the number of genomes the be analyzed [" + number_of_genomes + "]" );
-            }
-            final StringBuilder parent_names = new StringBuilder();
-            final int nodes_lacking_name = SurfacingUtil.getNumberOfNodesLackingName( intree, parent_names );
-            if ( nodes_lacking_name > 0 ) {
-                ForesterUtil.fatalError( surfacing.PRG_NAME, "input tree [" + intree_file + "] has "
-                        + nodes_lacking_name + " node(s) lacking a name [parent names:" + parent_names + "]" );
-            }
-            preparePhylogenyForParsimonyAnalyses( intree, input_file_properties );
-            if ( !intree.isCompletelyBinary() ) {
-                ForesterUtil.printWarningMessage( surfacing.PRG_NAME, "input tree [" + intree_file
-                        + "] is not completely binary" );
-            }
-            intrees[ i++ ] = intree;
-        }
-        return intrees;
-    }
-
-    private static List<Phylogeny> inferSpeciesTrees( final File outfile, final List<DistanceMatrix> distances_list ) {
-        final NeighborJoining nj = NeighborJoining.createInstance();
-        final List<Phylogeny> phylogenies = nj.execute( distances_list );
-        final PhylogenyWriter w = new PhylogenyWriter();
-        try {
-            w.toNewHampshire( phylogenies, true, true, outfile, ";" );
-        }
-        catch ( final IOException e ) {
-            ForesterUtil.fatalError( PRG_NAME, "failed to write to outfile [" + outfile + "]: " + e.getMessage() );
-        }
-        return phylogenies;
     }
 
     private static void preparePhylogenyForParsimonyAnalyses( final Phylogeny intree,
@@ -2341,7 +2447,7 @@ public class surfacing {
     }
 
     private static void processFilter( final File filter_file, final SortedSet<DomainId> filter ) {
-        Set<String> filter_str = null;
+        SortedSet<String> filter_str = null;
         try {
             filter_str = ForesterUtil.file2set( filter_file );
         }
@@ -2365,10 +2471,9 @@ public class surfacing {
         final String[][] input_file_properties = new String[ names.length ][];
         for( int i = 0; i < names.length; ++i ) {
             if ( names[ i ].indexOf( SEPARATOR_FOR_INPUT_VALUES ) < 0 ) {
-                input_file_properties[ i ] = new String[ 3 ];
+                input_file_properties[ i ] = new String[ 2 ];
                 input_file_properties[ i ][ 0 ] = names[ i ];
                 input_file_properties[ i ][ 1 ] = names[ i ];
-                input_file_properties[ i ][ 2 ] = DEFAULT_SEARCH_PARAMETER;
             }
             else {
                 input_file_properties[ i ] = names[ i ].split( surfacing.SEPARATOR_FOR_INPUT_VALUES + "" );
@@ -2376,8 +2481,7 @@ public class surfacing {
                     ForesterUtil
                             .fatalError( surfacing.PRG_NAME,
                                          "properties for the input files (hmmpfam output) are expected "
-                                                 + "to be in the following format \"<hmmpfam output file>#<species>#<search"
-                                                 + " parameter>\" (or just one word, which is both the filename and the species id), instead received \""
+                                                 + "to be in the following format \"<hmmpfam output file>#<species>\" (or just one word, which is both the filename and the species id), instead received \""
                                                  + names[ i ] + "\"" );
                 }
             }

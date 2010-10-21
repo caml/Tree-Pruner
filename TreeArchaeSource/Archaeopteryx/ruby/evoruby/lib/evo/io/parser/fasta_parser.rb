@@ -4,7 +4,7 @@
 # Copyright::  Copyright (C) 2006-2007 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: fasta_parser.rb,v 1.10 2008/08/28 23:37:39 cmzmasek Exp $
+# $Id: fasta_parser.rb,v 1.11 2010/10/08 22:04:17 cmzmasek Exp $
 #
 # last modified: 05/17/2007
 
@@ -42,7 +42,8 @@ module Evoruby
                             error_msg = "format error at: " + line
                             raise IOError, error_msg
                         end
-                        seq = $1.rstrip
+                        # was: seq = $1.rstrip
+                        seq =  $1.gsub(/\s+/, '')
                         current_seq = current_seq + seq
                     else
                         error_msg = "Unexpected line: " + line

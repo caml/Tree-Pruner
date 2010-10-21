@@ -1,4 +1,4 @@
-// $Id: NodeData.java,v 1.30 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: NodeData.java,v 1.43 2010/06/09 17:58:31 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -29,24 +29,53 @@ package org.forester.phylogeny.data;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.forester.io.parsers.phyloxml.PhyloXmlMapping;
 import org.forester.util.ForesterUtil;
 
 public class NodeData implements PhylogenyData {
 
-    private Event            _event;
-    private Sequence         _sequence;
-    private Identifier       _node_identifier;
-    private Taxonomy         _taxonomy;
-    private Distribution     _distribution;
-    private Date             _date;
-    private BinaryCharacters _binary_characters;
-    private PropertiesMap    _properties;
-    private Reference        _reference;
+    private Event              _event;
+    private List<Sequence>     _sequences;
+    private Identifier         _node_identifier;
+    private List<Taxonomy>     _taxonomies;
+    private List<Distribution> _distributions;
+    private Date               _date;
+    private BinaryCharacters   _binary_characters;
+    private PropertiesMap      _properties;
+    private List<Reference>    _references;
 
     public NodeData() {
         //Constructor
+    }
+
+    public void addDistribution( final Distribution distribution ) {
+        if ( _distributions == null ) {
+            _distributions = new ArrayList<Distribution>();
+        }
+        _distributions.add( distribution );
+    }
+
+    public void addReference( final Reference reference ) {
+        if ( _references == null ) {
+            _references = new ArrayList<Reference>();
+        }
+        _references.add( reference );
+    }
+
+    public void addSequence( final Sequence sequence ) {
+        if ( _sequences == null ) {
+            _sequences = new ArrayList<Sequence>();
+        }
+        _sequences.add( sequence );
+    }
+
+    public void addTaxonomy( final Taxonomy taxonomy ) {
+        if ( _taxonomies == null ) {
+            _taxonomies = new ArrayList<Taxonomy>();
+        }
+        _taxonomies.add( taxonomy );
     }
 
     public StringBuffer asSimpleText() {
@@ -58,35 +87,55 @@ public class NodeData implements PhylogenyData {
     }
 
     public PhylogenyData copy() {
-        final NodeData new_pnd = new NodeData();
-        if ( isHasSequence() ) {
-            new_pnd.setSequence( ( Sequence ) getSequence().copy() );
+        final NodeData new_data = new NodeData();
+        if ( ( getSequences() != null ) && ( getSequences().size() > 0 ) ) {
+            new_data.setSequences( new ArrayList<Sequence>() );
+            for( final Sequence s : getSequences() ) {
+                if ( s != null ) {
+                    new_data.addSequence( ( Sequence ) s.copy() );
+                }
+            }
         }
         if ( isHasEvent() ) {
-            new_pnd.setEvent( ( Event ) getEvent().copy() );
+            new_data.setEvent( ( Event ) getEvent().copy() );
         }
         if ( isHasNodeIdentifier() ) {
-            new_pnd.setNodeIdentifier( ( Identifier ) getNodeIdentifier().copy() );
+            new_data.setNodeIdentifier( ( Identifier ) getNodeIdentifier().copy() );
         }
-        if ( isHasTaxonomy() ) {
-            new_pnd.setTaxonomy( ( Taxonomy ) getTaxonomy().copy() );
+        if ( ( getTaxonomies() != null ) && ( getTaxonomies().size() > 0 ) ) {
+            new_data.setTaxonomies( new ArrayList<Taxonomy>() );
+            for( final Taxonomy t : getTaxonomies() ) {
+                if ( t != null ) {
+                    new_data.addTaxonomy( ( Taxonomy ) t.copy() );
+                }
+            }
         }
         if ( isHasBinaryCharacters() ) {
-            new_pnd.setBinaryCharacters( ( BinaryCharacters ) getBinaryCharacters().copy() );
+            new_data.setBinaryCharacters( ( BinaryCharacters ) getBinaryCharacters().copy() );
         }
-        if ( isHasReference() ) {
-            new_pnd.setReference( ( Reference ) getReference().copy() );
+        if ( ( getReferences() != null ) && ( getReferences().size() > 0 ) ) {
+            new_data.setReferences( new ArrayList<Reference>() );
+            for( final Reference r : getReferences() ) {
+                if ( r != null ) {
+                    new_data.addReference( ( Reference ) r.copy() );
+                }
+            }
         }
-        if ( isHasDistribution() ) {
-            new_pnd.setDistribution( ( Distribution ) getDistribution().copy() );
+        if ( ( getDistributions() != null ) && ( getDistributions().size() > 0 ) ) {
+            new_data.setDistributions( new ArrayList<Distribution>() );
+            for( final Distribution d : getDistributions() ) {
+                if ( d != null ) {
+                    new_data.addDistribution( ( Distribution ) d.copy() );
+                }
+            }
         }
         if ( isHasDate() ) {
-            new_pnd.setDate( ( Date ) getDate().copy() );
+            new_data.setDate( ( Date ) getDate().copy() );
         }
         if ( isHasProperties() ) {
-            new_pnd.setProperties( ( PropertiesMap ) getProperties().copy() );
+            new_data.setProperties( ( PropertiesMap ) getProperties().copy() );
         }
-        return new_pnd;
+        return new_data;
     }
 
     public BinaryCharacters getBinaryCharacters() {
@@ -97,8 +146,21 @@ public class NodeData implements PhylogenyData {
         return _date;
     }
 
+    /**
+     * Convenience method -- always returns the first Distribution.
+     *  
+     * @return Distribution
+     */
     public Distribution getDistribution() {
-        return _distribution;
+        return getDistribution( 0 );
+    }
+
+    public Distribution getDistribution( final int index ) {
+        return _distributions.get( index );
+    }
+
+    public List<Distribution> getDistributions() {
+        return _distributions;
     }
 
     public Event getEvent() {
@@ -113,16 +175,57 @@ public class NodeData implements PhylogenyData {
         return _properties;
     }
 
+    /**
+     * Convenience method -- always returns the first Reference.
+     * 
+     *  @return Reference
+     *  
+     */
     public Reference getReference() {
-        return _reference;
+        return getReference( 0 );
     }
 
+    public Reference getReference( final int index ) {
+        return _references.get( index );
+    }
+
+    public List<Reference> getReferences() {
+        return _references;
+    }
+
+    /**
+     * Convenience method -- always returns the first Sequence.
+     * 
+     * @return Sequence
+     */
     public Sequence getSequence() {
-        return _sequence;
+        return getSequence( 0 );
     }
 
+    public Sequence getSequence( final int index ) {
+        return _sequences.get( index );
+    }
+
+    public List<Sequence> getSequences() {
+        return _sequences;
+    }
+
+    public List<Taxonomy> getTaxonomies() {
+        return _taxonomies;
+    }
+
+    /**
+     * Convenience method -- always returns the first Taxonomy.
+     * 
+     * @return  Taxonomy
+     * 
+     */
     public Taxonomy getTaxonomy() {
-        return _taxonomy;
+        return getTaxonomy( 0 );
+    }
+
+    public Taxonomy getTaxonomy( final int index ) {
+        return _taxonomies.get( index );
     }
 
     public boolean isEqual( final PhylogenyData data ) {
@@ -134,11 +237,17 @@ public class NodeData implements PhylogenyData {
     }
 
     public boolean isHasDate() {
-        return getDate() != null;
+        return ( getDate() != null )
+                && ( !ForesterUtil.isEmpty( getDate().getDesc() ) || !ForesterUtil.isNull( getDate().getMax() )
+                        || !ForesterUtil.isNull( getDate().getMin() ) || !ForesterUtil.isNull( getDate().getValue() ) || !ForesterUtil
+                        .isEmpty( getDate().getUnit() ) );
     }
 
     public boolean isHasDistribution() {
-        return getDistribution() != null;
+        return ( ( ( getDistributions() != null ) && ( getDistributions().size() > 0 ) ) && ( ( !ForesterUtil
+                .isEmpty( getDistribution().getDesc() ) )
+                || ( ( getDistribution().getPoints() != null ) && ( getDistribution().getPoints().size() > 0 ) ) || ( ( getDistribution()
+                .getPolygons() != null ) && ( getDistribution().getPolygons().size() > 0 ) ) ) );
     }
 
     public boolean isHasEvent() {
@@ -154,15 +263,17 @@ public class NodeData implements PhylogenyData {
     }
 
     public boolean isHasReference() {
-        return getReference() != null;
+        return ( ( getReferences() != null ) && ( getReferences().size() > 0 ) )
+                && ( !ForesterUtil.isEmpty( getReference().getDoi() ) || !ForesterUtil.isEmpty( getReference()
+                        .getValue() ) );
     }
 
     public boolean isHasSequence() {
-        return getSequence() != null;
+        return ( getSequences() != null ) && ( getSequences().size() > 0 ) && ( getSequences().get( 0 ) != null );
     }
 
     public boolean isHasTaxonomy() {
-        return getTaxonomy() != null;
+        return ( getTaxonomies() != null ) && ( getTaxonomies().size() > 0 ) && ( getTaxonomies().get( 0 ) != null );
     }
 
     public void setBinaryCharacters( final BinaryCharacters binary_characters ) {
@@ -173,8 +284,31 @@ public class NodeData implements PhylogenyData {
         _date = date;
     }
 
+    /**
+     * Convenience method -- always sets the first Distribution.
+     * 
+     */
     public void setDistribution( final Distribution distribution ) {
-        _distribution = distribution;
+        if ( _distributions == null ) {
+            _distributions = new ArrayList<Distribution>();
+        }
+        if ( _distributions.size() == 0 ) {
+            _distributions.add( distribution );
+        }
+        else {
+            _distributions.set( 0, distribution );
+        }
+    }
+
+    public void setDistribution( final int index, final Distribution distribution ) {
+        if ( _distributions == null ) {
+            _distributions = new ArrayList<Distribution>();
+        }
+        _distributions.set( index, distribution );
+    }
+
+    private void setDistributions( final List<Distribution> distributions ) {
+        _distributions = distributions;
     }
 
     public void setEvent( final Event event ) {
@@ -189,16 +323,85 @@ public class NodeData implements PhylogenyData {
         _properties = custom_data;
     }
 
+    public void setReference( final int index, final Reference reference ) {
+        if ( _references == null ) {
+            _references = new ArrayList<Reference>();
+        }
+        _references.set( index, reference );
+    }
+
+    /**
+     * Convenience method -- always sets the first Reference.
+     * 
+     */
     public void setReference( final Reference reference ) {
-        _reference = reference;
+        if ( _references == null ) {
+            _references = new ArrayList<Reference>();
+        }
+        if ( _references.size() == 0 ) {
+            _references.add( reference );
+        }
+        else {
+            _references.set( 0, reference );
+        }
     }
 
+    private void setReferences( final List<Reference> references ) {
+        _references = references;
+    }
+
+    public void setSequence( final int index, final Sequence sequence ) {
+        if ( _sequences == null ) {
+            _sequences = new ArrayList<Sequence>();
+        }
+        _sequences.set( index, sequence );
+    }
+
+    /**
+     * Convenience method -- always sets the first Sequence.
+     * 
+     */
     public void setSequence( final Sequence sequence ) {
-        _sequence = sequence;
+        if ( _sequences == null ) {
+            _sequences = new ArrayList<Sequence>();
+        }
+        if ( _sequences.size() == 0 ) {
+            _sequences.add( sequence );
+        }
+        else {
+            _sequences.set( 0, sequence );
+        }
     }
 
+    private void setSequences( final List<Sequence> sequences ) {
+        _sequences = sequences;
+    }
+
+    private void setTaxonomies( final List<Taxonomy> taxonomies ) {
+        _taxonomies = taxonomies;
+    }
+
+    public void setTaxonomy( final int index, final Taxonomy taxonomy ) {
+        if ( _taxonomies == null ) {
+            _taxonomies = new ArrayList<Taxonomy>();
+        }
+        _taxonomies.set( index, taxonomy );
+    }
+
+    /**
+     * Convenience method -- always sets the first Taxonomy.
+     * 
+     */
     public void setTaxonomy( final Taxonomy taxonomy ) {
-        _taxonomy = taxonomy;
+        if ( _taxonomies == null ) {
+            _taxonomies = new ArrayList<Taxonomy>();
+        }
+        if ( _taxonomies.size() == 0 ) {
+            _taxonomies.add( taxonomy );
+        }
+        else {
+            _taxonomies.set( 0, taxonomy );
+        }
     }
 
     public StringBuffer toNHX() {
@@ -225,20 +428,28 @@ public class NodeData implements PhylogenyData {
         if ( isHasNodeIdentifier() ) {
             writer.write( ForesterUtil.LINE_SEPARATOR );
             writer.write( indentation );
-            if ( !org.forester.util.ForesterUtil.isEmpty( getNodeIdentifier().getType() ) ) {
-                PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.NODE_IDENTIFIER, getNodeIdentifier()
-                        .getValue(), PhyloXmlMapping.IDENTIFIER_TYPE_ATTR, getNodeIdentifier().getType() );
-            }
-            else {
-                PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.NODE_IDENTIFIER, getNodeIdentifier()
-                        .getValue() );
-            }
+            //  if ( !org.forester.util.ForesterUtil.isEmpty( getNodeIdentifier().getProvider() ) ) {
+            //     PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.NODE_IDENTIFIER, getNodeIdentifier()
+            //             .getValue(), PhyloXmlMapping.IDENTIFIER_PROVIDER_ATTR, getNodeIdentifier().getProvider() );
+            // }
+            // else {
+            //     PhylogenyDataUtil.appendElement( writer, PhyloXmlMapping.NODE_IDENTIFIER, getNodeIdentifier()
+            //             .getValue() );
+            // }
         }
         if ( isHasTaxonomy() ) {
-            getTaxonomy().toPhyloXML( writer, level, indentation );
+            for( final Taxonomy t : getTaxonomies() ) {
+                if ( !t.isEmpty() ) {
+                    t.toPhyloXML( writer, level, indentation );
+                }
+            }
         }
         if ( isHasSequence() ) {
-            getSequence().toPhyloXML( writer, level, indentation );
+            for( final Sequence s : getSequences() ) {
+                if ( !s.isEmpty() ) {
+                    s.toPhyloXML( writer, level, indentation );
+                }
+            }
         }
         if ( isHasEvent() ) {
             getEvent().toPhyloXML( writer, level, indentation );
@@ -247,13 +458,17 @@ public class NodeData implements PhylogenyData {
             getBinaryCharacters().toPhyloXML( writer, level, indentation );
         }
         if ( isHasDistribution() ) {
-            getDistribution().toPhyloXML( writer, level, indentation );
+            for( final Distribution d : getDistributions() ) {
+                d.toPhyloXML( writer, level, indentation );
+            }
         }
         if ( isHasDate() ) {
             getDate().toPhyloXML( writer, level, indentation );
         }
         if ( isHasReference() ) {
-            getReference().toPhyloXML( writer, level, indentation );
+            for( final Reference r : getReferences() ) {
+                r.toPhyloXML( writer, level, indentation );
+            }
         }
         if ( isHasProperties() ) {
             getProperties().toPhyloXML( writer, level, indentation.substring( 0, indentation.length() - 3 ) );

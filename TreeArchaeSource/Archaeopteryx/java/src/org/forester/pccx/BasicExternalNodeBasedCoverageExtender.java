@@ -44,6 +44,46 @@ import org.forester.util.ForesterUtil;
  */
 public class BasicExternalNodeBasedCoverageExtender implements CoverageExtender {
 
+    private String find( final CoverageCalculationOptions options,
+                         final BranchCountingBasedScoringMethod scoring_method,
+                         final List<SortedMap<PhylogenyNode, Double>> external_node_scores_list,
+                         final List<SortedMap<PhylogenyNode, Double>> external_node_scores_list_temp,
+                         final List<Phylogeny> phylogenies,
+                         final Set<String> already_covered,
+                         final PrintStream out,
+                         final int i,
+                         final double normalization_factor ) {
+        final Phylogeny p = phylogenies.get( 0 );
+        String best_name = null;
+        double best_score = -Double.MAX_VALUE;
+        for( final PhylogenyNodeIterator iter = p.iteratorExternalForward(); iter.hasNext(); ) {
+            final String name = iter.next().getNodeName();
+            if ( !already_covered.contains( name ) ) {
+                final double score = BasicExternalNodeBasedCoverageExtender
+                        .calculateCoverage( phylogenies,
+                                            name,
+                                            options,
+                                            scoring_method,
+                                            external_node_scores_list_temp,
+                                            false );
+                if ( score > best_score ) {
+                    best_score = score;
+                    best_name = name;
+                }
+            }
+        }
+        BasicExternalNodeBasedCoverageExtender.calculateCoverage( phylogenies,
+                                                                  best_name,
+                                                                  options,
+                                                                  scoring_method,
+                                                                  external_node_scores_list_temp,
+                                                                  true );
+        if ( out != null ) {
+            out.println( i + "\t" + best_name + "\t" + ( best_score * normalization_factor ) );
+        }
+        return best_name;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -106,46 +146,6 @@ public class BasicExternalNodeBasedCoverageExtender implements CoverageExtender 
             best_names.add( name );
         }
         return best_names;
-    }
-
-    private String find( final CoverageCalculationOptions options,
-                         final BranchCountingBasedScoringMethod scoring_method,
-                         final List<SortedMap<PhylogenyNode, Double>> external_node_scores_list,
-                         final List<SortedMap<PhylogenyNode, Double>> external_node_scores_list_temp,
-                         final List<Phylogeny> phylogenies,
-                         final Set<String> already_covered,
-                         final PrintStream out,
-                         final int i,
-                         final double normalization_factor ) {
-        final Phylogeny p = phylogenies.get( 0 );
-        String best_name = null;
-        double best_score = -Double.MAX_VALUE;
-        for( final PhylogenyNodeIterator iter = p.iteratorExternalForward(); iter.hasNext(); ) {
-            final String name = iter.next().getNodeName();
-            if ( !already_covered.contains( name ) ) {
-                final double score = BasicExternalNodeBasedCoverageExtender
-                        .calculateCoverage( phylogenies,
-                                            name,
-                                            options,
-                                            scoring_method,
-                                            external_node_scores_list_temp,
-                                            false );
-                if ( score > best_score ) {
-                    best_score = score;
-                    best_name = name;
-                }
-            }
-        }
-        BasicExternalNodeBasedCoverageExtender.calculateCoverage( phylogenies,
-                                                                  best_name,
-                                                                  options,
-                                                                  scoring_method,
-                                                                  external_node_scores_list_temp,
-                                                                  true );
-        if ( out != null ) {
-            out.println( i + "\t" + best_name + "\t" + ( best_score * normalization_factor ) );
-        }
-        return best_name;
     }
 
     private static double calculateCoverage( final List<Phylogeny> phylogenies,

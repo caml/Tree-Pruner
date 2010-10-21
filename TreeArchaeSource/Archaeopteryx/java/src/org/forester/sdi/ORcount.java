@@ -1,4 +1,4 @@
-// $Id: ORcount.java,v 1.17 2009/06/19 05:32:23 cmzmasek Exp $
+// $Id: ORcount.java,v 1.20 2009/11/20 22:22:10 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -54,14 +54,15 @@ import org.forester.util.ForesterUtil;
  */
 public class ORcount {
 
-    private static final String[] group_1              = { "ANOGA", "DROME", "CAEBR", "CAEEL" };
-    private static final String[] group_2              = { "CIOIN", "FUGRU", "MOUSE", "RAT", "HUMAN" };
-    private static final String[] all_species          = { "ANOGA", "DROME", "CAEBR", "CAEEL", "CIOIN", "FUGRU",
-            "MOUSE", "RAT", "HUMAN"                   };
-    private final Phylogeny[]     _trees;
-    private HashMap               _species             = null;
-    private ArrayList             _names               = null;
-    private int                   _group1_vs_2_counter = 0;
+    private static final String[]                     group_1              = { "ANOGA", "DROME", "CAEBR", "CAEEL" };
+    private static final String[]                     group_2              = { "CIOIN", "FUGRU", "MOUSE", "RAT",
+            "HUMAN"                                                       };
+    private static final String[]                     all_species          = { "ANOGA", "DROME", "CAEBR", "CAEEL",
+            "CIOIN", "FUGRU", "MOUSE", "RAT", "HUMAN"                     };
+    private final Phylogeny[]                         _trees;
+    private HashMap<String, HashMap<Object, Integer>> _species             = null;
+    private ArrayList<String>                         _names               = null;
+    private int                                       _group1_vs_2_counter = 0;
 
     /**
      * Default contructor which
@@ -69,6 +70,44 @@ public class ORcount {
     public ORcount( final Phylogeny[] trees ) {
         _trees = trees;
     } // ORcount( final Phylogeny[] trees )
+
+    private void count( final PhylogenyNode node ) {
+        final List<PhylogenyNode> external_nodes = node.getAllExternalDescendants();
+        for( int i = 1; i < external_nodes.size(); ++i ) {
+            for( int j = 0; j < i; ++j ) {
+                final PhylogenyNode node_i = external_nodes.get( i );
+                final PhylogenyNode node_j = external_nodes.get( j );
+                final String si = PhylogenyMethods.getSpecies( node_i );
+                final String sj = PhylogenyMethods.getSpecies( node_j );
+                count( si, sj, node_i.getNodeName(), node_j.getNodeName() );
+            }
+        }
+    } // count( PhylogenyNode )
+
+    private void count( final String a, final String b, final String seq_name_a, final String seq_name_b ) {
+        HashMap<Object, Integer> h1 = _species.get( a );
+        if ( h1 == null ) {
+            throw new RuntimeException( "Unexpected error: Species \"" + a + "\" not present in species matrix." );
+        }
+        Object h2 = h1.get( b );
+        String species_in_h1 = b;
+        // We only look at the half matrix, and we do not know/care about the
+        // order
+        // of the keys (species).
+        if ( h2 == null ) {
+            h1 = _species.get( b );
+            if ( h1 == null ) {
+                throw new RuntimeException( "Unexpected error: Species \"" + b + "\" not present in species matrix." );
+            }
+            h2 = h1.get( a );
+            species_in_h1 = a;
+        }
+        if ( h2 == null ) {
+            throw new RuntimeException( "Unexpected error: Species \"" + a + "\" not present in species matrix." );
+        }
+        h1.put( species_in_h1, new Integer( ( ( Integer ) h2 ).intValue() + 1 ) );
+        _names.add( a + "-" + seq_name_a + " = " + b + "-" + seq_name_b );
+    } // count( String, String )
 
     public void countSharedAncestralClades( final Phylogeny tree,
                                             final int bootstrap_threshold,
@@ -94,10 +133,10 @@ public class ORcount {
                     current_node.setIndicator( ( byte ) 1 );
                 }
                 else {
-                    final List external_nodes = current_node.getAllExternalDescendants();
+                    final List<PhylogenyNode> external_nodes = current_node.getAllExternalDescendants();
                     final String[] external_species = new String[ external_nodes.size() ];
                     for( int i = 0; i < external_nodes.size(); ++i ) {
-                        final PhylogenyNode n = ( PhylogenyNode ) external_nodes.get( i );
+                        final PhylogenyNode n = external_nodes.get( i );
                         external_species[ i ] = PhylogenyMethods.getSpecies( n ).trim().toUpperCase();
                     }
                     if ( ForesterUtil.isIntersecting( external_species, group_1 )
@@ -145,51 +184,6 @@ public class ORcount {
             countSuperOrthologousRelations( _trees[ i ], bootstrap_threshold );
         }
     }
-
-    public void reset() {
-        getAllSpecies();
-        setUpCountingMatrix();
-        setGroup1Vs2Counter( 0 );
-        _names = new ArrayList();
-    }
-
-    private void count( final PhylogenyNode node ) {
-        final List external_nodes = node.getAllExternalDescendants();
-        for( int i = 1; i < external_nodes.size(); ++i ) {
-            for( int j = 0; j < i; ++j ) {
-                final PhylogenyNode node_i = ( PhylogenyNode ) external_nodes.get( i );
-                final PhylogenyNode node_j = ( PhylogenyNode ) external_nodes.get( j );
-                final String si = PhylogenyMethods.getSpecies( node_i );
-                final String sj = PhylogenyMethods.getSpecies( node_j );
-                count( si, sj, node_i.getNodeName(), node_j.getNodeName() );
-            }
-        }
-    } // count( PhylogenyNode )
-
-    private void count( final String a, final String b, final String seq_name_a, final String seq_name_b ) {
-        HashMap h1 = ( HashMap ) _species.get( a );
-        if ( h1 == null ) {
-            throw new RuntimeException( "Unexpected error: Species \"" + a + "\" not present in species matrix." );
-        }
-        Object h2 = h1.get( b );
-        String species_in_h1 = b;
-        // We only look at the half matrix, and we do not know/care about the
-        // order
-        // of the keys (species).
-        if ( h2 == null ) {
-            h1 = ( HashMap ) _species.get( b );
-            if ( h1 == null ) {
-                throw new RuntimeException( "Unexpected error: Species \"" + b + "\" not present in species matrix." );
-            }
-            h2 = h1.get( a );
-            species_in_h1 = a;
-        }
-        if ( h2 == null ) {
-            throw new RuntimeException( "Unexpected error: Species \"" + a + "\" not present in species matrix." );
-        }
-        h1.put( species_in_h1, new Integer( ( ( Integer ) h2 ).intValue() + 1 ) );
-        _names.add( a + "-" + seq_name_a + " = " + b + "-" + seq_name_b );
-    } // count( String, String )
 
     private void countSuperOrthologousRelations( final Phylogeny tree, final int bootstrap_threshold ) {
         final PhylogenyNodeIterator it = tree.iteratorPostorder();
@@ -242,7 +236,7 @@ public class ORcount {
         if ( ( getTrees() == null ) || ( getTrees().length < 1 ) ) {
             throw new RuntimeException( "Phylogeny array in method \"getAllSpecies( HashMap hash )\" is null or empty." );
         }
-        setSpecies( new HashMap() );
+        setSpecies( new HashMap<String, HashMap<Object, Integer>>() );
         for( int i = 0; i < getTrees().length; ++i ) {
             PhylogenyNode node = getTrees()[ i ].getFirstExternalNode();
             while ( node != null ) {
@@ -256,7 +250,7 @@ public class ORcount {
         return _group1_vs_2_counter;
     }
 
-    private HashMap getSpecies() {
+    private HashMap<String, HashMap<Object, Integer>> getSpecies() {
         return _species;
     }
 
@@ -278,7 +272,7 @@ public class ORcount {
             final String species = ( String ) species_array[ i ];
             System.out.println();
             System.out.println( species + ":" );
-            final HashMap h = ( HashMap ) _species.get( species );
+            final HashMap<?, ?> h = _species.get( species );
             // Setting up HashMaps linked to by hash (=_species)
             // Diagonals are ignored, only half the matrix is needed.
             for( int j = 1 + i; j < s; ++j ) {
@@ -295,11 +289,18 @@ public class ORcount {
         }
     }
 
+    public void reset() {
+        getAllSpecies();
+        setUpCountingMatrix();
+        setGroup1Vs2Counter( 0 );
+        _names = new ArrayList<String>();
+    }
+
     private void setGroup1Vs2Counter( final int group1_vs_2_counter ) {
         _group1_vs_2_counter = group1_vs_2_counter;
     }
 
-    private void setSpecies( final HashMap species ) {
+    private void setSpecies( final HashMap<String, HashMap<Object, Integer>> species ) {
         _species = species;
     }
 
@@ -311,7 +312,7 @@ public class ORcount {
         final int s = species_array.length;
         for( int i = 0; i < s; ++i ) {
             final String species = ( String ) species_array[ i ];
-            final HashMap h = new HashMap();
+            final HashMap<Object, Integer> h = new HashMap<Object, Integer>();
             // Setting up HashMaps linked to by hash (=_species)
             // Diagonals are ignored, only half the matrix is needed.
             for( int j = 1 + i; j < s; ++j ) {
@@ -320,6 +321,15 @@ public class ORcount {
             getSpecies().put( species, h );
         }
     }
+
+    private static void errorInCommandLine() {
+        System.out.println( "\nORcount: Error in command line.\n" );
+        System.out.println( "Usage: \"\"" );
+        System.out.println( "\nOptions:" );
+        System.out.println( " -" );
+        System.out.println( "" );
+        System.exit( -1 );
+    } // errorInCommandLine()
 
     /**
      * Main method for this class.
@@ -340,7 +350,7 @@ public class ORcount {
         for( int i = 0; i < trees.length; ++i ) {
             try {
                 System.out.println( "Reading tree #" + i + "  [" + args[ i ] + "]" );
-                final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( new File( args[ i ] ) );
+                final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( new File( args[ i ] ), true );
                 trees[ i ] = factory.create( new File( args[ i ] ), pp )[ 0 ];
             }
             catch ( final Exception e ) {
@@ -369,13 +379,4 @@ public class ORcount {
         System.out.println( "\nDone." );
         System.exit( 0 );
     } // main ( String )
-
-    private static void errorInCommandLine() {
-        System.out.println( "\nORcount: Error in command line.\n" );
-        System.out.println( "Usage: \"\"" );
-        System.out.println( "\nOptions:" );
-        System.out.println( " -" );
-        System.out.println( "" );
-        System.exit( -1 );
-    } // errorInCommandLine()
 } // End of class ORcount.

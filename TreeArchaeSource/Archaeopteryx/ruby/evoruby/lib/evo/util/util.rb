@@ -4,7 +4,7 @@
 # Copyright::  Copyright (C) 2006-2007 Christian M. Zmasek
 # License::    GNU Lesser General Public License (LGPL)
 #
-# $Id: util.rb,v 1.16 2009/01/03 00:19:08 cmzmasek Exp $
+# $Id: util.rb,v 1.17 2009/10/06 22:22:46 cmzmasek Exp $
 #
 # last modified: 05/15/2007
 
@@ -105,6 +105,15 @@ module Evoruby
             end
         end
 
+        def Util.get_env_variable_value( env_variable ) 
+            value = ENV[env_variable]
+            if value == nil || value.empty?
+                error_msg = "apparently environment variable #{env_variable} has not been set"
+                raise StandardError, error_msg 
+            end
+            value
+        end
+        
 
         # raises ArgumentError
         def Util.file2array( path, split_by_semicolon )

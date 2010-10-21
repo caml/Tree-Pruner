@@ -1,4 +1,4 @@
-// $Id: Event.java,v 1.38 2009/01/13 19:49:29 cmzmasek Exp $
+// $Id: Event.java,v 1.40 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -39,10 +39,10 @@ public class Event implements PhylogenyData {
 
     public final static int     DEFAULT_VALUE = -1;
     private static final String NHX_SEPARATOR = ">";
-    private final int           _duplications;
-    private final int           _speciations;
-    private final int           _gene_losses;
-    private final EventType     _event_type;
+    private int                 _duplications;
+    private int                 _speciations;
+    private int                 _gene_losses;
+    private EventType           _event_type;
     private Confidence          _confidence;
 
     public Event() {
@@ -284,6 +284,21 @@ public class Event implements PhylogenyData {
 
     public void setConfidence( final Confidence confidence ) {
         _confidence = confidence;
+    }
+
+    public void setDuplications( final int duplications ) {
+        _duplications = duplications;
+        _event_type = EventType.mixed;
+    }
+
+    public void setGeneLosses( final int gene_losses ) {
+        _gene_losses = gene_losses;
+        _event_type = EventType.mixed;
+    }
+
+    public void setSpeciations( final int speciations ) {
+        _speciations = speciations;
+        _event_type = EventType.mixed;
     }
 
     public StringBuffer toNHX() {

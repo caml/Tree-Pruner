@@ -1,4 +1,4 @@
-// $Id: strip.java,v 1.9 2008/03/19 01:57:01 cmzmasek Exp $
+// $Id: strip.java,v 1.11 2009/11/20 22:22:09 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -55,7 +55,7 @@ public class strip {
         Phylogeny p = null;
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( infile );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( infile, true );
             p = factory.create( infile, pp )[ 0 ];
         }
         catch ( final Exception e ) {
@@ -109,13 +109,13 @@ public class strip {
         try {
             final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
             final File f = new File( file );
-            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( f );
+            final PhylogenyParser pp = ForesterUtil.createParserDependingOnFileType( f, true );
             p0 = factory.create( f, pp )[ 0 ];
         }
         catch ( final Exception e ) {
             System.out.println( "\nCould not read \"" + file + "\" [" + e.getMessage() + "]\n" );
             System.exit( -1 );
         }
-        return p0.getAllExternalSeqNames();
+        return p0.getAllExternalNodeNames();
     }
 }

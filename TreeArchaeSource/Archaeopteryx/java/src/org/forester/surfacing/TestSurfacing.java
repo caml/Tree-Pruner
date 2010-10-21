@@ -1,4 +1,4 @@
-// $Id: TestSurfacing.java,v 1.79 2008/12/13 06:08:59 cmzmasek Exp $
+// $Id: TestSurfacing.java,v 1.84 2010/09/29 23:50:18 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -37,6 +37,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.forester.evoinference.matrix.character.BasicCharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.BinaryStates;
+import org.forester.evoinference.matrix.character.CharacterStateMatrix.GainLossStates;
 import org.forester.io.parsers.HmmPfamOutputParser;
 import org.forester.io.parsers.nexus.PaupLogParser;
 import org.forester.io.parsers.nhx.NHXParser;
@@ -44,10 +48,6 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
 import org.forester.phylogeny.factories.PhylogenyFactory;
-import org.forester.phylogenyinference.BasicCharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix;
-import org.forester.phylogenyinference.CharacterStateMatrix.BinaryStates;
-import org.forester.phylogenyinference.CharacterStateMatrix.GainLossStates;
 import org.forester.surfacing.BinaryDomainCombination.DomainCombinationType;
 import org.forester.test.Test;
 import org.forester.util.ForesterUtil;
@@ -59,6 +59,19 @@ public class TestSurfacing {
 
     public static boolean isEqual( final double a, final double b ) {
         return ( ( Math.abs( a - b ) ) < TestSurfacing.ZERO_DIFF );
+    }
+
+    private static StringBuffer mapToStringBuffer( final Map<PhylogenyNode, CharacterStateMatrix.BinaryStates> map ) {
+        final StringBuffer sb = new StringBuffer();
+        for( final PhylogenyNode key : map.keySet() ) {
+            if ( !key.isExternal() ) {
+                sb.append( key.getNodeName() );
+                sb.append( " : " );
+                sb.append( map.get( key ).toString() );
+                sb.append( ForesterUtil.getLineSeparator() );
+            }
+        }
+        return sb;
     }
 
     public static boolean test( final File test_dir ) {
@@ -226,26 +239,10 @@ public class TestSurfacing {
         return true;
     }
 
-    private static StringBuffer mapToStringBuffer( final Map<PhylogenyNode, CharacterStateMatrix.BinaryStates> map ) {
-        final StringBuffer sb = new StringBuffer();
-        for( final PhylogenyNode key : map.keySet() ) {
-            if ( !key.isExternal() ) {
-                sb.append( key.getNodeName() );
-                sb.append( " : " );
-                sb.append( map.get( key ).toString() );
-                sb.append( ForesterUtil.getLineSeparator() );
-            }
-        }
-        return sb;
-    }
-
     private static boolean testBasicDomain() {
         try {
-            final Domain pd = new BasicDomain( "id", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain pd = new BasicDomain( "id", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             if ( !pd.getDomainId().getId().equals( "id" ) ) {
-                return false;
-            }
-            if ( pd.getLength() != 3 ) {
                 return false;
             }
             if ( pd.getNumber() != 1 ) {
@@ -254,32 +251,14 @@ public class TestSurfacing {
             if ( pd.getTotalCount() != 4 ) {
                 return false;
             }
-            if ( !pd.equals( new BasicDomain( "id", 22, 111, ( short ) 1, ( short ) 4, 0.2, -12, "fs", false, false ) ) ) {
+            if ( !pd.equals( new BasicDomain( "id", 22, 111, ( short ) 1, ( short ) 4, 0.2, -12 ) ) ) {
                 return false;
             }
-            final Domain a1 = new BasicDomain( "a", 1, 10, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final BasicDomain a1_copy = new BasicDomain( "a",
-                                                         1,
-                                                         10,
-                                                         ( short ) 1,
-                                                         ( short ) 4,
-                                                         0.1,
-                                                         -12,
-                                                         "ls",
-                                                         true,
-                                                         true );
-            final BasicDomain a1_equal = new BasicDomain( "a",
-                                                          524,
-                                                          743994,
-                                                          ( short ) 1,
-                                                          ( short ) 300,
-                                                          3.0005,
-                                                          230,
-                                                          "FS---",
-                                                          false,
-                                                          false );
-            final BasicDomain a2 = new BasicDomain( "a", 1, 10, ( short ) 2, ( short ) 4, 0.1, -12, "ls", true, true );
-            final BasicDomain a3 = new BasicDomain( "A", 1, 10, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain a1 = new BasicDomain( "a", 1, 10, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final BasicDomain a1_copy = new BasicDomain( "a", 1, 10, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final BasicDomain a1_equal = new BasicDomain( "a", 524, 743994, ( short ) 1, ( short ) 300, 3.0005, 230 );
+            final BasicDomain a2 = new BasicDomain( "a", 1, 10, ( short ) 2, ( short ) 4, 0.1, -12 );
+            final BasicDomain a3 = new BasicDomain( "A", 1, 10, ( short ) 1, ( short ) 4, 0.1, -12 );
             if ( !a1.equals( a1 ) ) {
                 return false;
             }
@@ -361,15 +340,15 @@ public class TestSurfacing {
         // sd = 0.0
         // n = 3
         try {
-            final Domain A = new BasicDomain( "A", 1, 2, ( short ) 1, ( short ) 1, 0.15, -12, "ls", true, true );
-            final Domain B = new BasicDomain( "B", 1, 2, ( short ) 1, ( short ) 1, 0.2, -12, "ls", true, true );
-            final Domain C = new BasicDomain( "C", 1, 2, ( short ) 1, ( short ) 1, 0.3, -12, "ls", true, true );
-            final Domain D = new BasicDomain( "D", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12, "ls", true, true );
-            final Domain E = new BasicDomain( "E", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12, "ls", true, true );
-            final Domain F = new BasicDomain( "F", 1, 2, ( short ) 1, ( short ) 1, 0.01, -12, "ls", true, true );
-            final Domain G = new BasicDomain( "G", 1, 2, ( short ) 1, ( short ) 1, 0.001, -12, "ls", true, true );
-            final Domain X = new BasicDomain( "X", 1, 2, ( short ) 1, ( short ) 1, 0.0001, -12, "ls", true, true );
-            if ( !TestSurfacing.isEqual( X.getScore(), -12 ) ) {
+            final Domain A = new BasicDomain( "A", 1, 2, ( short ) 1, ( short ) 1, 0.15, -12 );
+            final Domain B = new BasicDomain( "B", 1, 2, ( short ) 1, ( short ) 1, 0.2, -12 );
+            final Domain C = new BasicDomain( "C", 1, 2, ( short ) 1, ( short ) 1, 0.3, -12 );
+            final Domain D = new BasicDomain( "D", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12 );
+            final Domain E = new BasicDomain( "E", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12 );
+            final Domain F = new BasicDomain( "F", 1, 2, ( short ) 1, ( short ) 1, 0.01, -12 );
+            final Domain G = new BasicDomain( "G", 1, 2, ( short ) 1, ( short ) 1, 0.001, -12 );
+            final Domain X = new BasicDomain( "X", 1, 2, ( short ) 1, ( short ) 1, 0.0001, -12 );
+            if ( !TestSurfacing.isEqual( X.getPerSequenceScore(), -12 ) ) {
                 return false;
             }
             final Protein mouse_1 = new BasicProtein( "1", "mouse" );
@@ -1078,14 +1057,14 @@ public class TestSurfacing {
 
     private static boolean testBasicDomainSimilarityCalculatorNotIgnoringSpeciesSpeficDomains() {
         try {
-            final Domain A = new BasicDomain( "A", 1, 2, ( short ) 1, ( short ) 1, 0.15, -12, "ls", true, true );
-            final Domain B = new BasicDomain( "B", 1, 2, ( short ) 1, ( short ) 1, 0.2, -12, "ls", true, true );
-            final Domain D = new BasicDomain( "D", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12, "ls", true, true );
-            final Domain E = new BasicDomain( "E", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12, "ls", true, true );
-            final Domain F = new BasicDomain( "F", 1, 2, ( short ) 1, ( short ) 1, 0.01, -12, "ls", true, true );
-            final Domain G = new BasicDomain( "G", 1, 2, ( short ) 1, ( short ) 1, 0.001, -12, "ls", true, true );
-            final Domain X = new BasicDomain( "X", 1, 2, ( short ) 1, ( short ) 1, 0.0001, -12, "ls", true, true );
-            if ( !TestSurfacing.isEqual( X.getScore(), -12 ) ) {
+            final Domain A = new BasicDomain( "A", 1, 2, ( short ) 1, ( short ) 1, 0.15, -12 );
+            final Domain B = new BasicDomain( "B", 1, 2, ( short ) 1, ( short ) 1, 0.2, -12 );
+            final Domain D = new BasicDomain( "D", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12 );
+            final Domain E = new BasicDomain( "E", 1, 2, ( short ) 1, ( short ) 1, 0.5, -12 );
+            final Domain F = new BasicDomain( "F", 1, 2, ( short ) 1, ( short ) 1, 0.01, -12 );
+            final Domain G = new BasicDomain( "G", 1, 2, ( short ) 1, ( short ) 1, 0.001, -12 );
+            final Domain X = new BasicDomain( "X", 1, 2, ( short ) 1, ( short ) 1, 0.0001, -12 );
+            if ( !TestSurfacing.isEqual( X.getPerSequenceScore(), -12 ) ) {
                 return false;
             }
             final Protein mouse_1 = new BasicProtein( "1", "mouse" );
@@ -1204,8 +1183,8 @@ public class TestSurfacing {
 
     private static boolean testBasicDomainSimilarityCalculatorRemovalOfSingles() {
         try {
-            final Domain A = new BasicDomain( "A", 1, 2, ( short ) 1, ( short ) 1, 0.15, -12, "ls", true, true );
-            final Domain B = new BasicDomain( "B", 1, 2, ( short ) 1, ( short ) 1, 0.2, -12, "ls", true, true );
+            final Domain A = new BasicDomain( "A", 1, 2, ( short ) 1, ( short ) 1, 0.15, -12 );
+            final Domain B = new BasicDomain( "B", 1, 2, ( short ) 1, ( short ) 1, 0.2, -12 );
             final Protein mouse_1 = new BasicProtein( "1", "mouse" );
             final Protein rabbit_1 = new BasicProtein( "1", "rabbit" );
             final Protein ciona_1 = new BasicProtein( "1", "ciona" );
@@ -1331,18 +1310,18 @@ public class TestSurfacing {
     private static boolean testBasicProtein() {
         try {
             // A0  A10  B15  A20  B25  A30  B35  B40  C50  A60  C70  D80
-            final Domain A0 = new BasicDomain( "A", 0, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain A10 = new BasicDomain( "A", 10, 11, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain B15 = new BasicDomain( "B", 11, 16, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain A20 = new BasicDomain( "A", 20, 100, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain B25 = new BasicDomain( "B", 25, 26, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain A30 = new BasicDomain( "A", 30, 31, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain B35 = new BasicDomain( "B", 31, 40, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain B40 = new BasicDomain( "B", 40, 600, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain C50 = new BasicDomain( "C", 50, 59, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain A60 = new BasicDomain( "A", 60, 395, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain C70 = new BasicDomain( "C", 70, 71, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain D80 = new BasicDomain( "D", 80, 81, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain A0 = new BasicDomain( "A", 0, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain A10 = new BasicDomain( "A", 10, 11, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain B15 = new BasicDomain( "B", 11, 16, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain A20 = new BasicDomain( "A", 20, 100, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain B25 = new BasicDomain( "B", 25, 26, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain A30 = new BasicDomain( "A", 30, 31, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain B35 = new BasicDomain( "B", 31, 40, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain B40 = new BasicDomain( "B", 40, 600, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain C50 = new BasicDomain( "C", 50, 59, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain A60 = new BasicDomain( "A", 60, 395, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain C70 = new BasicDomain( "C", 70, 71, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain D80 = new BasicDomain( "D", 80, 81, ( short ) 1, ( short ) 4, 0.1, -12 );
             final BasicProtein p = new BasicProtein( "p", "owl" );
             p.addProteinDomain( B15 );
             p.addProteinDomain( C50 );
@@ -1806,10 +1785,10 @@ public class TestSurfacing {
 
     private static boolean testCombinableDomains() {
         try {
-            final Domain key0 = new BasicDomain( "key0", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain key0 = new BasicDomain( "key0", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains cd0 = new BasicCombinableDomains( key0.getDomainId(), new BasicSpecies( "eel" ) );
             cd0.addCombinableDomain( a.getDomainId() );
             cd0.addCombinableDomain( b.getDomainId() );
@@ -1870,10 +1849,10 @@ public class TestSurfacing {
             if ( !cd0.toBinaryDomainCombinations().contains( s4 ) ) {
                 return false;
             }
-            final Domain key1 = new BasicDomain( "key1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain a1 = new BasicDomain( "a1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b1 = new BasicDomain( "b1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c1 = new BasicDomain( "c1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain key1 = new BasicDomain( "key1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain a1 = new BasicDomain( "a1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b1 = new BasicDomain( "b1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c1 = new BasicDomain( "c1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains cd1 = new BasicCombinableDomains( key1.getDomainId(), new BasicSpecies( "eel" ) );
             cd1.addCombinableDomain( a1.getDomainId() );
             cd1.addCombinableDomain( b1.getDomainId() );
@@ -1914,27 +1893,17 @@ public class TestSurfacing {
 
     private static boolean testCombinationsBasedPairwiseSimilarityCalculator() {
         try {
-            final Domain a = new BasicDomain( "A", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "B", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "C", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain one_key = new BasicDomain( "bcl2", 4, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain two_key = new BasicDomain( "bcl2", 5, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain a = new BasicDomain( "A", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "B", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "C", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain one_key = new BasicDomain( "bcl2", 4, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain two_key = new BasicDomain( "bcl2", 5, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains one = new BasicCombinableDomains( one_key.getDomainId(), new BasicSpecies( "mouse" ) );
             final CombinableDomains two = new BasicCombinableDomains( two_key.getDomainId(),
                                                                       new BasicSpecies( "rabbit" ) );
             one.addCombinableDomain( a.getDomainId() );
             one.addCombinableDomain( a.getDomainId() );
-            two
-                    .addCombinableDomain( new BasicDomain( "A",
-                                                           1,
-                                                           5,
-                                                           ( short ) 1,
-                                                           ( short ) 4,
-                                                           0.1,
-                                                           -12,
-                                                           "ls",
-                                                           false,
-                                                           false ).getDomainId() );
+            two.addCombinableDomain( new BasicDomain( "A", 1, 5, ( short ) 1, ( short ) 4, 0.1, -12 ).getDomainId() );
             two.addCombinableDomain( b.getDomainId() );
             two.addCombinableDomain( c.getDomainId() );
             final PairwiseDomainSimilarityCalculator calc = new CombinationsBasedPairwiseDomainSimilarityCalculator();
@@ -1960,9 +1929,9 @@ public class TestSurfacing {
             if ( ( ( CombinationsBasedPairwiseDomainSimilarity ) s2 ).getNumberOfDifferentDomains() != 0 ) {
                 return false;
             }
-            final Domain d = new BasicDomain( "D", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain e = new BasicDomain( "E", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain f = new BasicDomain( "F", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain d = new BasicDomain( "D", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain e = new BasicDomain( "E", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain f = new BasicDomain( "F", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             one.addCombinableDomain( d.getDomainId() );
             one.addCombinableDomain( d.getDomainId() );
             one.addCombinableDomain( e.getDomainId() );
@@ -1977,28 +1946,10 @@ public class TestSurfacing {
             if ( ( ( CombinationsBasedPairwiseDomainSimilarity ) s3 ).getNumberOfDifferentDomains() != 3 ) {
                 return false;
             }
-            final Domain aaa = new BasicDomain( "aaa", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain bbb = new BasicDomain( "bbb", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain three_key = new BasicDomain( "bcl2",
-                                                      23,
-                                                      25,
-                                                      ( short ) 1,
-                                                      ( short ) 4,
-                                                      0.1,
-                                                      -12,
-                                                      "ls",
-                                                      true,
-                                                      true );
-            final Domain four_key = new BasicDomain( "bcl2",
-                                                     23,
-                                                     25,
-                                                     ( short ) 1,
-                                                     ( short ) 4,
-                                                     0.1,
-                                                     -12,
-                                                     "ls",
-                                                     true,
-                                                     true );
+            final Domain aaa = new BasicDomain( "aaa", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain bbb = new BasicDomain( "bbb", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain three_key = new BasicDomain( "bcl2", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain four_key = new BasicDomain( "bcl2", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains three = new BasicCombinableDomains( three_key.getDomainId(),
                                                                         new BasicSpecies( "mouse" ) );
             final CombinableDomains four = new BasicCombinableDomains( four_key.getDomainId(),
@@ -2010,7 +1961,7 @@ public class TestSurfacing {
             if ( !TestSurfacing.isEqual( s4.getSimilarityScore(), 0.0 / ( 0 + 2 ) ) ) {
                 return false;
             }
-            final Domain aaa2 = new BasicDomain( "aaa", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain aaa2 = new BasicDomain( "aaa", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             four.addCombinableDomain( aaa2.getDomainId() );
             final PairwiseDomainSimilarity s5 = calc.calculateSimilarity( three, four );
             if ( !TestSurfacing.isEqual( s5.getSimilarityScore(), 1.0 / ( 1 + 1 ) ) ) {
@@ -2026,8 +1977,8 @@ public class TestSurfacing {
 
     private static boolean testCopyNumberBasedPairwiseSimilarityCalculator() {
         try {
-            final Domain one_key = new BasicDomain( "bcl2", 4, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain two_key = new BasicDomain( "bcl2", 5, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain one_key = new BasicDomain( "bcl2", 4, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain two_key = new BasicDomain( "bcl2", 5, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains one = new BasicCombinableDomains( one_key.getDomainId(), new BasicSpecies( "mouse" ) );
             final CombinableDomains two = new BasicCombinableDomains( two_key.getDomainId(),
                                                                       new BasicSpecies( "rabbit" ) );
@@ -2069,10 +2020,10 @@ public class TestSurfacing {
 
     private static boolean testDirectedCombinableDomains() {
         try {
-            final Domain key0 = new BasicDomain( "key0", 10, 20, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain key0 = new BasicDomain( "key0", 10, 20, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains cd0 = new DirectedCombinableDomains( key0.getDomainId(), new BasicSpecies( "eel" ) );
             cd0.addCombinableDomain( a.getDomainId() );
             cd0.addCombinableDomain( b.getDomainId() );
@@ -2149,10 +2100,10 @@ public class TestSurfacing {
             if ( cd0.toBinaryDomainCombinations().contains( s8 ) ) {
                 return false;
             }
-            final Domain key1 = new BasicDomain( "key1", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain a1 = new BasicDomain( "a1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b1 = new BasicDomain( "b1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c1 = new BasicDomain( "c1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain key1 = new BasicDomain( "key1", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain a1 = new BasicDomain( "a1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b1 = new BasicDomain( "b1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c1 = new BasicDomain( "c1", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final CombinableDomains cd1 = new DirectedCombinableDomains( key1.getDomainId(), new BasicSpecies( "eel" ) );
             cd1.addCombinableDomain( a1.getDomainId() );
             cd1.addCombinableDomain( b1.getDomainId() );
@@ -2204,131 +2155,22 @@ public class TestSurfacing {
             final Protein three_1 = new BasicProtein( "three", "1" );
             final Protein four_1 = new BasicProtein( "four", "1" );
             final Protein five_1 = new BasicProtein( "five", "1" );
-            one_1
-                    .addProteinDomain( new BasicDomain( "B",
-                                                        12,
-                                                        14,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            one_1
-                    .addProteinDomain( new BasicDomain( "C",
-                                                        13,
-                                                        14,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            one_1
-                    .addProteinDomain( new BasicDomain( "A",
-                                                        11,
-                                                        12,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            one_1.addProteinDomain( new BasicDomain( "X",
-                                                     100,
-                                                     110,
-                                                     ( short ) 1,
-                                                     ( short ) 4,
-                                                     0.1,
-                                                     -12,
-                                                     "ls",
-                                                     true,
-                                                     true ) );
-            one_1.addProteinDomain( new BasicDomain( "Y",
-                                                     200,
-                                                     210,
-                                                     ( short ) 1,
-                                                     ( short ) 4,
-                                                     0.1,
-                                                     -12,
-                                                     "ls",
-                                                     true,
-                                                     true ) );
-            two_1
-                    .addProteinDomain( new BasicDomain( "A",
-                                                        10,
-                                                        20,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            two_1
-                    .addProteinDomain( new BasicDomain( "B",
-                                                        30,
-                                                        40,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            two_1.addProteinDomain( new BasicDomain( "Y", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            two_1
-                    .addProteinDomain( new BasicDomain( "X",
-                                                        10,
-                                                        11,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            three_1.addProteinDomain( new BasicDomain( "P",
-                                                       10,
-                                                       11,
-                                                       ( short ) 1,
-                                                       ( short ) 4,
-                                                       0.1,
-                                                       -12,
-                                                       "ls",
-                                                       true,
-                                                       true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "M", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "M", 5, 6, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "N", 7, 8, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "N", 3, 4, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            four_1.addProteinDomain( new BasicDomain( "XX",
-                                                      10,
-                                                      20,
-                                                      ( short ) 1,
-                                                      ( short ) 4,
-                                                      0.1,
-                                                      -12,
-                                                      "ls",
-                                                      true,
-                                                      true ) );
-            five_1.addProteinDomain( new BasicDomain( "YY",
-                                                      30,
-                                                      40,
-                                                      ( short ) 1,
-                                                      ( short ) 4,
-                                                      0.1,
-                                                      -12,
-                                                      "ls",
-                                                      true,
-                                                      true ) );
+            one_1.addProteinDomain( new BasicDomain( "B", 12, 14, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "C", 13, 14, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "A", 11, 12, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "X", 100, 110, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "Y", 200, 210, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "A", 10, 20, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "B", 30, 40, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "Y", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "X", 10, 11, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "P", 10, 11, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "M", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "M", 5, 6, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "N", 7, 8, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "N", 3, 4, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            four_1.addProteinDomain( new BasicDomain( "XX", 10, 20, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            five_1.addProteinDomain( new BasicDomain( "YY", 30, 40, ( short ) 1, ( short ) 4, 0.1, -12 ) );
             final List<Protein> list_1 = new ArrayList<Protein>();
             list_1.add( one_1 );
             list_1.add( two_1 );
@@ -2888,131 +2730,22 @@ public class TestSurfacing {
             final Protein three_1 = new BasicProtein( "three", "1" );
             final Protein four_1 = new BasicProtein( "four", "1" );
             final Protein five_1 = new BasicProtein( "five", "1" );
-            one_1
-                    .addProteinDomain( new BasicDomain( "B",
-                                                        12,
-                                                        14,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            one_1
-                    .addProteinDomain( new BasicDomain( "C",
-                                                        13,
-                                                        14,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            one_1
-                    .addProteinDomain( new BasicDomain( "A",
-                                                        11,
-                                                        12,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            one_1.addProteinDomain( new BasicDomain( "X",
-                                                     100,
-                                                     110,
-                                                     ( short ) 1,
-                                                     ( short ) 4,
-                                                     0.1,
-                                                     -12,
-                                                     "ls",
-                                                     true,
-                                                     true ) );
-            one_1.addProteinDomain( new BasicDomain( "Y",
-                                                     200,
-                                                     210,
-                                                     ( short ) 1,
-                                                     ( short ) 4,
-                                                     0.1,
-                                                     -12,
-                                                     "ls",
-                                                     true,
-                                                     true ) );
-            two_1
-                    .addProteinDomain( new BasicDomain( "A",
-                                                        10,
-                                                        20,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            two_1
-                    .addProteinDomain( new BasicDomain( "B",
-                                                        30,
-                                                        40,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            two_1.addProteinDomain( new BasicDomain( "Y", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            two_1
-                    .addProteinDomain( new BasicDomain( "X",
-                                                        10,
-                                                        11,
-                                                        ( short ) 1,
-                                                        ( short ) 4,
-                                                        0.1,
-                                                        -12,
-                                                        "ls",
-                                                        true,
-                                                        true ) );
-            three_1.addProteinDomain( new BasicDomain( "P",
-                                                       10,
-                                                       11,
-                                                       ( short ) 1,
-                                                       ( short ) 4,
-                                                       0.1,
-                                                       -12,
-                                                       "ls",
-                                                       true,
-                                                       true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "M", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "M", 5, 6, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "N", 7, 8, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            three_1
-                    .addProteinDomain( new BasicDomain( "N", 3, 4, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true ) );
-            four_1.addProteinDomain( new BasicDomain( "XX",
-                                                      10,
-                                                      20,
-                                                      ( short ) 1,
-                                                      ( short ) 4,
-                                                      0.1,
-                                                      -12,
-                                                      "ls",
-                                                      true,
-                                                      true ) );
-            five_1.addProteinDomain( new BasicDomain( "YY",
-                                                      30,
-                                                      40,
-                                                      ( short ) 1,
-                                                      ( short ) 4,
-                                                      0.1,
-                                                      -12,
-                                                      "ls",
-                                                      true,
-                                                      true ) );
+            one_1.addProteinDomain( new BasicDomain( "B", 12, 14, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "C", 13, 14, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "A", 11, 12, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "X", 100, 110, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            one_1.addProteinDomain( new BasicDomain( "Y", 200, 210, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "A", 10, 20, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "B", 30, 40, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "Y", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            two_1.addProteinDomain( new BasicDomain( "X", 10, 11, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "P", 10, 11, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "M", 1, 2, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "M", 5, 6, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "N", 7, 8, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            three_1.addProteinDomain( new BasicDomain( "N", 3, 4, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            four_1.addProteinDomain( new BasicDomain( "XX", 10, 20, ( short ) 1, ( short ) 4, 0.1, -12 ) );
+            five_1.addProteinDomain( new BasicDomain( "YY", 30, 40, ( short ) 1, ( short ) 4, 0.1, -12 ) );
             final List<Protein> list_1 = new ArrayList<Protein>();
             list_1.add( one_1 );
             list_1.add( two_1 );
@@ -3143,20 +2876,20 @@ public class TestSurfacing {
 
     private static boolean testDomainArchitectureBasedGenomeSimilarityCalculator() {
         try {
-            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain d = new BasicDomain( "d", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain e = new BasicDomain( "e", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain f = new BasicDomain( "f", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain g = new BasicDomain( "g", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain h = new BasicDomain( "h", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain i = new BasicDomain( "i", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain j = new BasicDomain( "j", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain k = new BasicDomain( "k", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain l = new BasicDomain( "l", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain m = new BasicDomain( "m", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain n = new BasicDomain( "n", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain d = new BasicDomain( "d", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain e = new BasicDomain( "e", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain f = new BasicDomain( "f", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain g = new BasicDomain( "g", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain h = new BasicDomain( "h", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain i = new BasicDomain( "i", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain j = new BasicDomain( "j", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain k = new BasicDomain( "k", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain l = new BasicDomain( "l", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain m = new BasicDomain( "m", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain n = new BasicDomain( "n", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final Protein eel_0 = new BasicProtein( "0", "eel" );
             final Protein eel_1 = new BasicProtein( "1", "eel" );
             final Protein eel_2 = new BasicProtein( "2", "eel" );
@@ -3705,12 +3438,12 @@ public class TestSurfacing {
             if ( !isEqual( calc_i.calculateSharedDomainsBasedGenomeSimilarityScore(), 1.0 - ( 14.0 - 4.0 ) / 14.0 ) ) {
                 return false;
             }
-            final Domain u = new BasicDomain( "u", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain v = new BasicDomain( "v", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain w = new BasicDomain( "w", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain x = new BasicDomain( "x", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain y = new BasicDomain( "y", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain z = new BasicDomain( "z", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain u = new BasicDomain( "u", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain v = new BasicDomain( "v", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain w = new BasicDomain( "w", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain x = new BasicDomain( "x", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain y = new BasicDomain( "y", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain z = new BasicDomain( "z", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final Protein a_0 = new BasicProtein( "0", "a" );
             final Protein a_1 = new BasicProtein( "1", "a" );
             final Protein a_2 = new BasicProtein( "2", "a" );
@@ -4676,156 +4409,27 @@ public class TestSurfacing {
 
     private static boolean testDomainSorting() {
         try {
-            final Domain A = new BasicDomain( "A",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.1,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain B = new BasicDomain( "B",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.1,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain C = new BasicDomain( "C",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.2,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain D = new BasicDomain( "D",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.3,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain E = new BasicDomain( "E",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.4,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain F = new BasicDomain( "F",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.5,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain G = new BasicDomain( "G",
-                                              ( short ) 1,
-                                              ( short ) 2,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.6,
-                                              -12,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain H1 = new BasicDomain( "H",
-                                               ( short ) 100,
-                                               ( short ) 200,
-                                               ( short ) 1,
-                                               ( short ) 5,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain H2 = new BasicDomain( "H",
-                                               ( short ) 300,
-                                               ( short ) 400,
-                                               ( short ) 2,
-                                               ( short ) 5,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain H3 = new BasicDomain( "H",
-                                               ( short ) 500,
-                                               ( short ) 600,
-                                               ( short ) 3,
-                                               ( short ) 5,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain H4 = new BasicDomain( "H",
-                                               ( short ) 700,
-                                               ( short ) 800,
-                                               ( short ) 4,
-                                               ( short ) 5,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain H5 = new BasicDomain( "H",
-                                               ( short ) 700,
-                                               ( short ) 800,
-                                               ( short ) 5,
-                                               ( short ) 5,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
+            final Domain A = new BasicDomain( "A", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.1, -12 );
+            final Domain B = new BasicDomain( "B", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.1, -12 );
+            final Domain C = new BasicDomain( "C", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.2, -12 );
+            final Domain D = new BasicDomain( "D", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.3, -12 );
+            final Domain E = new BasicDomain( "E", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.4, -12 );
+            final Domain F = new BasicDomain( "F", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.5, -12 );
+            final Domain G = new BasicDomain( "G", ( short ) 1, ( short ) 2, ( short ) 1, ( short ) 1, 0.6, -12 );
+            final Domain H1 = new BasicDomain( "H", ( short ) 100, ( short ) 200, ( short ) 1, ( short ) 5, 0.7, -12 );
+            final Domain H2 = new BasicDomain( "H", ( short ) 300, ( short ) 400, ( short ) 2, ( short ) 5, 0.7, -12 );
+            final Domain H3 = new BasicDomain( "H", ( short ) 500, ( short ) 600, ( short ) 3, ( short ) 5, 0.7, -12 );
+            final Domain H4 = new BasicDomain( "H", ( short ) 700, ( short ) 800, ( short ) 4, ( short ) 5, 0.7, -12 );
+            final Domain H5 = new BasicDomain( "H", ( short ) 700, ( short ) 800, ( short ) 5, ( short ) 5, 0.7, -12 );
             final Domain H6 = new BasicDomain( "H",
                                                ( short ) 1199,
                                                ( short ) 1299,
                                                ( short ) 6,
                                                ( short ) 6,
                                                0.7,
-                                               -0.111,
-                                               "fs",
-                                               false,
-                                               false );
-            final Domain H7 = new BasicDomain( "H7",
-                                               ( short ) 700,
-                                               ( short ) 800,
-                                               ( short ) 5,
-                                               ( short ) 5,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain H8 = new BasicDomain( "H7",
-                                               ( short ) 700,
-                                               ( short ) 800,
-                                               ( short ) 5,
-                                               ( short ) 200,
-                                               0.7,
-                                               -12,
-                                               "ls",
-                                               true,
-                                               true );
+                                               -0.111 );
+            final Domain H7 = new BasicDomain( "H7", ( short ) 700, ( short ) 800, ( short ) 5, ( short ) 5, 0.7, -12 );
+            final Domain H8 = new BasicDomain( "H7", ( short ) 700, ( short ) 800, ( short ) 5, ( short ) 200, 0.7, -12 );
             final Protein protein = new BasicProtein( "00", "bat" );
             protein.addProteinDomain( H5 );
             protein.addProteinDomain( H2 );
@@ -4968,13 +4572,13 @@ public class TestSurfacing {
 
     private static boolean testEngulfingOverlapRemoval() {
         try {
-            final Domain d0 = new BasicDomain( "d0", 0, 8, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain d1 = new BasicDomain( "d1", 0, 1, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain d2 = new BasicDomain( "d2", 0, 2, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain d3 = new BasicDomain( "d3", 7, 8, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain d4 = new BasicDomain( "d4", 7, 9, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain d5 = new BasicDomain( "d4", 0, 9, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain d6 = new BasicDomain( "d4", 4, 5, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
+            final Domain d0 = new BasicDomain( "d0", 0, 8, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d1 = new BasicDomain( "d1", 0, 1, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d2 = new BasicDomain( "d2", 0, 2, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d3 = new BasicDomain( "d3", 7, 8, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d4 = new BasicDomain( "d4", 7, 9, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d5 = new BasicDomain( "d4", 0, 9, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d6 = new BasicDomain( "d4", 4, 5, ( short ) 1, ( short ) 1, 0.1, 1 );
             final List<Boolean> covered = new ArrayList<Boolean>();
             covered.add( true ); // 0
             covered.add( false ); // 1
@@ -5006,9 +4610,9 @@ public class TestSurfacing {
             if ( !SurfacingUtil.isEngulfed( d6, covered ) ) {
                 return false;
             }
-            final Domain a = new BasicDomain( "a", 0, 10, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain b = new BasicDomain( "b", 8, 20, ( short ) 1, ( short ) 1, 0.2, 1, "ls", true, true );
-            final Domain c = new BasicDomain( "c", 15, 16, ( short ) 1, ( short ) 1, 0.3, 1, "ls", true, true );
+            final Domain a = new BasicDomain( "a", 0, 10, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain b = new BasicDomain( "b", 8, 20, ( short ) 1, ( short ) 1, 0.2, 1 );
+            final Domain c = new BasicDomain( "c", 15, 16, ( short ) 1, ( short ) 1, 0.3, 1 );
             final Protein abc = new BasicProtein( "abc", "nemve" );
             abc.addProteinDomain( a );
             abc.addProteinDomain( b );
@@ -5030,9 +4634,9 @@ public class TestSurfacing {
             if ( !abc_r2.getProteinDomain( 1 ).getDomainId().getId().equals( "b" ) ) {
                 return false;
             }
-            final Domain d = new BasicDomain( "d", 0, 10, ( short ) 1, ( short ) 1, 0.1, 1, "ls", true, true );
-            final Domain e = new BasicDomain( "e", 8, 20, ( short ) 1, ( short ) 1, 0.3, 1, "ls", true, true );
-            final Domain f = new BasicDomain( "f", 15, 16, ( short ) 1, ( short ) 1, 0.2, 1, "ls", true, true );
+            final Domain d = new BasicDomain( "d", 0, 10, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain e = new BasicDomain( "e", 8, 20, ( short ) 1, ( short ) 1, 0.3, 1 );
+            final Domain f = new BasicDomain( "f", 15, 16, ( short ) 1, ( short ) 1, 0.2, 1 );
             final Protein def = new BasicProtein( "def", "nemve" );
             def.addProteinDomain( d );
             def.addProteinDomain( e );
@@ -5067,15 +4671,15 @@ public class TestSurfacing {
 
     private static boolean testGenomeWideCombinableDomains() {
         try {
-            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain d = new BasicDomain( "d", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain e = new BasicDomain( "e", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain f = new BasicDomain( "f", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain g = new BasicDomain( "g", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain h = new BasicDomain( "h", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain x = new BasicDomain( "x", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain a = new BasicDomain( "a", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "b", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "c", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain d = new BasicDomain( "d", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain e = new BasicDomain( "e", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain f = new BasicDomain( "f", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain g = new BasicDomain( "g", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain h = new BasicDomain( "h", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain x = new BasicDomain( "x", 23, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             final Protein eel_0 = new BasicProtein( "0", "eel" );
             final Protein eel_1 = new BasicProtein( "1", "eel" );
             final Protein eel_2 = new BasicProtein( "2", "eel" );
@@ -5498,19 +5102,10 @@ public class TestSurfacing {
             if ( uba_domain.getTo() != 57 ) {
                 return false;
             }
-            if ( uba_domain.getLength() != 42 ) {
+            if ( !Test.isEqual( uba_domain.getPerSequenceEvalue(), 0.00084 ) ) {
                 return false;
             }
-            if ( !Test.isEqual( uba_domain.getConfidence(), 0.00084 ) ) {
-                return false;
-            }
-            if ( !Test.isEqual( uba_domain.getScore(), 23.2 ) ) {
-                return false;
-            }
-            if ( !uba_domain.getSearchParameter().equals( "ls" ) ) {
-                return false;
-            }
-            if ( !uba_domain.isCompleteTargetMatch() ) {
+            if ( !Test.isEqual( uba_domain.getPerSequenceScore(), 23.2 ) ) {
                 return false;
             }
             final HmmPfamOutputParser parser2 = new HmmPfamOutputParser( new File( test_dir
@@ -5538,7 +5133,7 @@ public class TestSurfacing {
             if ( domain_collections2.size() != 1 ) {
                 return false;
             }
-            final Protein pdc2 = ( Protein ) domain_collections2.get( 0 );
+            final Protein pdc2 = domain_collections2.get( 0 );
             if ( !pdc2.getProteinId().getId().equals( "ENSP00000285681" ) ) {
                 return false;
             }
@@ -5594,16 +5189,7 @@ public class TestSurfacing {
             if ( uba_domain2.getTo() != 57 ) {
                 return false;
             }
-            if ( uba_domain.getLength() != 42 ) {
-                return false;
-            }
-            if ( !Test.isEqual( uba_domain2.getConfidence(), 0.00084 ) ) {
-                return false;
-            }
-            if ( !uba_domain2.getSearchParameter().equals( "ls" ) ) {
-                return false;
-            }
-            if ( !uba_domain2.isCompleteTargetMatch() ) {
+            if ( !Test.isEqual( uba_domain2.getPerSequenceEvalue(), 0.00084 ) ) {
                 return false;
             }
         }
@@ -5816,56 +5402,11 @@ public class TestSurfacing {
 
     private static boolean testOverlapRemoval() {
         try {
-            final Domain d0 = new BasicDomain( "d0",
-                                               ( short ) 2,
-                                               ( short ) 5,
-                                               ( short ) 1,
-                                               ( short ) 1,
-                                               0.1,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain d1 = new BasicDomain( "d1",
-                                               ( short ) 7,
-                                               ( short ) 10,
-                                               ( short ) 1,
-                                               ( short ) 1,
-                                               0.1,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain d2 = new BasicDomain( "d2",
-                                               ( short ) 0,
-                                               ( short ) 20,
-                                               ( short ) 1,
-                                               ( short ) 1,
-                                               0.1,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain d3 = new BasicDomain( "d3",
-                                               ( short ) 9,
-                                               ( short ) 10,
-                                               ( short ) 1,
-                                               ( short ) 1,
-                                               0.1,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain d4 = new BasicDomain( "d4",
-                                               ( short ) 7,
-                                               ( short ) 8,
-                                               ( short ) 1,
-                                               ( short ) 1,
-                                               0.1,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
+            final Domain d0 = new BasicDomain( "d0", ( short ) 2, ( short ) 5, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d1 = new BasicDomain( "d1", ( short ) 7, ( short ) 10, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d2 = new BasicDomain( "d2", ( short ) 0, ( short ) 20, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d3 = new BasicDomain( "d3", ( short ) 9, ( short ) 10, ( short ) 1, ( short ) 1, 0.1, 1 );
+            final Domain d4 = new BasicDomain( "d4", ( short ) 7, ( short ) 8, ( short ) 1, ( short ) 1, 0.1, 1 );
             final List<Boolean> covered = new ArrayList<Boolean>();
             covered.add( true ); // 0
             covered.add( false ); // 1
@@ -5891,26 +5432,8 @@ public class TestSurfacing {
             if ( SurfacingUtil.calculateOverlap( d4, covered ) != 2 ) {
                 return false;
             }
-            final Domain a = new BasicDomain( "a",
-                                              ( short ) 2,
-                                              ( short ) 5,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.01,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain b = new BasicDomain( "b",
-                                              ( short ) 2,
-                                              ( short ) 10,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.1,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
+            final Domain a = new BasicDomain( "a", ( short ) 2, ( short ) 5, ( short ) 1, ( short ) 1, 0.01, 1 );
+            final Domain b = new BasicDomain( "b", ( short ) 2, ( short ) 10, ( short ) 1, ( short ) 1, 0.1, 1 );
             final Protein ab = new BasicProtein( "ab", "varanus" );
             ab.addProteinDomain( a );
             ab.addProteinDomain( b );
@@ -5931,36 +5454,15 @@ public class TestSurfacing {
             if ( ab_s1.getNumberOfProteinDomains() != 2 ) {
                 return false;
             }
-            final Domain c = new BasicDomain( "c",
-                                              ( short ) 20000,
-                                              ( short ) 20500,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              10,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
+            final Domain c = new BasicDomain( "c", ( short ) 20000, ( short ) 20500, ( short ) 1, ( short ) 1, 10, 1 );
             final Domain d = new BasicDomain( "d",
                                               ( short ) 10000,
                                               ( short ) 10500,
                                               ( short ) 1,
                                               ( short ) 1,
                                               0.0000001,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain e = new BasicDomain( "e",
-                                              ( short ) 5000,
-                                              ( short ) 5500,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.0001,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
+                                              1 );
+            final Domain e = new BasicDomain( "e", ( short ) 5000, ( short ) 5500, ( short ) 1, ( short ) 1, 0.0001, 1 );
             final Protein cde = new BasicProtein( "cde", "varanus" );
             cde.addProteinDomain( c );
             cde.addProteinDomain( d );
@@ -5972,56 +5474,11 @@ public class TestSurfacing {
             if ( cde_s0.getNumberOfProteinDomains() != 3 ) {
                 return false;
             }
-            final Domain f = new BasicDomain( "f",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              10,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain g = new BasicDomain( "g",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.01,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain h = new BasicDomain( "h",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.0001,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain i = new BasicDomain( "i",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.5,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain i2 = new BasicDomain( "i",
-                                               ( short ) 5,
-                                               ( short ) 30,
-                                               ( short ) 1,
-                                               ( short ) 1,
-                                               0.5,
-                                               10,
-                                               "fs",
-                                               false,
-                                               false );
+            final Domain f = new BasicDomain( "f", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 10, 1 );
+            final Domain g = new BasicDomain( "g", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 0.01, 1 );
+            final Domain h = new BasicDomain( "h", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 0.0001, 1 );
+            final Domain i = new BasicDomain( "i", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 0.5, 1 );
+            final Domain i2 = new BasicDomain( "i", ( short ) 5, ( short ) 30, ( short ) 1, ( short ) 1, 0.5, 10 );
             final Protein fghi = new BasicProtein( "fghi", "varanus" );
             fghi.addProteinDomain( f );
             fghi.addProteinDomain( g );
@@ -6047,76 +5504,13 @@ public class TestSurfacing {
             if ( fghi_s1.getNumberOfProteinDomains() != 7 ) {
                 return false;
             }
-            final Domain j = new BasicDomain( "j",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              10,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain k = new BasicDomain( "k",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.01,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain l = new BasicDomain( "l",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 1,
-                                              0.0001,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain m = new BasicDomain( "m",
-                                              ( short ) 10,
-                                              ( short ) 20,
-                                              ( short ) 1,
-                                              ( short ) 4,
-                                              0.5,
-                                              1,
-                                              "ls",
-                                              true,
-                                              true );
-            final Domain m0 = new BasicDomain( "m",
-                                               ( short ) 10,
-                                               ( short ) 20,
-                                               ( short ) 2,
-                                               ( short ) 4,
-                                               0.5,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain m1 = new BasicDomain( "m",
-                                               ( short ) 10,
-                                               ( short ) 20,
-                                               ( short ) 3,
-                                               ( short ) 4,
-                                               0.5,
-                                               1,
-                                               "ls",
-                                               true,
-                                               true );
-            final Domain m2 = new BasicDomain( "m",
-                                               ( short ) 5,
-                                               ( short ) 30,
-                                               ( short ) 4,
-                                               ( short ) 4,
-                                               0.5,
-                                               10,
-                                               "fs",
-                                               false,
-                                               false );
+            final Domain j = new BasicDomain( "j", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 10, 1 );
+            final Domain k = new BasicDomain( "k", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 0.01, 1 );
+            final Domain l = new BasicDomain( "l", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 1, 0.0001, 1 );
+            final Domain m = new BasicDomain( "m", ( short ) 10, ( short ) 20, ( short ) 1, ( short ) 4, 0.5, 1 );
+            final Domain m0 = new BasicDomain( "m", ( short ) 10, ( short ) 20, ( short ) 2, ( short ) 4, 0.5, 1 );
+            final Domain m1 = new BasicDomain( "m", ( short ) 10, ( short ) 20, ( short ) 3, ( short ) 4, 0.5, 1 );
+            final Domain m2 = new BasicDomain( "m", ( short ) 5, ( short ) 30, ( short ) 4, ( short ) 4, 0.5, 10 );
             final Protein jklm = new BasicProtein( "jklm", "varanus" );
             jklm.addProteinDomain( j );
             jklm.addProteinDomain( k );
@@ -6142,16 +5536,7 @@ public class TestSurfacing {
             if ( jklm_s1.getNumberOfProteinDomains() != 7 ) {
                 return false;
             }
-            final Domain only = new BasicDomain( "only",
-                                                 ( short ) 5,
-                                                 ( short ) 30,
-                                                 ( short ) 4,
-                                                 ( short ) 4,
-                                                 0.5,
-                                                 10,
-                                                 "fs",
-                                                 false,
-                                                 false );
+            final Domain only = new BasicDomain( "only", ( short ) 5, ( short ) 30, ( short ) 4, ( short ) 4, 0.5, 10 );
             final Protein od = new BasicProtein( "od", "varanus" );
             od.addProteinDomain( only );
             final Protein od_s0 = SurfacingUtil.removeOverlappingDomains( 0, false, od );
@@ -6177,23 +5562,23 @@ public class TestSurfacing {
             final GainLossStates L = GainLossStates.LOSS;
             final GainLossStates A = GainLossStates.UNCHANGED_ABSENT;
             final GainLossStates P = GainLossStates.UNCHANGED_PRESENT;
-            final Domain a = new BasicDomain( "A", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "B", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "C", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain d = new BasicDomain( "D", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain e = new BasicDomain( "E", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain f = new BasicDomain( "F", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain g = new BasicDomain( "G", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain h = new BasicDomain( "H", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain i = new BasicDomain( "I", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain j = new BasicDomain( "J", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain l = new BasicDomain( "L", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain m = new BasicDomain( "M", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain n = new BasicDomain( "N", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain o = new BasicDomain( "O", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain p = new BasicDomain( "P", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain q = new BasicDomain( "Q", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain r = new BasicDomain( "R", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain a = new BasicDomain( "A", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "B", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "C", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain d = new BasicDomain( "D", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain e = new BasicDomain( "E", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain f = new BasicDomain( "F", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain g = new BasicDomain( "G", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain h = new BasicDomain( "H", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain i = new BasicDomain( "I", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain j = new BasicDomain( "J", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain l = new BasicDomain( "L", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain m = new BasicDomain( "M", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain n = new BasicDomain( "N", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain o = new BasicDomain( "O", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain p = new BasicDomain( "P", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain q = new BasicDomain( "Q", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain r = new BasicDomain( "R", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             // 1 a-a a-b a-c e-f-g-h l-m
             // 2 a-b a-c e-f-g-i n-o
             // 3 a-b a-d e-f-g-j p-q
@@ -6460,23 +5845,23 @@ public class TestSurfacing {
             final GainLossStates L = GainLossStates.LOSS;
             final GainLossStates A = GainLossStates.UNCHANGED_ABSENT;
             final GainLossStates P = GainLossStates.UNCHANGED_PRESENT;
-            final Domain a = new BasicDomain( "A", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain b = new BasicDomain( "B", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain c = new BasicDomain( "C", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain d = new BasicDomain( "D", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain e = new BasicDomain( "E", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain f = new BasicDomain( "F", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain g = new BasicDomain( "G", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain h = new BasicDomain( "H", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain i = new BasicDomain( "I", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain j = new BasicDomain( "J", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain l = new BasicDomain( "L", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain m = new BasicDomain( "M", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain n = new BasicDomain( "N", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain o = new BasicDomain( "O", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain p = new BasicDomain( "P", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain q = new BasicDomain( "Q", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
-            final Domain r = new BasicDomain( "R", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12, "ls", true, true );
+            final Domain a = new BasicDomain( "A", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain b = new BasicDomain( "B", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain c = new BasicDomain( "C", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain d = new BasicDomain( "D", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain e = new BasicDomain( "E", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain f = new BasicDomain( "F", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain g = new BasicDomain( "G", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain h = new BasicDomain( "H", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain i = new BasicDomain( "I", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain j = new BasicDomain( "J", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain l = new BasicDomain( "L", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain m = new BasicDomain( "M", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain n = new BasicDomain( "N", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain o = new BasicDomain( "O", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain p = new BasicDomain( "P", 1, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain q = new BasicDomain( "Q", 2, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
+            final Domain r = new BasicDomain( "R", 3, 25, ( short ) 1, ( short ) 4, 0.1, -12 );
             // 1 a-a a-b a-c e-f-g-h l-m
             // 2 a-b a-c e-f-g-i n-o
             // 3 a-b a-d e-f-g-j p-q

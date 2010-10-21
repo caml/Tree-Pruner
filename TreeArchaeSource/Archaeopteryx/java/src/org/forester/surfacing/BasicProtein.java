@@ -1,4 +1,4 @@
-// $Id: BasicProtein.java,v 1.6 2008/08/19 21:34:23 cmzmasek Exp $
+// $Id: BasicProtein.java,v 1.7 2009/10/26 23:29:40 cmzmasek Exp $
 //
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
@@ -51,6 +51,19 @@ public class BasicProtein implements Protein {
         getProteinDomains().add( protein_domain );
     }
 
+    @Override
+    /**
+     * If in_nc_order is set to true, this returns true only and only if
+     * the order in List 'domains' and this protein (as determined by the start positions
+     * of the domains of this proteins, _not_ by their index) are the same
+     * (interspersing, 'other', domains in this are ignored). 
+     * If in_nc_order is set to false, this returns true only and only if
+     * this contains all domains listed in 'domains' (order and count do not matter).
+     * 
+     * @param domains a list of domain ids in a certain order.
+     * @param in_nc_order to consider order
+     * @return
+     */
     public boolean contains( final List<DomainId> query_domain_ids, final boolean in_nc_order ) {
         if ( !in_nc_order ) {
             for( final DomainId query_domain_id : query_domain_ids ) {
@@ -85,14 +98,17 @@ public class BasicProtein implements Protein {
         }
     }
 
+    @Override
     public String getAccession() {
         return _accession;
     }
 
+    @Override
     public String getDescription() {
         return _desc;
     }
 
+    @Override
     public String getName() {
         return _name;
     }
@@ -107,6 +123,14 @@ public class BasicProtein implements Protein {
 
     public int getProteinDomainCount( final DomainId domain_id ) {
         return getProteinDomains( domain_id ).size();
+    }
+
+    private List<DomainId> getProteinDomainIds() {
+        final List<DomainId> ids = new ArrayList<DomainId>( getProteinDomains().size() );
+        for( final Domain domain : getProteinDomains() ) {
+            ids.add( domain.getDomainId() );
+        }
+        return ids;
     }
 
     public List<Domain> getProteinDomains() {
@@ -131,6 +155,12 @@ public class BasicProtein implements Protein {
         return _species;
     }
 
+    private void init() {
+        _desc = "";
+        _accession = "";
+        _name = "";
+    }
+
     public void setAccession( final String accession ) {
         _accession = accession;
     }
@@ -141,19 +171,5 @@ public class BasicProtein implements Protein {
 
     public void setName( final String name ) {
         _name = name;
-    }
-
-    private List<DomainId> getProteinDomainIds() {
-        final List<DomainId> ids = new ArrayList<DomainId>( getProteinDomains().size() );
-        for( final Domain domain : getProteinDomains() ) {
-            ids.add( domain.getDomainId() );
-        }
-        return ids;
-    }
-
-    private void init() {
-        _desc = "";
-        _accession = "";
-        _name = "";
     }
 }

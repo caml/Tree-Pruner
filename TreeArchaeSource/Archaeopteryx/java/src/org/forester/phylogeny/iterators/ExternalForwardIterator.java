@@ -1,4 +1,4 @@
-// $Id: ExternalForwardIterator.java,v 1.12 2009/01/13 19:49:30 cmzmasek Exp $
+// $Id: ExternalForwardIterator.java,v 1.13 2009/10/26 23:29:39 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -58,6 +58,18 @@ public class ExternalForwardIterator implements PhylogenyNodeIterator {
         reset();
     }
 
+    private PhylogenyNode getCurrentNode() {
+        return _current_node;
+    }
+
+    private PhylogenyNode getFirstExtNode() {
+        return _first_ext_node;
+    }
+
+    private PhylogenyNode getLastExtNode() {
+        return _last_ext_node;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -99,18 +111,6 @@ public class ExternalForwardIterator implements PhylogenyNodeIterator {
      */
     public void reset() {
         setCurrentNode( getFirstExtNode() );
-    }
-
-    private PhylogenyNode getCurrentNode() {
-        return _current_node;
-    }
-
-    private PhylogenyNode getFirstExtNode() {
-        return _first_ext_node;
-    }
-
-    private PhylogenyNode getLastExtNode() {
-        return _last_ext_node;
     }
 
     private void setCurrentNode( final PhylogenyNode current_node ) {

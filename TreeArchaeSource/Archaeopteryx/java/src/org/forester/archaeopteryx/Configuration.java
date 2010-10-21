@@ -1,4 +1,4 @@
-// $Id: Configuration.java,v 1.13 2009/03/30 20:23:41 cmzmasek Exp $
+// $Id: Configuration.java,v 1.58 2010/10/04 02:24:33 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -27,10 +27,7 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-/**
- * NOTE - The original file was obtained from SourceForge.net (ATV Version 4.1.04) on 2009.07.02
- *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
- */
+
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -46,83 +43,91 @@ import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
+import org.forester.archaeopteryx.Options.CLADOGRAM_TYPE;
 import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.archaeopteryx.Options.OVERVIEW_PLACEMENT_TYPE;
 import org.forester.archaeopteryx.Options.PHYLOGENY_GRAPHICS_TYPE;
 import org.forester.util.ForesterUtil;
-//******************************************START**********************************************************//
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
-//********************************************END**********************************************************//
 
-//******************************************START CHANGED**********************************************************//
-public class Configuration {
-//final class Configuration {   // final->public - changed
-//********************************************END**********************************************************//
+public final class Configuration {
 
-
-    private static final String             WEB_LINK_KEY                  = "web_link";
-    private static final String             DISPLAY_COLOR_KEY             = "display_color";
-    private static final int                DEPRECATED                    = -2;
-    private boolean                         _native_ui                    = false;
-    private boolean                         _use_tabbed_display           = false;
-    private boolean                         _hide_controls_and_menus      = false;
-    private boolean                         _non_lined_up_cladogram       = false;
-    private SortedMap<String, WebLink>      _weblinks                     = null;
-    private SortedMap<String, Color>        _display_colors               = null;
-    private boolean                         _antialias_screen             = true;
-    private PHYLOGENY_GRAPHICS_TYPE         _phylogeny_graphics_type      = PHYLOGENY_GRAPHICS_TYPE.RECTANGULAR;
-    private String                          _base_font_family_name        = "";
-    private int                             _base_font_size               = -1;
-    private int                             _graphics_export_x            = -1;
-    private int                             _graphics_export_y            = -1;
-    private short                           _ov_max_width                 = 60;
-    private short                           _ov_max_height                = 80;
-    private OVERVIEW_PLACEMENT_TYPE         _ov_placement                 = OVERVIEW_PLACEMENT_TYPE.UPPER_LEFT;
-    private double                          _min_confidence_value         = Options.MIN_CONFIDENCE_DEFAULT;
-    private double                          _print_line_width             = Constants.PDF_LINE_WIDTH_DEFAULT;
-    private boolean                         _show_scale                   = false;
-    private boolean                         _show_branch_length_values    = false;
-    private boolean                         _show_overview                = true;
-  //******************************************START**********************************************************//
-    public KeepRemoveConfiguration              keepRemoveConfiguration   = new KeepRemoveConfiguration(this);
-  //********************************************END**********************************************************//
-    final static int                        display_as_phylogram          = 0;
-    final static int                        show_node_names               = 1;
-    final static int                        show_tax_code                 = 2;
-    final static int                        show_annotation               = 3;
-    final static int                        write_confidence_values       = 4;
-    final static int                        write_events                  = 5;
-    final static int                        color_orthologous             = 6;
-    final static int                        color_super_orthologous       = 7;
-    final static int                        color_subtree_neighbors       = 8;
-    final static int                        color_according_to_species    = 9;
-    final static int                        color_branches                = 10;
-    final static int                        width_branches                = 11;
-    final static int                        show_domain_architectures     = 12;
-    final static int                        show_binary_characters        = 13;
-    final static int                        show_binary_character_counts  = 14;
-    final static int                        show_gene_names               = 15;
-    final static int                        show_sequence_acc             = 16;
-    final static int                        display_internal_data         = 17;
-    final static int                        dynamically_hide_data         = 18;
-    final static int                        show_taxonomy_names           = 19;
-    final static int                        color_according_to_annotation = 20;
-    final static int                        show_property                 = 21;
+    static final String                     VALIDATE_AGAINST_PHYLOXML_XSD_SCHEMA                   = "validate_against_phyloxml_xsd_schema";
+    private static final String             WEB_LINK_KEY                                           = "web_link";
+    private static final String             DISPLAY_COLOR_KEY                                      = "display_color";
+    private static final int                DEPRECATED                                             = -2;
+    private TRIPLET                         _native_ui                                             = TRIPLET.FALSE;
+    private boolean                         _use_tabbed_display                                    = false;
+    private boolean                         _hide_controls_and_menus                               = false;
+    private CLADOGRAM_TYPE                  _cladogram_type                                        = Constants.CLADOGRAM_TYPE_DEFAULT;
+    private SortedMap<String, WebLink>      _weblinks                                              = null;
+    private SortedMap<String, Color>        _display_colors                                        = null;
+    private boolean                         _antialias_screen                                      = true;
+    private PHYLOGENY_GRAPHICS_TYPE         _phylogeny_graphics_type                               = PHYLOGENY_GRAPHICS_TYPE.RECTANGULAR;
+    private String                          _base_font_family_name                                 = "";
+    private int                             _base_font_size                                        = -1;
+    private int                             _graphics_export_x                                     = -1;
+    private int                             _graphics_export_y                                     = -1;
+    private short                           _ov_max_width                                          = 80;
+    private short                           _ov_max_height                                         = 80;
+    private OVERVIEW_PLACEMENT_TYPE         _ov_placement                                          = OVERVIEW_PLACEMENT_TYPE.UPPER_LEFT;
+    private double                          _min_confidence_value                                  = Options.MIN_CONFIDENCE_DEFAULT;
+    private float                           _print_line_width                                      = Constants.PDF_LINE_WIDTH_DEFAULT;
+    private boolean                         _show_scale                                            = false;
+    private boolean                         _show_branch_length_values                             = false;
+    private boolean                         _show_overview                                         = true;
+    private short                           _number_of_digits_after_comma_for_confidence_values    = Constants.NUMBER_OF_DIGITS_AFTER_COMMA_FOR_CONFIDENCE_VALUES_DEFAULT;
+    private short                           _number_of_digits_after_comma_for_branch_length_values = Constants.NUMBER_OF_DIGITS_AFTER_COMMA_FOR_BRANCH_LENGTH_VALUES_DEFAULT;
+    private boolean                         _editable                                              = true;
+    private boolean                         _nh_parsing_replace_underscores                        = false;
+    private boolean                         _nh_parsing_extract_pfam_taxonomy_codes                = false;
+    private boolean                         _internal_number_are_confidence_for_nh_parsing         = false;
+    private boolean                         _display_sequence_relations                            = false;
+    private boolean                         _validate_against_phyloxml_xsd_schema                  = Constants.VALIDATE_AGAINST_PHYLOXML_XSD_SCJEMA_DEFAULT;
+    private boolean                         _background_color_gradient                             = false;
+    private boolean                         _show_domain_labels                                    = true;
+    private boolean                         _color_labels_same_as_parent_branch                    = false;
+    private int                             _default_bootstrap_samples                             = -1;
+    final static int                        display_as_phylogram                                   = 0;
+    final static int                        show_node_names                                        = 1;
+    final static int                        show_tax_code                                          = 2;
+    final static int                        show_annotation                                        = 3;
+    final static int                        write_confidence_values                                = 4;
+    final static int                        write_events                                           = 5;
+    final static int                        color_according_to_species                             = 6;
+    final static int                        color_branches                                         = 7;
+    final static int                        width_branches                                         = 8;
+    final static int                        show_domain_architectures                              = 9;
+    final static int                        show_binary_characters                                 = 10;
+    final static int                        show_binary_character_counts                           = 11;
+    final static int                        show_gene_names                                        = 12;
+    final static int                        show_sequence_acc                                      = 13;
+    final static int                        display_internal_data                                  = 14;
+    final static int                        dynamically_hide_data                                  = 15;
+    final static int                        show_taxonomy_scientific_names                         = 16;
+    final static int                        show_taxonomy_common_names                             = 17;
+    final static int                        color_according_to_annotation                          = 18;
+    final static int                        show_property                                          = 19;
+    final static int                        show_gene_symbols                                      = 20;
+    final static int                        node_data_popup                                        = 21;
+    final static int                        show_relation_confidence                               = 22;
     // ------------------
     // Click-to options
     // ------------------
-    final static int                        display_node_data             = 0;
-    final static int                        collapse_uncollapse           = 1;
-    final static int                        reroot                        = 2;
-    final static int                        subtree                       = 3;
-    final static int                        swap                          = 4;
-    final static int                        color_subtree                 = 5;
-  //******************************************START CHANGED**********************************************************//
-    final static int                        open_seq_web                  = 8;	//change this to higer number if TreeDecorator
-    final static int                        open_tax_web                  = 9;  //demands for it
-  //********************************************END**********************************************************//
-  
+    final static int                        display_node_data                                      = 0;
+    final static int                        collapse_uncollapse                                    = 1;
+    final static int                        reroot                                                 = 2;
+    final static int                        subtree                                                = 3;
+    final static int                        swap                                                   = 4;
+    final static int                        color_subtree                                          = 5;
+    final static int                        open_seq_web                                           = 6;
+    final static int                        open_tax_web                                           = 7;
+    final static int                        cut_subtree                                            = 8;
+    final static int                        copy_subtree                                           = 9;
+    final static int                        paste_subtree                                          = 10;
+    final static int                        delete_subtree_or_node                                 = 11;
+    final static int                        add_new_node                                           = 12;
+    final static int                        edit_node_data                                         = 13;
+    final static int                        blast                                                  = 14;
     // ---------------------------
     // Display options for trees
     // ---------------------------
@@ -131,32 +136,27 @@ public class Configuration {
     // ---------------------------------
     // Full path to config (may be URL)
     String                                  config_filename;
-    String                                  default_config_filename       = Constants.DEFAULT_CONFIGURATION_FILE_NAME;
-    String                                  display_options[][]           = { { "Phylogram", "display", "?" },
-            { "Node Name", "display", "yes" }, { "Taxonomy Code", "display", "yes" },
+    String                                  default_config_filename                                = Constants.DEFAULT_CONFIGURATION_FILE_NAME;
+    final static String                     display_options[][]                                    = {
+            { "Phylogram", "display", "?" }, { "Node Name", "display", "yes" }, { "Taxonomy Code", "display", "yes" },
             { "Annotation", "nodisplay", "no" }, { "Confidence Value", "display", "?" }, { "Event", "display", "?" },
-            { "Orthology", "nodisplay", "no" }, { "S-Orthology", "nodisplay", "no" },
-            { "Subtr-Neighbors", "nodisplay", "no" }, { "Taxonomy colorize", "display", "yes" },
-            { "Colorize Branches", "display", "no" }, { "Use Branch-Width", "nodisplay", "no" },
-            { "Domain Architectures", "nodisplay", "no" }, { "Binary Characters", "nodisplay", "no" },
-            { "Binary Char Counts", "nodisplay", "no" }, { "Protein/Gene Name", "display", "no" },
-            { "Protein/Gene Acc", "display", "no" }, { "Show Internal Data", "display", "yes" },
-            { "Dynamic Hiding", "display", "yes" }, { "Taxonomy Name", "display", "yes" },
-            { "Annotation colorize", "nodisplay", "no" }, { "Property", "nodisplay", "no" } };
-    String                                  clickto_options[][]           = { { "Display Node Data", "display" },
-            { "Collapse/Uncollapse", "display" }, { "Root/Reroot", "display" }, { "Sub/Super Tree", "display" },
-            { "Swap Descendants", "display" }, { "Colorize Subtree", "display" },
-          //******************************************START**********************************************************//
-            {"<html><b>Keep Sequences in Working Set</b></html>", "display"},            //Display or no display depends upon the 
-            {"<html><b>Remove/Restore Sequences from Working Set</b></html>", "display"},  //TreePruner or TreeDecorator AppType. 
-            /**Later on change this to nodisplay if apptype is TreeDecorator from ArchaeA.java
-            Change Number in KeepRemoveConfiguration.java from 6 n 7 for keep and remove to higher number 
-            if TreeDecorator demands it*/
-         //********************************************END**********************************************************//
-            { "Open Sequence Web", "nodisplay" },
-            { "Open Taxonomy Web", "nodisplay" }                    };
+            { "Taxonomy Colorize", "display", "yes" }, { "Colorize Branches", "display", "no" },
+            { "Use Branch-Width", "nodisplay", "no" }, { "Domains", "nodisplay", "no" },
+            { "Binary Characters", "nodisplay", "no" }, { "Binary Char Counts", "nodisplay", "no" },
+            { "Prot/Gene Name", "display", "no" }, { "Prot/Gene Acc", "display", "no" },
+            { "Show Internal Data", "display", "yes" }, { "Dyna Hide", "display", "yes" },
+            { "Taxonomy Scientific", "display", "yes" }, { "Taxonomy Common", "display", "no" },
+            { "Annotation Colorize", "nodisplay", "no" }, { "Property", "nodisplay", "no" },
+            { "Prot/Gene Symbol", "display", "no" }, { "Rollover", "display", "yes" },
+            { "Relation confidence score", "display", "no" }                                      };
+    final static String                     clickto_options[][]                                    = {
+            { "Display Node Data", "display" }, { "Collapse/Uncollapse", "display" }, { "Root/Reroot", "display" },
+            { "Sub/Super Tree", "display" }, { "Swap Descendants", "display" }, { "Colorize Subtree", "display" },
+            { "Open Sequence Web", "nodisplay" }, { "Open Taxonomy Web", "nodisplay" }, { "Cut Subtree", "display" },
+            { "Copy Subtree", "display" }, { "Paste Subtree", "display" }, { "Delete Subtree/Node", "display" },
+            { "Add New Node", "display" }, { "Edit Node Data", "display" }, { "Blast", "display" } };
     // This option is selected in the dropdown
-    int                                     default_clickto               = Configuration.display_node_data;
+    int                                     default_clickto                                        = Configuration.display_node_data;
     // --------------
     // Color set
     // --------------
@@ -177,9 +177,20 @@ public class Configuration {
     // Function colors
     // ----------------
     private static Hashtable<String, Color> _annotation_colors;
-    boolean                                 verbose                       = Constants.VERBOSE_DEFAULT;
-    private NODE_LABEL_DIRECTION            _node_label_direction         = NODE_LABEL_DIRECTION.HORIZONTAL;
-    private static String                   DEFAULT_FONT_FAMILY           = "";
+    boolean                                 verbose                                                = Constants.VERBOSE_DEFAULT;
+    private NODE_LABEL_DIRECTION            _node_label_direction                                  = NODE_LABEL_DIRECTION.HORIZONTAL;
+    private TRIPLET                         _use_native_ui;
+    private Color                           _gui_background_color                                  = Constants.GUI_BACKGROUND_DEFAULT;
+    private Color                           _gui_checkbox_text_color                               = Constants.CHECKBOX_TEXT_COLOR_DEFAULT;
+    private Color                           _gui_checkbox_and_button_active_color                  = Constants.CHECKBOX_AND_BUTTON_ACTIVE_COLOR_DEFAULT;
+    private Color                           _gui_button_text_color                                 = Constants.BUTTON_TEXT_COLOR_DEFAULT;
+    private Color                           _gui_button_background_color                           = Constants.BUTTON_BACKGROUND_COLOR_DEFAULT;
+    private Color                           _gui_menu_background_color                             = Constants.MENU_BACKGROUND_COLOR_DEFAULT;
+    private Color                           _gui_menu_text_color                                   = Constants.MENU_TEXT_COLOR_DEFAULT;
+    private Color                           _gui_button_border_color                               = Constants.BUTTON_BORDER_COLOR_DEFAULT;
+    private Color                           _domain_structure_font_color                           = Constants.DOMAIN_STRUCTURE_FONT_COLOR_DEFAULT;
+    private Color                           _domain_structure_base_color                           = Constants.DOMAIN_STRUCTURE_BASE_COLOR_DEFAULT;
+    private static String                   DEFAULT_FONT_FAMILY                                    = "";
     static {
         for( final String font_name : Constants.DEFAULT_FONT_CHOICES ) {
             if ( Arrays.binarySearch( Util.getAvailableFontFamiliesSorted(), font_name ) >= 0 ) {
@@ -249,33 +260,68 @@ public class Configuration {
         }
     }
 
-    public String getBaseFontFamilyName() {
-        return _base_font_family_name;
+    private void createWebLink( final String url_str, final String desc, final String source_identifier ) {
+        WebLink weblink = null;
+        boolean ex = false;
+        try {
+            weblink = new WebLink( new URL( url_str.trim() ), desc.trim(), source_identifier.trim() );
+        }
+        catch ( final MalformedURLException e ) {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not create URL from [" + url_str + "]" );
+            ex = true;
+        }
+        if ( !ex && ( weblink != null ) ) {
+            getWebLinks().put( weblink.getSourceIdentifier().toLowerCase(), weblink );
+        }
+    }
+
+    Color getGuiBackgroundColor() {
+        return _gui_background_color;
+    }
+
+    Color getGuiCheckboxTextColor() {
+        return _gui_checkbox_text_color;
+    }
+
+    Color getGuiCheckboxAndButtonActiveColor() {
+        return _gui_checkbox_and_button_active_color;
+    }
+
+    Color getGuiButtonTextColor() {
+        return _gui_button_text_color;
+    }
+
+    Color getGuiButtonBackgroundColor() {
+        return _gui_button_background_color;
+    }
+
+    Color getGuiMenuBackgroundColor() {
+        return _gui_menu_background_color;
+    }
+
+    Color getGuiMenuTextColor() {
+        return _gui_menu_text_color;
+    }
+
+    Color getGuiButtonBorderColor() {
+        return _gui_button_border_color;
+    }
+
+    boolean displaySequenceRelations() {
+        return _display_sequence_relations;
     }
 
     boolean doCheckOption( final int which ) {
-        return display_options[ which ][ 2 ].equals( "yes" );
+        return ( display_options[ which ][ 2 ].equalsIgnoreCase( "yes" ) )
+                || ( display_options[ which ][ 2 ].equalsIgnoreCase( "true" ) );
     }
 
     boolean doDisplayClickToOption( final int which ) {
-    //******************************************START**********************************************************//
-    	/**
-    	 * Note to programmer: Whatever happens in this method will also affect do_display_clickToOption(final int which){}
-    	 */
-    	if(which == 6 || which == 7){
-    		if(AppletParams.isTreePrunerForAll() ){
-    			clickto_options[which][1] = "display";
-    		}
-    		else{
-    			clickto_options[which][1] = "nodisplay";
-    		}
-    	}
-    //********************************************END**********************************************************//
-        return clickto_options[ which ][ 1 ].equals( "display" );
+        return clickto_options[ which ][ 1 ].equalsIgnoreCase( "display" );
     }
 
     boolean doDisplayOption( final int which ) {
-        return display_options[ which ][ 1 ].equals( "display" );
+        return display_options[ which ][ 1 ].equalsIgnoreCase( "display" );
     }
 
     /**
@@ -294,8 +340,87 @@ public class Configuration {
         return _annotation_colors;
     }
 
+    public String getBaseFontFamilyName() {
+        return _base_font_family_name;
+    }
+
     int getBaseFontSize() {
         return _base_font_size;
+    }
+
+    CLADOGRAM_TYPE getCladogramType() {
+        return _cladogram_type;
+    }
+
+    private int getClickToIndex( final String name ) {
+        int index = -1;
+        if ( name.equals( "edit_info" ) ) {
+            index = Configuration.display_node_data;
+            ForesterUtil
+                    .printWarningMessage( Constants.PRG_NAME,
+                                          "configuration key [edit_info] is deprecated, use [display node data] instead" );
+        }
+        else if ( name.equals( "display_node_data" ) ) {
+            index = Configuration.display_node_data;
+        }
+        else if ( name.equals( "collapse_uncollapse" ) ) {
+            index = Configuration.collapse_uncollapse;
+        }
+        else if ( name.equals( "reroot" ) ) {
+            index = Configuration.reroot;
+        }
+        else if ( name.equals( "subtree" ) ) {
+            index = Configuration.subtree;
+        }
+        else if ( name.equals( "swap" ) ) {
+            index = Configuration.swap;
+        }
+        else if ( name.equals( "display_sequences" ) ) {
+            ForesterUtil
+                    .printWarningMessage( Constants.PRG_NAME, "configuration key [display_sequences] is deprecated" );
+            return DEPRECATED;
+        }
+        else if ( name.equals( "open_seq_web" ) ) {
+            index = Configuration.open_seq_web;
+        }
+        else if ( name.equals( "open_tax_web" ) ) {
+            index = Configuration.open_tax_web;
+        }
+        else if ( name.equals( "cut_subtree" ) ) {
+            index = Configuration.cut_subtree;
+        }
+        else if ( name.equals( "copy_subtree" ) ) {
+            index = Configuration.copy_subtree;
+        }
+        else if ( name.equals( "paste_subtree" ) ) {
+            index = Configuration.paste_subtree;
+        }
+        else if ( name.equals( "delete" ) ) {
+            index = Configuration.delete_subtree_or_node;
+        }
+        else if ( name.equals( "add_new_node" ) ) {
+            index = Configuration.add_new_node;
+        }
+        else if ( name.equals( "edit_node_data" ) ) {
+            index = Configuration.edit_node_data;
+        }
+        else if ( name.equals( "display_node_popup" ) ) {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME,
+                                              "configuration key [display_node_popup] is deprecated" );
+            return DEPRECATED;
+        }
+        else if ( name.equals( "custom_option" ) ) {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [custom_option] is deprecated" );
+            return DEPRECATED;
+        }
+        else if ( name.equals( "color_subtree" ) ) {
+            index = Configuration.color_subtree;
+        }
+        else if ( name.equals( "go_to_swiss_prot" ) ) {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [go_to_swiss_prot] is deprecated" );
+            return DEPRECATED;
+        }
+        return index;
     }
 
     int getClickToOptionsCount() {
@@ -333,12 +458,24 @@ public class Configuration {
         return _graphics_export_y;
     }
 
+    int getDefaultBootstrapSamples() {
+        return _default_bootstrap_samples;
+    }
+
     double getMinConfidenceValue() {
         return _min_confidence_value;
     }
 
     NODE_LABEL_DIRECTION getNodeLabelDirection() {
         return _node_label_direction;
+    }
+
+    short getNumberOfDigitsAfterCommaForBranchLengthValues() {
+        return _number_of_digits_after_comma_for_branch_length_values;
+    }
+
+    short getNumberOfDigitsAfterCommaForConfidenceValues() {
+        return _number_of_digits_after_comma_for_confidence_values;
     }
 
     short getOvMaxHeight() {
@@ -357,7 +494,7 @@ public class Configuration {
         return _phylogeny_graphics_type;
     }
 
-    double getPrintLineWidth() {
+    float getPrintLineWidth() {
         return _print_line_width;
     }
 
@@ -388,6 +525,10 @@ public class Configuration {
         return _antialias_screen;
     }
 
+    public boolean isBackgroundColorGradient() {
+        return _background_color_gradient;
+    }
+
     /**
      * Convenience method.
      * 
@@ -395,6 +536,14 @@ public class Configuration {
      */
     boolean isDrawAsPhylogram() {
         return doCheckOption( display_as_phylogram );
+    }
+
+    boolean isEditable() {
+        return _editable;
+    }
+
+    boolean isExtractPfamTaxonomyCodesInNhParsing() {
+        return _nh_parsing_extract_pfam_taxonomy_codes;
     }
 
     boolean isHasWebLink( final String source ) {
@@ -409,8 +558,12 @@ public class Configuration {
         return _hide_controls_and_menus;
     }
 
-    boolean isNonLinedUpCladogram() {
-        return _non_lined_up_cladogram;
+    boolean isInternalNumberAreConfidenceForNhParsing() {
+        return _internal_number_are_confidence_for_nh_parsing;
+    }
+
+    boolean isReplaceUnderscoresInNhParsing() {
+        return _nh_parsing_replace_underscores;
     }
 
     boolean isShowBranchLengthValues() {
@@ -425,11 +578,19 @@ public class Configuration {
         return _show_scale;
     }
 
-    boolean isUseNativeUI() {
-        if ( Util.isMac() ) {
-            return true;
+    final boolean isUseNativeUI() {
+        if ( ( _use_native_ui == null ) || ( _use_native_ui == TRIPLET.UNKNOWN ) ) {
+            if ( ( _native_ui == TRIPLET.UNKNOWN ) && Util.isMac() && Util.isJava15() ) {
+                _use_native_ui = TRIPLET.TRUE;
+            }
+            else if ( _native_ui == TRIPLET.TRUE ) {
+                _use_native_ui = TRIPLET.TRUE;
+            }
+            else {
+                _use_native_ui = TRIPLET.FALSE;
+            }
         }
-        return _native_ui;
+        return _use_native_ui == TRIPLET.TRUE;
     }
 
     /**
@@ -440,95 +601,22 @@ public class Configuration {
         return _use_tabbed_display;
     }
 
-    void setDisplayColors( final SortedMap<String, Color> display_colors ) {
-        _display_colors = display_colors;
+    boolean isValidatePhyloXmlAgainstSchema() {
+        return _validate_against_phyloxml_xsd_schema;
     }
 
-    void setNodeLabelDirection( final NODE_LABEL_DIRECTION node_label_direction ) {
-        _node_label_direction = node_label_direction;
-    }
-
-    void setPhylogenyGraphicsType( final PHYLOGENY_GRAPHICS_TYPE phylogeny_graphics_type ) {
-        _phylogeny_graphics_type = phylogeny_graphics_type;
-    }
-
-    void setWebLinks( final SortedMap<String, WebLink> weblinks ) {
-        _weblinks = weblinks;
-    }
-
-    private void createWebLink( final String url_str, final String desc, final String source_identifier ) {
-        WebLink weblink = null;
-        boolean ex = false;
-        try {
-            weblink = new WebLink( new URL( url_str.trim() ), desc.trim(), source_identifier.trim() );
+    private boolean parseBoolean( final String str ) {
+        final String my_str = str.trim().toLowerCase();
+        if ( my_str.equals( "yes" ) || my_str.equals( "true" ) ) {
+            return true;
         }
-        catch ( final MalformedURLException e ) {
-            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not create URL from [" + url_str + "]" );
-            ex = true;
+        else if ( my_str.equals( "no" ) || my_str.equals( "false" ) ) {
+            return false;
         }
-        if ( !ex && ( weblink != null ) ) {
-            getWebLinks().put( weblink.getSourceIdentifier().toLowerCase(), weblink );
+        else {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not parse boolean value from [" + str + "]" );
+            return false;
         }
-    }
-
-    private int getClickToIndex( final String name ) {
-        int index = -1;
-        if ( name.equals( "edit_info" ) ) {
-            index = Configuration.display_node_data;
-            ForesterUtil
-                    .printWarningMessage( Constants.PRG_NAME,
-                                          "configuration key [edit_info] is deprecated, use [display node data] instead" );
-        }
-        else if ( name.equals( "display_node_data" ) ) {
-            index = Configuration.display_node_data;
-        }
-        else if ( name.equals( "collapse_uncollapse" ) ) {
-            index = Configuration.collapse_uncollapse;
-        }
-        else if ( name.equals( "reroot" ) ) {
-            index = Configuration.reroot;
-        }
-        else if ( name.equals( "subtree" ) ) {
-            index = Configuration.subtree;
-        }
-        else if ( name.equals( "swap" ) ) {
-            index = Configuration.swap;
-        }
-        else if ( name.equals( "display_sequences" ) ) {
-            ForesterUtil
-                    .printWarningMessage( Constants.PRG_NAME, "configuration key [display_sequences] is deprecated" );
-            return DEPRECATED;
-        }
-        else if ( name.equals( "open_seq_web" ) ) {
-            index = Configuration.open_seq_web;
-        }
-        else if ( name.equals( "open_tax_web" ) ) {
-            index = Configuration.open_tax_web;
-        }
-        else if ( name.equals( "display_node_popup" ) ) {
-            ForesterUtil.printWarningMessage( Constants.PRG_NAME,
-                                              "configuration key [display_node_popup] is deprecated" );
-            return DEPRECATED;
-        }
-        else if ( name.equals( "custom_option" ) ) {
-            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [custom_option] is deprecated" );
-            return DEPRECATED;
-        }
-        else if ( name.equals( "color_subtree" ) ) {
-            index = Configuration.color_subtree;
-        }
-        else if ( name.equals( "go_to_swiss_prot" ) ) {
-            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [go_to_swiss_prot] is deprecated" );
-            return DEPRECATED;
-        }
-      //******************************************START**********************************************************//
-        else{
-        	if(AppletParams.isTreePrunerForAll() ){
-        		index = keepRemoveConfiguration.getClickToIndex(name,index);
-        	}
-        }
-      //********************************************END**********************************************************//
-        return index;
     }
 
     private double parseDouble( final String str ) {
@@ -543,6 +631,18 @@ public class Configuration {
         return d;
     }
 
+    private float parseFloat( final String str ) {
+        float f = 0.0f;
+        try {
+            f = Float.parseFloat( str );
+        }
+        catch ( final Exception e ) {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not parse float from [" + str + "]" );
+            f = 0.0f;
+        }
+        return f;
+    }
+
     private int parseInt( final String str ) {
         int i = -1;
         try {
@@ -550,6 +650,18 @@ public class Configuration {
         }
         catch ( final Exception e ) {
             ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not parse integer from [" + str + "]" );
+            i = -1;
+        }
+        return i;
+    }
+
+    private short parseShort( final String str ) {
+        short i = -1;
+        try {
+            i = Short.parseShort( str );
+        }
+        catch ( final Exception e ) {
+            ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not parse short from [" + str + "]" );
             i = -1;
         }
         return i;
@@ -593,12 +705,44 @@ public class Configuration {
         _antialias_screen = antialias_screen;
     }
 
+    public void setBackgroundColorGradient( final boolean background_color_gradient ) {
+        _background_color_gradient = background_color_gradient;
+    }
+
     private void setBaseFontFamilyName( final String base_font_family_name ) {
         _base_font_family_name = base_font_family_name;
     }
 
     private void setBaseFontSize( final int base_font_size ) {
         _base_font_size = base_font_size;
+    }
+
+    private void setShowDomainLabels( final boolean show_domain_labels ) {
+        _show_domain_labels = show_domain_labels;
+    }
+
+    private void setColorLabelsSameAsParentBranch( final boolean color_labels_same_as_parent_branch ) {
+        _color_labels_same_as_parent_branch = color_labels_same_as_parent_branch;
+    }
+
+    private void setCladogramType( final CLADOGRAM_TYPE cladogram_type ) {
+        _cladogram_type = cladogram_type;
+    }
+
+    void setDisplayColors( final SortedMap<String, Color> display_colors ) {
+        _display_colors = display_colors;
+    }
+
+    private void setDisplaySequenceRelations( final boolean display_sequence_relations ) {
+        _display_sequence_relations = display_sequence_relations;
+    }
+
+    private void setEditable( final boolean editable ) {
+        _editable = editable;
+    }
+
+    private void setExtractPfamTaxonomyCodesInNhParsing( final boolean nh_parsing_extract_pfam_taxonomy_codes ) {
+        _nh_parsing_extract_pfam_taxonomy_codes = nh_parsing_extract_pfam_taxonomy_codes;
     }
 
     private void setGraphicsExportX( final int graphics_export_x ) {
@@ -609,6 +753,14 @@ public class Configuration {
         _graphics_export_y = graphics_export_y;
     }
 
+    private void setDefaultBootstrapSamples( final int default_bootstrap_samples ) {
+        _default_bootstrap_samples = default_bootstrap_samples;
+    }
+
+    private void setInternalNumberAreConfidenceForNhParsing( final boolean internal_number_are_confidence_for_nh_parsing ) {
+        _internal_number_are_confidence_for_nh_parsing = internal_number_are_confidence_for_nh_parsing;
+    }
+
     /**
      * Set a key-value(s) tuple
      */
@@ -616,6 +768,7 @@ public class Configuration {
         String key = ( String ) st.nextElement();
         key = key.replace( ':', ' ' );
         key = key.trim();
+        key = key.toLowerCase();
         // Handle single value settings first:
         if ( key.equals( "default_click_to" ) ) {
             final String clickto_name = ( String ) st.nextElement();
@@ -630,20 +783,27 @@ public class Configuration {
             }
         }
         else if ( key.equals( "native_ui" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                _native_ui = true;
+            final String my_str = ( ( String ) st.nextElement() ).trim().toLowerCase();
+            if ( my_str.equals( "yes" ) || my_str.equals( "true" ) ) {
+                _native_ui = TRIPLET.TRUE;
+            }
+            else if ( my_str.equals( "no" ) || my_str.equals( "false" ) ) {
+                _native_ui = TRIPLET.FALSE;
+            }
+            else if ( my_str.equals( "?" ) ) {
+                _native_ui = TRIPLET.UNKNOWN;
             }
             else {
-                _native_ui = false;
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME, "could not parse yes/no/? value from [" + my_str
+                        + "]" );
+                _native_ui = TRIPLET.FALSE;
             }
         }
+        else if ( key.equals( VALIDATE_AGAINST_PHYLOXML_XSD_SCHEMA ) ) {
+            setValidatePhyloXmlAgainstSchema( parseBoolean( ( String ) st.nextElement() ) );
+        }
         else if ( key.equals( "antialias_screen" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                setAntialiasScreen( true );
-            }
-            else {
-                setAntialiasScreen( false );
-            }
+            setAntialiasScreen( parseBoolean( ( String ) st.nextElement() ) );
         }
         else if ( key.equals( "phylogeny_graphics_type" ) ) {
             final String type_str = ( ( String ) st.nextElement() ).trim();
@@ -655,6 +815,9 @@ public class Configuration {
             }
             else if ( type_str.equalsIgnoreCase( PHYLOGENY_GRAPHICS_TYPE.EURO_STYLE.toString() ) ) {
                 setPhylogenyGraphicsType( PHYLOGENY_GRAPHICS_TYPE.EURO_STYLE );
+            }
+            else if ( type_str.equalsIgnoreCase( PHYLOGENY_GRAPHICS_TYPE.ROUNDED.toString() ) ) {
+                setPhylogenyGraphicsType( PHYLOGENY_GRAPHICS_TYPE.ROUNDED );
             }
             else if ( type_str.equalsIgnoreCase( PHYLOGENY_GRAPHICS_TYPE.RECTANGULAR.toString() ) ) {
                 setPhylogenyGraphicsType( PHYLOGENY_GRAPHICS_TYPE.RECTANGULAR );
@@ -699,60 +862,79 @@ public class Configuration {
         }
         else if ( key.equals( "pdf_export_line_width" ) ) {
             final String str = ( ( String ) st.nextElement() ).trim();
-            final double d = parseDouble( str );
-            if ( d > 0 ) {
-                setPrintLineWidth( d );
+            final float f = parseFloat( str );
+            if ( f > 0 ) {
+                setPrintLineWidth( f );
+            }
+            else {
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME,
+                                                  "value for [pdf_export_line_width] cannot be zero or negative" );
+            }
+        }
+        else if ( key.equals( "default_number_of_bootstrap_resamples" ) ) {
+            final String str = ( ( String ) st.nextElement() ).trim();
+            final int i = parseInt( str );
+            if ( i >= 0 ) {
+                setDefaultBootstrapSamples( i );
+            }
+            else {
+                ForesterUtil
+                        .printWarningMessage( Constants.PRG_NAME,
+                                              "value for [default_number_of_bootstrap_resamples] cannot be negative" );
             }
         }
         else if ( key.equals( "show_scale" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                setShowScale( true );
-            }
-            else {
-                setShowScale( false );
-            }
+            setShowScale( parseBoolean( ( String ) st.nextElement() ) );
         }
         else if ( key.equals( "show_overview" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                setShowOverview( true );
-            }
-            else {
-                setShowOverview( false );
-            }
+            setShowOverview( parseBoolean( ( String ) st.nextElement() ) );
         }
         else if ( key.equals( "show_branch_length_values" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                setShowBranchLengthValues( true );
+            setShowBranchLengthValues( parseBoolean( ( String ) st.nextElement() ) );
+        }
+        else if ( key.equals( "background_gradient" ) ) {
+            setBackgroundColorGradient( parseBoolean( ( String ) st.nextElement() ) );
+        }
+        else if ( key.equals( "color_labels_same_as_branch_length_values" ) ) {
+            setColorLabelsSameAsParentBranch( parseBoolean( ( String ) st.nextElement() ) );
+        }
+        else if ( key.equals( "show_domain_labels" ) ) {
+            setShowDomainLabels( parseBoolean( ( String ) st.nextElement() ) );
+        }
+        else if ( key.equals( "cladogram_type" ) ) {
+            final String type_str = ( ( String ) st.nextElement() ).trim();
+            if ( type_str.equalsIgnoreCase( Options.CLADOGRAM_TYPE.NON_LINED_UP.toString() ) ) {
+                setCladogramType( Options.CLADOGRAM_TYPE.NON_LINED_UP );
+            }
+            else if ( type_str.equalsIgnoreCase( Options.CLADOGRAM_TYPE.EXT_NODE_SUM_DEP.toString() ) ) {
+                setCladogramType( Options.CLADOGRAM_TYPE.EXT_NODE_SUM_DEP );
+            }
+            else if ( type_str.equalsIgnoreCase( Options.CLADOGRAM_TYPE.TOTAL_NODE_SUM_DEP.toString() ) ) {
+                setCladogramType( Options.CLADOGRAM_TYPE.TOTAL_NODE_SUM_DEP );
             }
             else {
-                setShowBranchLengthValues( false );
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME, "unknown value [" + type_str
+                        + "] for [cladogram_type]" );
             }
         }
         else if ( key.equals( "non_lined_up_cladogram" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                setNonLinedUpCladogram( true );
-            }
-            else {
-                setNonLinedUpCladogram( false );
-            }
+            ForesterUtil
+                    .printWarningMessage( Constants.PRG_NAME,
+                                          "configuration key [non_lined_up_cladogram] is deprecated, use [cladogram_type] instead" );
         }
         else if ( key.equals( "hide_controls_and_menus" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                _hide_controls_and_menus = true;
-            }
+            _hide_controls_and_menus = parseBoolean( ( String ) st.nextElement() );
         }
         else if ( key.equals( "use_tabbed_display" ) ) {
-            if ( ( ( String ) st.nextElement() ).trim().toLowerCase().equals( "yes" ) ) {
-                _use_tabbed_display = true;
-            }
+            _use_tabbed_display = parseBoolean( ( String ) st.nextElement() );
         }
         else if ( key.equals( "overview_width" ) ) {
-            final int i = parseInt( ( ( String ) st.nextElement() ).trim() );
-            setOvMaxWidth( ( short ) i );
+            final short i = parseShort( ( ( String ) st.nextElement() ).trim() );
+            setOvMaxWidth( i );
         }
         else if ( key.equals( "overview_height" ) ) {
-            final int i = parseInt( ( ( String ) st.nextElement() ).trim() );
-            setOvMaxHeight( ( short ) i );
+            final short i = parseShort( ( ( String ) st.nextElement() ).trim() );
+            setOvMaxHeight( i );
         }
         else if ( key.equals( "overview_placement_type" ) ) {
             final String type_str = ( ( String ) st.nextElement() ).trim();
@@ -788,8 +970,89 @@ public class Configuration {
                         + "] for [node_label_direction]" );
             }
         }
+        else if ( key.equals( "branch_length_value_digits" ) ) {
+            final short i = parseShort( ( ( String ) st.nextElement() ).trim() );
+            if ( i >= 0 ) {
+                setNumberOfDigitsAfterCommaForBranchLengthValue( i );
+            }
+            else {
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME, "illegal value [" + i
+                        + "] for [branch_length_value_digits]" );
+            }
+        }
+        else if ( key.equals( "confidence_value_digits" ) ) {
+            final short i = parseShort( ( ( String ) st.nextElement() ).trim() );
+            if ( i >= 0 ) {
+                setNumberOfDigitsAfterCommaForConfidenceValues( i );
+            }
+            else {
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME, "illegal value [" + i
+                        + "] for [confidence_value_digits]" );
+            }
+        }
+        else if ( key.equals( "allow_editing" ) ) {
+            setEditable( parseBoolean( ( String ) st.nextElement() ) );
+        }
+        else if ( key.equals( "display_sequence_relations" ) ) {
+            setDisplaySequenceRelations( parseBoolean( ( String ) st.nextElement() ) );
+        }
+        else if ( key.equals( "replace_underscores_in_nh_parsing" ) ) {
+            final boolean r = parseBoolean( ( String ) st.nextElement() );
+            if ( r && isExtractPfamTaxonomyCodesInNhParsing() ) {
+                ForesterUtil
+                        .printWarningMessage( Constants.PRG_NAME,
+                                              "attempt to extract taxonomies and replace underscores at the same time" );
+            }
+            else {
+                setReplaceUnderscoresInNhParsing( r );
+            }
+        }
+        else if ( key.equals( "extract_taxonomy_codes_in_nh_parsing" ) ) {
+            final boolean e = parseBoolean( ( String ) st.nextElement() );
+            if ( e && isReplaceUnderscoresInNhParsing() ) {
+                ForesterUtil
+                        .printWarningMessage( Constants.PRG_NAME,
+                                              "attempt to extract taxonomies and replace underscores at the same time" );
+            }
+            else {
+                setExtractPfamTaxonomyCodesInNhParsing( e );
+            }
+        }
+        else if ( key.equals( "internal_labels_are_confidence_values" ) ) {
+            setInternalNumberAreConfidenceForNhParsing( parseBoolean( ( String ) st.nextElement() ) );
+        }
         else if ( key.equals( "glyph_type" ) ) {
             ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [glyph_type] is deprecated" );
+        }
+        else if ( key.equals( "gui_background_color" ) ) {
+            _gui_background_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_checkbox_text_color" ) ) {
+            _gui_checkbox_text_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_checkbox_and_button_active_color" ) ) {
+            _gui_checkbox_and_button_active_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_button_text_color" ) ) {
+            _gui_button_text_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_button_background_color" ) ) {
+            _gui_button_background_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_menu_background_color" ) ) {
+            _gui_menu_background_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_menu_text_color" ) ) {
+            _gui_menu_text_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "gui_button_border_color" ) ) {
+            _gui_button_border_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "domain_structure_font_color" ) ) {
+            _domain_structure_font_color = Color.decode( ( String ) st.nextElement() );
+        }
+        else if ( key.equals( "domain_structure_base_color" ) ) {
+            _domain_structure_base_color = Color.decode( ( String ) st.nextElement() );
         }
         else if ( st.countTokens() >= 2 ) { // counts the tokens that are not
             // yet retrieved!
@@ -801,6 +1064,9 @@ public class Configuration {
                             .printWarningMessage( Constants.PRG_NAME,
                                                   "configuration key [use_real_br_lengths] is deprecated, use [phylogram] instead" );
                 }
+            }
+            else if ( key.equals( "rollover" ) ) {
+                key_index = Configuration.node_data_popup;
             }
             else if ( key.equals( "color_according_to_species" ) ) {
                 key_index = Configuration.color_according_to_species;
@@ -844,13 +1110,16 @@ public class Configuration {
                 key_index = Configuration.width_branches;
             }
             else if ( key.equals( "color_orthologous" ) ) {
-                key_index = Configuration.color_orthologous;
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME,
+                                                  "configuration key [color_orthologous] is deprecated" );
             }
             else if ( key.equals( "color_subtree_neighbors" ) ) {
-                key_index = Configuration.color_subtree_neighbors;
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME,
+                                                  "configuration key [color_subtree_neighbors] is deprecated" );
             }
             else if ( key.equals( "color_super_orthologous" ) ) {
-                key_index = Configuration.color_super_orthologous;
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME,
+                                                  "configuration key [color_super_orthologous] is deprecated" );
             }
             else if ( key.equals( "mark_nodes_with_box" ) ) {
                 ForesterUtil.printWarningMessage( Constants.PRG_NAME,
@@ -872,6 +1141,9 @@ public class Configuration {
             else if ( key.equals( "show_gene_names" ) ) {
                 key_index = Configuration.show_gene_names;
             }
+            else if ( key.equals( "show_gene_symbols" ) ) {
+                key_index = Configuration.show_gene_symbols;
+            }
             else if ( key.equals( "show_sequence_acc" ) ) {
                 key_index = Configuration.show_sequence_acc;
             }
@@ -887,13 +1159,24 @@ public class Configuration {
                 key_index = Configuration.dynamically_hide_data;
             }
             else if ( key.equals( "show_taxonomy_names" ) ) {
-                key_index = Configuration.show_taxonomy_names;
+                ForesterUtil.printWarningMessage( Constants.PRG_NAME,
+                                                  "configuration key [show_taxonomy_names] is deprecated" );
+                key_index = DEPRECATED;
+            }
+            else if ( key.equals( "show_taxonomy_scientific_names" ) ) {
+                key_index = Configuration.show_taxonomy_scientific_names;
+            }
+            else if ( key.equals( "show_taxonomy_common_names" ) ) {
+                key_index = Configuration.show_taxonomy_common_names;
             }
             else if ( key.equals( "color_according_to_annotation" ) ) {
                 key_index = Configuration.color_according_to_annotation;
             }
             else if ( key.equals( "show_property" ) ) {
                 key_index = Configuration.show_property;
+            }
+            else if ( key.equals( "show_relation_confidence" ) ) {
+                key_index = Configuration.show_relation_confidence;
             }
             // If we've found the key, set the values
             if ( key_index >= 0 ) {
@@ -962,8 +1245,16 @@ public class Configuration {
         _min_confidence_value = min_confidence_value;
     }
 
-    private void setNonLinedUpCladogram( final boolean non_lined_up_cladogram ) {
-        _non_lined_up_cladogram = non_lined_up_cladogram;
+    void setNodeLabelDirection( final NODE_LABEL_DIRECTION node_label_direction ) {
+        _node_label_direction = node_label_direction;
+    }
+
+    private void setNumberOfDigitsAfterCommaForBranchLengthValue( final short _number_of_digits_after_comma_for_branch_length_values ) {
+        this._number_of_digits_after_comma_for_branch_length_values = _number_of_digits_after_comma_for_branch_length_values;
+    }
+
+    private void setNumberOfDigitsAfterCommaForConfidenceValues( final short _number_of_digits_after_comma_for_confidence_values ) {
+        this._number_of_digits_after_comma_for_confidence_values = _number_of_digits_after_comma_for_confidence_values;
     }
 
     private void setOvMaxHeight( final short ov_max_height ) {
@@ -978,8 +1269,16 @@ public class Configuration {
         _ov_placement = ov_placement;
     }
 
-    private void setPrintLineWidth( final double print_line_width ) {
+    void setPhylogenyGraphicsType( final PHYLOGENY_GRAPHICS_TYPE phylogeny_graphics_type ) {
+        _phylogeny_graphics_type = phylogeny_graphics_type;
+    }
+
+    private void setPrintLineWidth( final float print_line_width ) {
         _print_line_width = print_line_width;
+    }
+
+    private void setReplaceUnderscoresInNhParsing( final boolean nh_parsing_replace_underscores ) {
+        _nh_parsing_replace_underscores = nh_parsing_replace_underscores;
     }
 
     private void setShowBranchLengthValues( final boolean show_branch_length_values ) {
@@ -994,28 +1293,35 @@ public class Configuration {
         _show_scale = show_scale;
     }
 
+    private void setValidatePhyloXmlAgainstSchema( final boolean validate_against_phyloxml_xsd_schema ) {
+        _validate_against_phyloxml_xsd_schema = validate_against_phyloxml_xsd_schema;
+    }
+
+    void setWebLinks( final SortedMap<String, WebLink> weblinks ) {
+        _weblinks = weblinks;
+    }
+
     static String getDefaultFontFamilyName() {
         return DEFAULT_FONT_FAMILY;
     }
-    
-  //******************************************START**********************************************************//
-    public boolean do_display_clickToOption( final int which ) {
-    	/**
-    	 * Note to programmer: Whatever happens in this method will also affect doDisplayClickToOption(final int which){}
-    	 */
-    	if(which == 6 || which == 7){
-    		if(AppletParams.isTreePrunerForAll() ){
-    			clickto_options[which][1] = "display";
-    		}
-    		else{
-    			clickto_options[which][1] = "nodisplay";
-    		}
-    	}
-        return clickto_options[ which ][ 1 ].equals( "display" );
+
+    static enum TRIPLET {
+        TRUE, FALSE, UNKNOWN
     }
-    
-    public String get_click_toTitle( final int which ) {
-        return clickto_options[ which ][ 0 ];
+
+    public Color getDomainStructureFontColor() {
+        return _domain_structure_font_color;
     }
-  //********************************************END**********************************************************//
+
+    public Color getDomainStructureBaseColor() {
+        return _domain_structure_base_color;
+    }
+
+    public boolean isColorLabelsSameAsParentBranch() {
+        return _color_labels_same_as_parent_branch;
+    }
+
+    public boolean isShowDomainLabels() {
+        return _show_domain_labels;
+    }
 }

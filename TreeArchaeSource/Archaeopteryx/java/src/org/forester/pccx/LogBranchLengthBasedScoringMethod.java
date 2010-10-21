@@ -40,6 +40,26 @@ public class LogBranchLengthBasedScoringMethod extends BranchCountingBasedScorin
     public static final double MAX_ALLOWED_BL_VALUE = 1.0;
 
     @Override
+    double calculateScoreContributionPerExternalNode( final PhylogenyNode external_node,
+                                                      final PhylogenyNode current_node ) {
+        double score_contribution = 0.0;
+        if ( current_node == external_node ) {
+            score_contribution = external_node.getDistanceToParent();
+            // This, of course, is completely /ad hoc/.
+        }
+        else {
+            score_contribution = ModelingUtils.calculateBranchLengthSum( external_node, current_node );
+        }
+        if ( score_contribution > LogBranchLengthBasedScoringMethod.MAX_ALLOWED_BL_VALUE ) {
+            score_contribution = LogBranchLengthBasedScoringMethod.MAX_ALLOWED_BL_VALUE;
+        }
+        else if ( score_contribution < LogBranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE ) {
+            score_contribution = LogBranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE;
+        }
+        return ( -Math.log( score_contribution ) );
+    }
+
+    @Override
     public String getDesciption() {
         return "sum of -ln(branch-length-sum) [for self: -ln(branch-length)] [min branch length: "
                 + LogBranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE + ", max branch length: "
@@ -61,25 +81,5 @@ public class LogBranchLengthBasedScoringMethod extends BranchCountingBasedScorin
             s += ( -Math.log( d ) );
         }
         return 1 / s;
-    }
-
-    @Override
-    double calculateScoreContributionPerExternalNode( final PhylogenyNode external_node,
-                                                      final PhylogenyNode current_node ) {
-        double score_contribution = 0.0;
-        if ( current_node == external_node ) {
-            score_contribution = external_node.getDistanceToParent();
-            // This, of course, is completely /ad hoc/.
-        }
-        else {
-            score_contribution = ModelingUtils.calculateBranchLengthSum( external_node, current_node );
-        }
-        if ( score_contribution > LogBranchLengthBasedScoringMethod.MAX_ALLOWED_BL_VALUE ) {
-            score_contribution = LogBranchLengthBasedScoringMethod.MAX_ALLOWED_BL_VALUE;
-        }
-        else if ( score_contribution < LogBranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE ) {
-            score_contribution = LogBranchLengthBasedScoringMethod.MIN_ALLOWED_BL_VALUE;
-        }
-        return ( -Math.log( score_contribution ) );
     }
 }

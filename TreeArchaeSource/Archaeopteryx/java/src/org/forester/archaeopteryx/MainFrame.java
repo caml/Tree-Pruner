@@ -1,4 +1,4 @@
-// $Id: MainFrame.java,v 1.33 2009/06/15 18:31:33 cmzmasek Exp $
+// $Id: MainFrame.java,v 1.81 2010/10/02 21:34:07 cmzmasek Exp $
 // FORESTER -- software libraries and applications
 // for evolutionary biology research and applications.
 //
@@ -23,59 +23,37 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-/**
- * NOTE - The original file was obtained from SourceForge.net (ATV Version 4.1.04) on 2009.07.02
- *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
- */
+
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.swing.JApplet;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
 
+import org.forester.archaeopteryx.Options.CLADOGRAM_TYPE;
 import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.archaeopteryx.Options.PHYLOGENY_GRAPHICS_TYPE;
-import org.forester.archaeopteryx.webservices.PhylogeniesWebserviceClient;
-import org.forester.archaeopteryx.webservices.WebserviceUtil;
-import org.forester.archaeopteryx.webservices.WebservicesManager;
-import org.forester.io.parsers.PhylogenyParser;
-import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
-import org.forester.io.parsers.nhx.NHXParser;
-import org.forester.io.parsers.nhx.NHXParser.TAXONOMY_EXTRACTION;
-import org.forester.io.parsers.phyloxml.PhyloXmlParser;
-import org.forester.io.parsers.tol.TolParser;
 import org.forester.phylogeny.Phylogeny;
-import org.forester.phylogeny.data.Identifier;
-import org.forester.phylogeny.factories.ParserBasedPhylogenyFactory;
-import org.forester.phylogeny.factories.PhylogenyFactory;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
-
-//******************************************START**********************************************************//
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.AppletTerminate;
-import com.lanl.application.TPTD.applet.NewWindowSubtree;
 
 public abstract class MainFrame extends JFrame implements ActionListener {
 
     static final String       USE_MOUSEWHEEL_SHIFT_TO_ROTATE     = "In this display type, use mousewheel + Shift to rotate [or A and S]";
+    static final String       PHYLOXML_REF_TOOL_TIP              = Constants.PHYLOXML_REFERENCE;                                                                                                                                       //TODO //FIXME
+    static final String       APTX_REF_TOOL_TIP                  = Constants.APTX_REFERENCE;
     private static final long serialVersionUID                   = 3655000897845508358L;
     final static Font         menu_font                          = new Font( Configuration.getDefaultFontFamilyName(),
                                                                              Font.PLAIN,
@@ -86,8 +64,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     static final String       CURVED_TYPE_CBMI_LABEL             = "Curved";
     static final String       TRIANGULAR_TYPE_CBMI_LABEL         = "Triangular";
     static final String       CONVEX_TYPE_CBMI_LABEL             = "Convex";
-    static final String       UNROOTED_TYPE_CBMI_LABEL           = "Unrooted (alpha)";                                                   //TODO
-    static final String       CIRCULAR_TYPE_CBMI_LABEL           = "Circular (broken)";                                                  //TODO
+    static final String       ROUNDED_TYPE_CBMI_LABEL            = "Rounded";
+    static final String       UNROOTED_TYPE_CBMI_LABEL           = "Unrooted (alpha)";                                                                                                                                                 //TODO
+    static final String       CIRCULAR_TYPE_CBMI_LABEL           = "Circular (alpha)";                                                                                                                                                 //TODO
     static final String       OPTIONS_HEADER                     = "Options";
     static final String       SEARCH_SUBHEADER                   = "Search:";
     static final String       DISPLAY_SUBHEADER                  = "Display:";
@@ -97,12 +76,18 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     static final String       DISPLAY_BRANCH_LENGTH_VALUES_LABEL = "Display Branch Length Values";
     static final String       DISPLAY_SCALE_LABEL                = "Display Scale";
     static final String       NON_LINED_UP_CLADOGRAMS_LABEL      = "Non-Lined Up Cladograms";
+    static final String       UNIFORM_CLADOGRAMS_LABEL           = "Total Node Sum Dependent Cladograms";
     static final String       LABEL_DIRECTION_LABEL              = "Radial Labels";
     static final String       LABEL_DIRECTION_TIP                = "To use radial node labels in radial and unrooted display types";
     static final String       SCREEN_ANTIALIAS_LABEL             = "Antialias";
+    static final String       COLOR_LABELS_LABEL                 = "Colorize Labels Same as Parent Branch";
+    static final String       BG_GRAD_LABEL                      = "Background Color Gradient";
     static final String       DISPLAY_NODE_BOXES_LABEL           = "Display Node Boxes";
     static final String       SHOW_OVERVIEW_LABEL                = "Show Overview";
     static final String       FONT_SIZE_MENU_LABEL               = "Font Size";
+    static final String       NONUNIFORM_CLADOGRAMS_LABEL        = "External Node Sum Dependent Cladograms";
+    static final String       SHOW_DOMAIN_LABELS_LABEL           = "Show Domain Labels";
+    static final String       COLOR_LABELS_TIP                   = "To use parent branch colors for node labels as well, need to turn off taxonomy dependent colorization and turn on branch colorization for this to become apparent";
     JMenuBar                  _jmenubar;
     JMenu                     _file_jmenu;
     JMenu                     _tools_menu;
@@ -118,13 +103,18 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     JMenuItem                 _save_all_item;
     JMenuItem                 _close_item;
     JMenuItem                 _exit_item;
+    JMenuItem                 _new_item;
     // tools menu:
     JMenuItem                 _midpoint_root_item;
     JMenuItem                 _taxcolor_item;
     JMenuItem                 _confcolor_item;
     JMenuItem                 _infer_common_sn_names_item;
     JMenuItem                 _collapse_species_specific_subtrees;
-    JMenuItem                 _collapse_below_threshold;                                                                                 //TODO implememt me
+    JMenuItem                 _collapse_below_threshold;                                                                                                                                                                               //TODO implememt me
+    JMenuItem                 _obtain_detailed_taxonomic_information_jmi;
+    JMenuItem                 _move_node_names_to_tax_sn_jmi;
+    JMenuItem                 _move_node_names_to_seq_names_jmi;
+    JMenuItem                 _extract_tax_code_from_node_names_jmi;
     // font size menu:
     JMenuItem                 _super_tiny_fonts_item;
     JMenuItem                 _tiny_fonts_item;
@@ -138,11 +128,16 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     JCheckBoxMenuItem         _label_direction_cbmi;
     // _  screen display
     JCheckBoxMenuItem         _screen_antialias_cbmi;
+    JCheckBoxMenuItem         _background_gradient_cbmi;
     JCheckBoxMenuItem         _show_node_boxes_cbmi;
-    JCheckBoxMenuItem         _non_lined_up_cladograms_cbmi;
+    JRadioButtonMenuItem      _non_lined_up_cladograms_rbmi;
+    JRadioButtonMenuItem      _uniform_cladograms_rbmi;
+    JRadioButtonMenuItem      _ext_node_dependent_cladogram_rbmi;
     JCheckBoxMenuItem         _show_branch_length_values_cbmi;
-    JCheckBoxMenuItem         _show_scale_cbmi;                                                                                          //TODO fix me
+    JCheckBoxMenuItem         _show_scale_cbmi;                                                                                                                                                                                        //TODO fix me
     JCheckBoxMenuItem         _show_overview_cbmi;
+    JCheckBoxMenuItem         _show_domain_labels;
+    JCheckBoxMenuItem         _color_labels_same_as_parent_branch;
     JMenuItem                 _overview_placment_mi;
     JMenuItem                 _choose_minimal_confidence_mi;
     // _  print
@@ -155,6 +150,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     JMenuItem                 _choose_pdf_width_mi;
     // _  parsing
     JCheckBoxMenuItem         _internal_number_are_confidence_for_nh_parsing_cbmi;
+    JCheckBoxMenuItem         _extract_pfam_style_tax_codes_cbmi;
+    JCheckBoxMenuItem         _replace_underscores_cbmi;
     // _  search
     JCheckBoxMenuItem         _search_case_senstive_cbmi;
     JCheckBoxMenuItem         _search_whole_words_only_cbmi;
@@ -166,6 +163,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     JCheckBoxMenuItem         _curved_type_cbmi;
     JCheckBoxMenuItem         _convex_type_cbmi;
     JCheckBoxMenuItem         _euro_type_cbmi;
+    JCheckBoxMenuItem         _rounded_type_cbmi;
     JCheckBoxMenuItem         _unrooted_type_cbmi;
     JCheckBoxMenuItem         _circular_type_cbmi;
     // view as text menu:
@@ -178,6 +176,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     JMenuItem                 _help_item;
     JMenuItem                 _website_item;
     JMenuItem                 _phyloxml_website_item;
+    JMenuItem                 _phyloxml_ref_item;
+    JMenuItem                 _aptx_ref_item;
     // Handy pointers to child components:
     MainPanel                 _mainpanel;
     Container                 _contentpane;
@@ -185,16 +185,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     Configuration             _configuration;
     JMenuItem                 _remove_branch_color_item;
     Options                   _options;
-  //******************************************START**********************************************************//
-    AppletTerminate appletTerminate = new AppletTerminate(this);
-    public WindowAdapter closeWindowAdapter = new WindowAdapter(){
 
-        @Override
-        public void windowClosing( final WindowEvent e ) {
-            close();
-        }
-    };
-   //********************************************END**********************************************************//
     MainFrame() {
         // Empty constructor.
     }
@@ -204,6 +195,14 @@ public abstract class MainFrame extends JFrame implements ActionListener {
      */
     public void actionPerformed( final ActionEvent e ) {
         final Object o = e.getSource();
+        boolean is_applet = false;
+        JApplet applet = null;
+        if ( getCurrentTreePanel() != null ) {
+            is_applet = getCurrentTreePanel().isApplet();
+            if ( is_applet ) {
+                applet = getCurrentTreePanel().obtainApplet();
+            }
+        }
         if ( o == _open_url_item ) {
             readPhylogeniesFromURL();
         }
@@ -290,10 +289,27 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             updateOptions( getOptions() );
             updateScreenTextAntialias( getMainPanel().getTreePanels() );
         }
+        else if ( o == _background_gradient_cbmi ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _show_domain_labels ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _color_labels_same_as_parent_branch ) {
+            updateOptions( getOptions() );
+        }
         else if ( o == _show_node_boxes_cbmi ) {
             updateOptions( getOptions() );
         }
-        else if ( o == _non_lined_up_cladograms_cbmi ) {
+        else if ( o == _non_lined_up_cladograms_rbmi ) {
+            updateOptions( getOptions() );
+            showWhole();
+        }
+        else if ( o == _uniform_cladograms_rbmi ) {
+            updateOptions( getOptions() );
+            showWhole();
+        }
+        else if ( o == _ext_node_dependent_cladogram_rbmi ) {
             updateOptions( getOptions() );
             showWhole();
         }
@@ -325,8 +341,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             }
         }
         else if ( ( o == _rectangular_type_cbmi ) || ( o == _triangular_type_cbmi ) || ( o == _curved_type_cbmi )
-                || ( o == _convex_type_cbmi ) || ( o == _euro_type_cbmi ) || ( o == _unrooted_type_cbmi )
-                || ( o == _circular_type_cbmi ) ) {
+                || ( o == _convex_type_cbmi ) || ( o == _euro_type_cbmi ) || ( o == _rounded_type_cbmi )
+                || ( o == _unrooted_type_cbmi ) || ( o == _circular_type_cbmi ) ) {
             typeChanged( o );
         }
         else if ( o == _about_item ) {
@@ -336,15 +352,43 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             help( getConfiguration().getWebLinks() );
         }
         else if ( o == _website_item ) {
-            openWebsite();
+            try {
+                Util.openWebsite( Constants.APTX_WEB_SITE, is_applet, applet );
+            }
+            catch ( final IOException e1 ) {
+                ForesterUtil.printErrorMessage( Constants.PRG_NAME, e1.toString() );
+            }
         }
         else if ( o == _phyloxml_website_item ) {
-            openPhyloXmlWebsite();
+            try {
+                Util.openWebsite( Constants.PHYLOXML_WEB_SITE, is_applet, applet );
+            }
+            catch ( final IOException e1 ) {
+                ForesterUtil.printErrorMessage( Constants.PRG_NAME, e1.toString() );
+            }
+        }
+        else if ( o == _aptx_ref_item ) {
+            try {
+                Util.openWebsite( Constants.APTX_REFERENCE_URL, is_applet, applet );
+            }
+            catch ( final IOException e1 ) {
+                ForesterUtil.printErrorMessage( Constants.PRG_NAME, e1.toString() );
+            }
+        }
+        else if ( o == _phyloxml_ref_item ) {
+            try {
+                Util.openWebsite( Constants.PHYLOXML_REFERENCE_URL, is_applet, applet );
+            }
+            catch ( final IOException e1 ) {
+                ForesterUtil.printErrorMessage( Constants.PRG_NAME, e1.toString() );
+            }
         }
         else {
-            for( int i = 0; i < _load_phylogeny_from_webservice_menu_items.length; ++i ) {
-                if ( o == _load_phylogeny_from_webservice_menu_items[ i ] ) {
-                    readPhylogeniesFromWebservice( i );
+            if ( _load_phylogeny_from_webservice_menu_items != null ) {
+                for( int i = 0; i < _load_phylogeny_from_webservice_menu_items.length; ++i ) {
+                    if ( o == _load_phylogeny_from_webservice_menu_items[ i ] ) {
+                        readPhylogeniesFromWebservice( i );
+                    }
                 }
             }
         }
@@ -389,44 +433,27 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         _help_jmenu = createMenu( "Help", getConfiguration() );
         _help_jmenu.add( _help_item = new JMenuItem( "Help" ) );
         _help_jmenu.add( _website_item = new JMenuItem( "Archaeopteryx Home" ) );
+        _aptx_ref_item = new JMenuItem( "Archaeopteryx Reference" );
         _help_jmenu.add( _phyloxml_website_item = new JMenuItem( "phyloXML Home" ) );
+        _help_jmenu.add( _phyloxml_ref_item = new JMenuItem( "phyloXML Reference" ) );
         _help_jmenu.addSeparator();
         _help_jmenu.add( _about_item = new JMenuItem( "About" ) );
         customizeJMenuItem( _help_item );
         customizeJMenuItem( _website_item );
         customizeJMenuItem( _phyloxml_website_item );
+        customizeJMenuItem( _aptx_ref_item );
+        customizeJMenuItem( _phyloxml_ref_item );
         customizeJMenuItem( _about_item );
+        _phyloxml_ref_item.setToolTipText( PHYLOXML_REF_TOOL_TIP );
+        _aptx_ref_item.setToolTipText( APTX_REF_TOOL_TIP );
         _jmenubar.add( _help_jmenu );
-    }
-
-    void buildToolsMenu() {
-        _tools_menu = createMenu( "Tools", getConfiguration() );
-        _tools_menu.add( _confcolor_item = new JMenuItem( "Colorize Branches Depending on Confidence" ) );
-        customizeJMenuItem( _confcolor_item );
-        _tools_menu.add( _taxcolor_item = new JMenuItem( "Taxonomy Colorize Branches" ) );
-        customizeJMenuItem( _taxcolor_item );
-        _tools_menu.add( _remove_branch_color_item = new JMenuItem( "Delete Branch Colors" ) );
-        _remove_branch_color_item.setToolTipText( "To delete branch color values from the current phylogeny." );
-        customizeJMenuItem( _remove_branch_color_item );
-        _tools_menu.addSeparator();
-        _tools_menu.add( _midpoint_root_item = new JMenuItem( "Midpoint-Root" ) );
-        customizeJMenuItem( _midpoint_root_item );
-        _tools_menu.addSeparator();
-        _tools_menu
-                .add( _infer_common_sn_names_item = new JMenuItem( "Infer Common Parts of Internal Scientific Names" ) );
-        customizeJMenuItem( _infer_common_sn_names_item );
-        _tools_menu.add( _collapse_species_specific_subtrees = new JMenuItem( "Collapse Species-Specific Subtrees" ) );
-        customizeJMenuItem( _collapse_species_specific_subtrees );
-        _tools_menu
-                .add( _collapse_below_threshold = new JMenuItem( "Collapse Branches with Confidence Below Threshold" ) );
-        customizeJMenuItem( _collapse_below_threshold );
-        _jmenubar.add( _tools_menu );
     }
 
     void buildTypeMenu() {
         _type_menu = createMenu( TYPE_MENU_HEADER, getConfiguration() );
         _type_menu.add( _rectangular_type_cbmi = new JCheckBoxMenuItem( MainFrame.RECTANGULAR_TYPE_CBMI_LABEL ) );
         _type_menu.add( _euro_type_cbmi = new JCheckBoxMenuItem( MainFrame.EURO_TYPE_CBMI_LABEL ) );
+        _type_menu.add( _rounded_type_cbmi = new JCheckBoxMenuItem( MainFrame.ROUNDED_TYPE_CBMI_LABEL ) );
         _type_menu.add( _curved_type_cbmi = new JCheckBoxMenuItem( MainFrame.CURVED_TYPE_CBMI_LABEL ) );
         _type_menu.add( _triangular_type_cbmi = new JCheckBoxMenuItem( MainFrame.TRIANGULAR_TYPE_CBMI_LABEL ) );
         _type_menu.add( _convex_type_cbmi = new JCheckBoxMenuItem( MainFrame.CONVEX_TYPE_CBMI_LABEL ) );
@@ -435,6 +462,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         customizeCheckBoxMenuItem( _rectangular_type_cbmi, false );
         customizeCheckBoxMenuItem( _triangular_type_cbmi, false );
         customizeCheckBoxMenuItem( _euro_type_cbmi, false );
+        customizeCheckBoxMenuItem( _rounded_type_cbmi, false );
         customizeCheckBoxMenuItem( _curved_type_cbmi, false );
         customizeCheckBoxMenuItem( _convex_type_cbmi, false );
         customizeCheckBoxMenuItem( _unrooted_type_cbmi, false );
@@ -458,48 +486,54 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         _jmenubar.add( _view_jmenu );
     }
 
+    private void chooseFont() {
+        final FontChooser fc = new FontChooser();
+        fc.setFont( getMainPanel().getTreeFontSet().getLargeFont() );
+        fc.showDialog( this, "Select the Base Font" );
+        getMainPanel().getTreeFontSet().setBaseFont( fc.getFont() );
+    }
+
+    private void chooseMinimalConfidence() {
+        final String s = ( String ) JOptionPane
+                .showInputDialog( this,
+                                  "Please enter the minimum for confidence values to be displayed.\n"
+                                          + "[current value: " + getOptions().getMinConfidenceValue() + "]\n",
+                                  "Minimal Confidence Value",
+                                  JOptionPane.QUESTION_MESSAGE,
+                                  null,
+                                  null,
+                                  getOptions().getMinConfidenceValue() );
+        if ( !ForesterUtil.isEmpty( s ) ) {
+            boolean success = true;
+            double m = 0.0;
+            final String m_str = s.trim();
+            if ( !ForesterUtil.isEmpty( m_str ) ) {
+                try {
+                    m = Double.parseDouble( m_str );
+                }
+                catch ( final Exception ex ) {
+                    success = false;
+                }
+            }
+            else {
+                success = false;
+            }
+            if ( success && ( m >= 0.0 ) ) {
+                getOptions().setMinConfidenceValue( m );
+            }
+        }
+    }
+
     void close() {
-    	/**
-    	 * NOTE TO PROGRAMMER
-    	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT public void closeSubTree(){...}. Hence whenever you make any changes here, also make changes in 
-    	 * public void closeSubTree(){...} 
-    	 */
-      //******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTDForAll() ){
-    		if(appletTerminate.check_terminate(this)){
-        
-	        removeTextFrame();
-	        if ( _mainpanel != null ) {
-	            _mainpanel.terminate();
-	        }
-	        if ( _contentpane != null ) {
-	            _contentpane.removeAll();
-	        }
-	        setVisible( false );
-	        dispose();
-	     
-	        NewWindowSubtree.handleBackToSubTreeButton();
-	        NewWindowSubtree.handleCloseXButton();
-	        AppletTerminate.extraTerminationActions(this);
-	        }
-	        else{
-	        	appletTerminate.closeAdditionalTasks();
-	        }
-    	}
-    	else{
-      //********************************************END**********************************************************//
-    		removeTextFrame();
-	        if ( _mainpanel != null ) {
-	            _mainpanel.terminate();
-	        }
-	        if ( _contentpane != null ) {
-	            _contentpane.removeAll();
-	        }
-	        setVisible( false );
-	        dispose();
-     //******************************************START**********************************************************//     
-    	} //end of else
-  	//********************************************END**********************************************************//
+        removeTextFrame();
+        if ( _mainpanel != null ) {
+            _mainpanel.terminate();
+        }
+        if ( _contentpane != null ) {
+            _contentpane.removeAll();
+        }
+        setVisible( false );
+        dispose();
     }
 
     void confColor() {
@@ -512,8 +546,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         if ( item != null ) {
             item.setFont( MainFrame.menu_font );
             if ( !getConfiguration().isUseNativeUI() ) {
-                item.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
-                item.setForeground( Constants.MENU_TEXT_COLOR_DEFAULT );
+                item.setBackground( getConfiguration().getGuiMenuBackgroundColor() );
+                item.setForeground( getConfiguration().getGuiMenuTextColor() );
             }
             item.setSelected( is_selected );
             item.addActionListener( this );
@@ -524,10 +558,22 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         if ( jmi != null ) {
             jmi.setFont( MainFrame.menu_font );
             if ( !getConfiguration().isUseNativeUI() ) {
-                jmi.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
-                jmi.setForeground( Constants.MENU_TEXT_COLOR_DEFAULT );
+                jmi.setBackground( getConfiguration().getGuiMenuBackgroundColor() );
+                jmi.setForeground( getConfiguration().getGuiMenuTextColor() );
             }
             jmi.addActionListener( this );
+        }
+    }
+
+    void customizeRadioButtonMenuItem( final JRadioButtonMenuItem item, final boolean is_selected ) {
+        if ( item != null ) {
+            item.setFont( MainFrame.menu_font );
+            if ( !getConfiguration().isUseNativeUI() ) {
+                item.setBackground( getConfiguration().getGuiMenuBackgroundColor() );
+                item.setForeground( getConfiguration().getGuiMenuTextColor() );
+            }
+            item.setSelected( is_selected );
+            item.addActionListener( this );
         }
     }
 
@@ -538,7 +584,10 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         catch ( final Exception ex ) {
             // Do nothing.
         }
-        JOptionPane.showMessageDialog( this, e.getMessage(), "Error during File|Open", JOptionPane.ERROR_MESSAGE );
+        JOptionPane.showMessageDialog( this,
+                                       ForesterUtil.wordWrap( e.getLocalizedMessage(), 80 ),
+                                       "Error during File|Open",
+                                       JOptionPane.ERROR_MESSAGE );
     }
 
     void exceptionOccuredDuringSaveAs( final Exception e ) {
@@ -579,8 +628,20 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         return getMainPanel().getCurrentTreePanel();
     }
 
+    JMenu getHelpMenu() {
+        return _help_jmenu;
+    }
+
+    JCheckBoxMenuItem getlabelDirectionCbmi() {
+        return _label_direction_cbmi;
+    }
+
     MainPanel getMainPanel() {
         return _mainpanel;
+    }
+
+    JMenuBar getMenuBarOfMainFrame() {
+        return _jmenubar;
     }
 
     Options getOptions() {
@@ -598,6 +659,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
                 break;
             case EURO_STYLE:
                 _euro_type_cbmi.setSelected( true );
+                break;
+            case ROUNDED:
+                _rounded_type_cbmi.setSelected( true );
                 break;
             case TRIANGULAR:
                 _triangular_type_cbmi.setSelected( true );
@@ -620,158 +684,17 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         }
     }
 
-    void openPhyloXmlWebsite() {
-        try {
-            Util.launchWebBrowser( new URI( Constants.PHYLOXML_WEB_SITE ), false, null, Constants.PRG_NAME );
-        }
-        catch ( final Exception e ) {
-            ForesterUtil.printErrorMessage( Constants.PRG_NAME, e.toString() );
-        }
-    }
-
-    void openWebsite() {
-        try {
-            Util.launchWebBrowser( new URI( Constants.WEB_SITE ), false, null, Constants.PRG_NAME );
-        }
-        catch ( final Exception e ) {
-            ForesterUtil.printErrorMessage( Constants.PRG_NAME, e.toString() );
-        }
-    }
-
     abstract void readPhylogeniesFromURL();
 
     void readPhylogeniesFromWebservice( final int i ) {
-        URL url = null;
-        Phylogeny[] trees = null;
-        final WebservicesManager webservices_manager = WebservicesManager.getInstance();
-        final PhylogeniesWebserviceClient client = webservices_manager.getAvailablePhylogeniesWebserviceClient( i );
-        String identifier = JOptionPane.showInputDialog( this, client.getInstructions() + "\n(Reference: "
-                + client.getReference() + ")", client.getDescription(), JOptionPane.QUESTION_MESSAGE );
-        if ( ( identifier != null ) && ( identifier.trim().length() > 0 ) ) {
-            identifier = identifier.trim();
-            if ( client.isQueryInteger() ) {
-                int id = -1;
-                try {
-                    id = Integer.parseInt( identifier );
-                }
-                catch ( final NumberFormatException e ) {
-                    id = -1;
-                }
-                if ( id < 1 ) {
-                    JOptionPane.showMessageDialog( this,
-                                                   "Identifier is expected to be a number",
-                                                   "Can not open URL",
-                                                   JOptionPane.ERROR_MESSAGE );
-                    return;
-                }
-                identifier = id + "";
-            }
-            try {
-                String url_str = client.getUrl();
-                url_str = url_str.replaceFirst( PhylogeniesWebserviceClient.QUERY_PLACEHOLDER, identifier );
-                url = new URL( url_str );
-                PhylogenyParser parser = null;
-                switch ( client.getReturnFormat() ) {
-                    case TOL_XML_RESPONSE:
-                        parser = new TolParser();
-                        break;
-                    case NEXUS:
-                        parser = new NexusPhylogeniesParser();
-                        break;
-                    case NH:
-                        parser = new NHXParser();
-                        ( ( NHXParser ) parser ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.NO );
-                        ( ( NHXParser ) parser ).setReplaceUnderscores( true );
-                        ( ( NHXParser ) parser ).setGuessRootedness( true );
-                        break;
-                    case NH_EXTRACT_TAXONOMY:
-                        parser = new NHXParser();
-                        ( ( NHXParser ) parser ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.PFAM_STYLE_ONLY );
-                        ( ( NHXParser ) parser ).setReplaceUnderscores( false );
-                        ( ( NHXParser ) parser ).setGuessRootedness( true );
-                        break;
-                    case NHX:
-                        parser = new NHXParser();
-                        ( ( NHXParser ) parser ).setTaxonomyExtraction( TAXONOMY_EXTRACTION.NO );
-                        ( ( NHXParser ) parser ).setReplaceUnderscores( false );
-                        ( ( NHXParser ) parser ).setGuessRootedness( true );
-                        break;
-                    case PHYLOXML:
-                        parser = new PhyloXmlParser();
-                        break;
-                    default:
-                        throw new IllegalArgumentException( "unknown format: " + client.getReturnFormat() );
-                }
-                if ( _mainpanel.getCurrentTreePanel() != null ) {
-                    _mainpanel.getCurrentTreePanel().setWaitCursor();
-                }
-                else {
-                    _mainpanel.setWaitCursor();
-                }
-                final PhylogenyFactory factory = ParserBasedPhylogenyFactory.getInstance();
-                trees = factory.create( url.openStream(), parser );
-            }
-            catch ( final MalformedURLException e ) {
-                JOptionPane.showMessageDialog( this,
-                                               "Malformed URL: " + url + "\n" + e.getLocalizedMessage(),
-                                               "Malformed URL",
-                                               JOptionPane.ERROR_MESSAGE );
-            }
-            catch ( final IOException e ) {
-                JOptionPane.showMessageDialog( this,
-                                               "Could not read from " + url + "\n" + e.getLocalizedMessage(),
-                                               "Failed to read tree from " + client.getName() + " for " + identifier,
-                                               JOptionPane.ERROR_MESSAGE );
-            }
-            catch ( final NumberFormatException e ) {
-                JOptionPane.showMessageDialog( this,
-                                               "Could not read from " + url + "\n" + e.getLocalizedMessage(),
-                                               "Failed to read tree from " + client.getName() + " for " + identifier,
-                                               JOptionPane.ERROR_MESSAGE );
-            }
-            catch ( final Exception e ) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog( this,
-                                               e.getLocalizedMessage(),
-                                               "Unexpected Exception",
-                                               JOptionPane.ERROR_MESSAGE );
-            }
-            finally {
-                if ( _mainpanel.getCurrentTreePanel() != null ) {
-                    _mainpanel.getCurrentTreePanel().setArrowCursor();
-                }
-                else {
-                    _mainpanel.setArrowCursor();
-                }
-            }
-            if ( ( trees != null ) && ( trees.length > 0 ) ) {
-                for( final Phylogeny phylogeny : trees ) {
-                    if ( client.getName().equals( WebserviceUtil.TREE_FAM_NAME ) ) {
-                        phylogeny.setRerootable( false );
-                    }
-                    if ( client.getProcessingInstructions() != null ) {
-                        WebserviceUtil.processInstructions( client, phylogeny );
-                    }
-                    if ( client.getNodeField() != null ) {
-                        ForesterUtil.transferNodeNameToField( phylogeny, client.getNodeField() );
-                    }
-                    phylogeny.setIdentifier( new Identifier( identifier, client.getName() ) );
-                    _jmenubar.remove( _help_jmenu );
-                    _jmenubar.add( _help_jmenu );
-                    _mainpanel.addPhylogenyInNewTab( phylogeny,
-                                                     getConfiguration(),
-                                                     new File( url.getFile() ).getName(),
-                                                     url.toString() );
-                    Util.lookAtSomeTreePropertiesForAptxControlSettings( phylogeny,
-                                                                         _mainpanel.getControlPanel(),
-                                                                         getConfiguration() );
-                    _mainpanel.getControlPanel().showWhole();
-                }
-            }
-            _contentpane.repaint();
+        final UrlTreeReader reader = new UrlTreeReader( this, i );
+        new Thread( reader ).start();
+    }
+
+    private void removeBranchColors() {
+        if ( getMainPanel().getCurrentPhylogeny() != null ) {
+            Util.removeBranchColors( getMainPanel().getCurrentPhylogeny() );
         }
-        activateSaveAllIfNeeded();
-        System.gc();
     }
 
     void removeTextFrame() {
@@ -804,6 +727,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             case EURO_STYLE:
                 _euro_type_cbmi.setSelected( true );
                 break;
+            case ROUNDED:
+                _rounded_type_cbmi.setSelected( true );
+                break;
             case RECTANGULAR:
                 _rectangular_type_cbmi.setSelected( true );
                 break;
@@ -822,6 +748,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         _convex_type_cbmi.setSelected( false );
         _curved_type_cbmi.setSelected( false );
         _euro_type_cbmi.setSelected( false );
+        _rounded_type_cbmi.setSelected( false );
         _triangular_type_cbmi.setSelected( false );
         _rectangular_type_cbmi.setSelected( false );
         _unrooted_type_cbmi.setSelected( false );
@@ -847,9 +774,6 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     void typeChanged( final Object o ) {
         updateTypeCheckboxes( getOptions(), o );
         updateOptions( getOptions() );
-        // for( final TreePanel tp : getMainPanel().getTreePanels() ) {
-        //     tp.updateStyle();
-        // }
         if ( getCurrentTreePanel() != null ) {
             final PHYLOGENY_GRAPHICS_TYPE previous_type = getCurrentTreePanel().getPhylogenyGraphicsType();
             final PHYLOGENY_GRAPHICS_TYPE new_type = getOptions().getPhylogenyGraphicsType();
@@ -859,20 +783,47 @@ public abstract class MainFrame extends JFrame implements ActionListener {
                     || ( ( previous_type != PHYLOGENY_GRAPHICS_TYPE.CIRCULAR ) && ( new_type == PHYLOGENY_GRAPHICS_TYPE.CIRCULAR ) ) ) {
                 getCurrentTreePanel().getControlPanel().showWhole();
             }
+            if ( getCurrentTreePanel().isPhyHasBranchLengths() && ( new_type != PHYLOGENY_GRAPHICS_TYPE.CIRCULAR ) ) {
+                getCurrentTreePanel().getControlPanel().setDrawPhylogramEnabled( true );
+            }
+            else {
+                getCurrentTreePanel().getControlPanel().setDrawPhylogramEnabled( false );
+            }
             getCurrentTreePanel().setPhylogenyGraphicsType( getOptions().getPhylogenyGraphicsType() );
             updateScreenTextAntialias( getMainPanel().getTreePanels() );
+            if ( getCurrentTreePanel().getControlPanel().getDynamicallyHideData() != null ) {
+                if ( new_type == PHYLOGENY_GRAPHICS_TYPE.UNROOTED ) {
+                    getCurrentTreePanel().getControlPanel().getDynamicallyHideData().setEnabled( false );
+                }
+                else {
+                    getCurrentTreePanel().getControlPanel().getDynamicallyHideData().setEnabled( true );
+                }
+            }
         }
     }
 
     void updateOptions( final Options options ) {
         options.setAntialiasScreen( ( _screen_antialias_cbmi != null ) && _screen_antialias_cbmi.isSelected() );
+        options.setBackgroundColorGradient( ( _background_gradient_cbmi != null )
+                && _background_gradient_cbmi.isSelected() );
+        options.setShowDomainLabels( ( _show_domain_labels != null ) && _show_domain_labels.isSelected() );
+        options.setColorLabelsSameAsParentBranch( ( _color_labels_same_as_parent_branch != null )
+                && _color_labels_same_as_parent_branch.isSelected() );
         options.setShowNodeBoxes( ( _show_node_boxes_cbmi != null ) && _show_node_boxes_cbmi.isSelected() );
-        options.setNonLinedUpCladogram( ( _non_lined_up_cladograms_cbmi != null )
-                && _non_lined_up_cladograms_cbmi.isSelected() );
+        if ( ( _non_lined_up_cladograms_rbmi != null ) && ( _non_lined_up_cladograms_rbmi.isSelected() ) ) {
+            options.setCladogramType( CLADOGRAM_TYPE.NON_LINED_UP );
+        }
+        else if ( ( _uniform_cladograms_rbmi != null ) && ( _uniform_cladograms_rbmi.isSelected() ) ) {
+            options.setCladogramType( CLADOGRAM_TYPE.TOTAL_NODE_SUM_DEP );
+        }
+        else if ( ( _ext_node_dependent_cladogram_rbmi != null ) && ( _ext_node_dependent_cladogram_rbmi.isSelected() ) ) {
+            options.setCladogramType( CLADOGRAM_TYPE.EXT_NODE_SUM_DEP );
+        }
         options.setSearchCaseSensitive( ( _search_case_senstive_cbmi != null )
                 && _search_case_senstive_cbmi.isSelected() );
-        options.setShowScale( ( ( _show_scale_cbmi != null ) && _show_scale_cbmi.isEnabled() )
-                && _show_scale_cbmi.isSelected() );
+        if ( ( _show_scale_cbmi != null ) && _show_scale_cbmi.isEnabled() ) {
+            options.setShowScale( _show_scale_cbmi.isSelected() );
+        }
         if ( _label_direction_cbmi != null ) {
             if ( _label_direction_cbmi.isSelected() ) {
                 options.setNodeLabelDirection( NODE_LABEL_DIRECTION.RADIAL );
@@ -882,10 +833,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             }
         }
         options.setShowOverview( ( _show_overview_cbmi != null ) && _show_overview_cbmi.isSelected() );
-        options
-                .setShowBranchLengthValues( ( ( _show_branch_length_values_cbmi != null ) && _show_branch_length_values_cbmi
-                        .isEnabled() )
-                        && _show_branch_length_values_cbmi.isSelected() );
+        if ( ( _show_branch_length_values_cbmi != null ) && _show_branch_length_values_cbmi.isEnabled() ) {
+            options.setShowBranchLengthValues( _show_branch_length_values_cbmi.isSelected() );
+        }
         options.setPrintUsingActualSize( ( _print_using_actual_size_cbmi != null )
                 && ( _print_using_actual_size_cbmi.isSelected() ) );
         options.setGraphicsExportUsingActualSize( ( _graphics_export_using_actual_size_cbmi != null )
@@ -896,6 +846,10 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         options
                 .setInternalNumberAreConfidenceForNhParsing( ( _internal_number_are_confidence_for_nh_parsing_cbmi != null )
                         && _internal_number_are_confidence_for_nh_parsing_cbmi.isSelected() );
+        options.setExtractPfamTaxonomyCodesInNhParsing( ( _extract_pfam_style_tax_codes_cbmi != null )
+                && _extract_pfam_style_tax_codes_cbmi.isSelected() );
+        options.setReplaceUnderscoresInNhParsing( ( _replace_underscores_cbmi != null )
+                && _replace_underscores_cbmi.isSelected() );
         options.setMatchWholeTermsOnly( ( _search_whole_words_only_cbmi != null )
                 && _search_whole_words_only_cbmi.isSelected() );
         options.setInverseSearchResult( ( _inverse_search_result_cbmi != null )
@@ -924,6 +878,9 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         }
         else if ( ( _euro_type_cbmi != null ) && _euro_type_cbmi.isSelected() ) {
             options.setPhylogenyGraphicsType( PHYLOGENY_GRAPHICS_TYPE.EURO_STYLE );
+        }
+        else if ( ( _rounded_type_cbmi != null ) && _rounded_type_cbmi.isSelected() ) {
+            options.setPhylogenyGraphicsType( PHYLOGENY_GRAPHICS_TYPE.ROUNDED );
         }
         else if ( ( _unrooted_type_cbmi != null ) && _unrooted_type_cbmi.isSelected() ) {
             options.setPhylogenyGraphicsType( PHYLOGENY_GRAPHICS_TYPE.UNROOTED );
@@ -973,57 +930,13 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         }
     }
 
-    private void chooseFont() {
-        final FontChooser fc = new FontChooser();
-        fc.setFont( getMainPanel().getTreeFontSet().getLargeFont() );
-        fc.showDialog( this, "Select the Base Font" );
-        getMainPanel().getTreeFontSet().setBaseFont( fc.getFont() );
-    }
-
-    private void chooseMinimalConfidence() {
-        final String s = ( String ) JOptionPane
-                .showInputDialog( this,
-                                  "Please enter the minimum for confidence values to be displayed.\n"
-                                          + "[current value: " + getOptions().getMinConfidenceValue() + "]\n",
-                                  "Minimal Confidence Value",
-                                  JOptionPane.QUESTION_MESSAGE,
-                                  null,
-                                  null,
-                                  getOptions().getMinConfidenceValue() );
-        if ( !ForesterUtil.isEmpty( s ) ) {
-            boolean success = true;
-            double m = 0.0;
-            final String m_str = s.trim();
-            if ( !ForesterUtil.isEmpty( m_str ) ) {
-                try {
-                    m = Double.parseDouble( m_str );
-                }
-                catch ( final Exception ex ) {
-                    success = false;
-                }
-            }
-            else {
-                success = false;
-            }
-            if ( success && ( m >= 0.0 ) ) {
-                getOptions().setMinConfidenceValue( m );
-            }
-        }
-    }
-
-    private void removeBranchColors() {
-        if ( getMainPanel().getCurrentPhylogeny() != null ) {
-            Util.removeBranchColors( getMainPanel().getCurrentPhylogeny() );
-        }
-    }
-
     /**
      * Display the about box.
      */
     static void about() {
         final StringBuffer about = new StringBuffer( "Archaeopteryx\nVersion " + Constants.VERSION + "\n" );
         about.append( "Copyright (C) 2007-2009 Christian M Zmasek\n" );
-        about.append( "Copyright (C) 2007-2008 Ethalinda KS Cannon\n" );
+        about.append( "Copyright (C) 2007-2009 Ethalinda KS Cannon\n" );
         about.append( "All Rights Reserved\n" );
         about.append( "License: GNU Lesser General Public License (LGPL)\n" );
         about.append( "Last modified: " + Constants.PRG_DATE + "\n" );
@@ -1042,9 +955,11 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         final long total_memory = rt.totalMemory() / 1000000;
         about.append( "[free memory: " + free_memory + "MB, total memory: " + total_memory + "MB]\n" );
         about.append( "[locale: " + Locale.getDefault() + "]\n" );
-        about.append( "Reference: Zmasek C.M. and Eddy S.R. Bioinformatics, 17, 383 (2001)\n" );
+        about.append( "References:\n" );
+        about.append( Constants.PHYLOXML_REFERENCE_SHORT + "\n" );
+        about.append( "Zmasek CM and Eddy SR (2001), Bioinformatics, 17, 383\n" );
         about.append( "For more information & download:\n" );
-        about.append( "http://www.phylosoft.org/archaeopteryx/\n" );
+        about.append( Constants.APTX_WEB_SITE + "\n" );
         about.append( "Comments: " + Constants.AUTHOR_EMAIL );
         JOptionPane.showMessageDialog( null, about, Constants.PRG_NAME, JOptionPane.PLAIN_MESSAGE );
     }
@@ -1057,8 +972,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         final JMenu jmenu = new JMenu( title );
         if ( !conf.isUseNativeUI() ) {
             jmenu.setFont( MainFrame.menu_font );
-            jmenu.setBackground( Constants.MENU_BACKGROUND_COLOR_DEFAULT );
-            jmenu.setForeground( Constants.MENU_TEXT_COLOR_DEFAULT );
+            jmenu.setBackground( conf.getGuiMenuBackgroundColor() );
+            jmenu.setForeground( conf.getGuiMenuTextColor() );
         }
         return jmenu;
     }
@@ -1066,8 +981,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     static JMenuItem customizeMenuItemAsLabel( final JMenuItem label, final Configuration configuration ) {
         label.setFont( MainFrame.menu_font.deriveFont( Font.BOLD ) );
         if ( !configuration.isUseNativeUI() ) {
-            label.setBackground( Constants.MENU_LABEL_BACKGROUND_COLOR_DEFAULT );
-            label.setForeground( Constants.MENU_LABEL_TEXT_COLOR_DEFAULT );
+            label.setBackground( configuration.getGuiMenuBackgroundColor() );
+            label.setForeground( configuration.getGuiMenuTextColor() );
             label.setOpaque( true );
         }
         label.setSelected( false );
@@ -1121,10 +1036,10 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         sb.append( "Mouse wheel+Shift controls zooming in vertical direction only.\n" );
         sb.append( "Use the buttons on the control panel to zoom the tree in and out, horizontally or vertically.\n" );
         sb
-                .append( "The entire tree can be fitted into the window by clicking the \"F\" button, or by pressing Backspace.\n" );
+                .append( "The entire tree can be fitted into the window by clicking the \"F\" button, or by pressing F, Delete, or Home.\n" );
         sb.append( "The up, down, left, and right keys can be used to move the visible part (if zoomed in).\n" );
         sb.append( "Up, down, left, and right+Shift can be used to control zooming horizontally and vertically.\n" );
-        sb.append( "Plus and minus keys+Ctrl change the text siz, Backspace+Ctrl resets it.\n\n" );
+        sb.append( "Plus and minus keys+Ctrl change the text size; F+Ctrl, Delete+Ctrl, or Home+Ctrl resets it.\n\n" );
         sb.append( "Quick tree manipulation:\n" );
         sb.append( "------------------------\n" );
         sb.append( "Order Subtrees -- order the tree by branch length\n" );
@@ -1184,6 +1099,12 @@ public abstract class MainFrame extends JFrame implements ActionListener {
         // +
         // "    with: \"SDI\"|\"SDI (Speciation Duplication Inference)\n\n"
         sb.append( "\n" );
+        sb.append( "phyloXML\n" );
+        sb.append( "-------------------\n" );
+        sb.append( "Reference: " + Constants.PHYLOXML_REFERENCE + "\n" );
+        sb.append( "Website: " + Constants.PHYLOXML_WEB_SITE + "\n" );
+        sb.append( "Version: " + ForesterConstants.PHYLO_XML_VERSION + "\n" );
+        sb.append( "\n" );
         sb.append( "For more information: http://www.phylosoft.org/archaeopteryx/\n" );
         sb.append( "Email: " + Constants.AUTHOR_EMAIL + "\n\n" );
         TextFrame.instantiate( sb.toString() );
@@ -1227,8 +1148,10 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     static void updateOptionsMenuDependingOnPhylogenyType( final MainPanel main_panel,
                                                            final JCheckBoxMenuItem scale,
                                                            final JCheckBoxMenuItem branch_lengths,
-                                                           final JCheckBoxMenuItem non_lined_up,
-                                                           final JCheckBoxMenuItem _label_direction_cbmi ) {
+                                                           final JRadioButtonMenuItem non_lined_up,
+                                                           final JRadioButtonMenuItem uniform_clado,
+                                                           final JRadioButtonMenuItem nonuniform_clado,
+                                                           final JCheckBoxMenuItem label_direction_cbmi ) {
         final TreePanel tree_panel = main_panel.getCurrentTreePanel();
         final ControlPanel control = main_panel.getControlPanel();
         final Options options = main_panel.getOptions();
@@ -1251,7 +1174,8 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             branch_lengths.setEnabled( true );
         }
         if ( ( tree_panel != null )
-                && ( ( tree_panel.getPhylogenyGraphicsType() != PHYLOGENY_GRAPHICS_TYPE.EURO_STYLE ) && ( tree_panel
+                && ( ( tree_panel.getPhylogenyGraphicsType() != PHYLOGENY_GRAPHICS_TYPE.ROUNDED )
+                        && ( tree_panel.getPhylogenyGraphicsType() != PHYLOGENY_GRAPHICS_TYPE.EURO_STYLE ) && ( tree_panel
                         .getPhylogenyGraphicsType() != PHYLOGENY_GRAPHICS_TYPE.RECTANGULAR ) ) ) {
             branch_lengths.setSelected( false );
             branch_lengths.setEnabled( false );
@@ -1260,10 +1184,13 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             if ( ( tree_panel.getPhylogenyGraphicsType() == PHYLOGENY_GRAPHICS_TYPE.CIRCULAR )
                     || ( tree_panel.getPhylogenyGraphicsType() == PHYLOGENY_GRAPHICS_TYPE.UNROOTED ) ) {
                 non_lined_up.setEnabled( false );
+                uniform_clado.setEnabled( false );
+                nonuniform_clado.setEnabled( false );
             }
             else {
-                // non_lined_up.setSelected( options.isNonLinedUpCladogram() );
                 non_lined_up.setEnabled( true );
+                uniform_clado.setEnabled( true );
+                nonuniform_clado.setEnabled( true );
             }
         }
         else {
@@ -1283,11 +1210,15 @@ public abstract class MainFrame extends JFrame implements ActionListener {
                 non_lined_up.setEnabled( true );
             }
         }
-        _label_direction_cbmi.setEnabled( true );
+        label_direction_cbmi.setEnabled( true );
         if ( tree_panel != null ) {
             if ( ( tree_panel.getPhylogenyGraphicsType() != PHYLOGENY_GRAPHICS_TYPE.UNROOTED )
                     && ( tree_panel.getPhylogenyGraphicsType() != PHYLOGENY_GRAPHICS_TYPE.CIRCULAR ) ) {
-                _label_direction_cbmi.setEnabled( false );
+                label_direction_cbmi.setEnabled( false );
+            }
+            if ( tree_panel.getPhylogenyGraphicsType() == PHYLOGENY_GRAPHICS_TYPE.CIRCULAR ) {
+                scale.setSelected( false );
+                scale.setEnabled( false );
             }
         }
     }
@@ -1297,80 +1228,4 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             tree_panel.setTextAntialias();
         }
     }
-  //******************************************START**********************************************************//
-    public void closeOnDelete() {
-        removeTextFrame();
-        if ( _mainpanel != null ) {
-            _mainpanel.terminateOnDelete();
-        }
-        if ( _contentpane != null ) {
-            _contentpane.removeAll();
-        }
-        setVisible( false );
-        dispose();
-        AppletTerminate.extraTerminationActions(this);
-    }
-    public MainPanel get_main_panel() {
-        return _mainpanel;
-    }
-    public void repaintPanel(){
-    	this.getMainPanel().repaint();
-    }
-    
-    public Configuration get_configuration() {
-        return _configuration;
-    }
-    
-    public void close_() {
-    	/**
-    	 * NOTE TO PROGRAMMER
-    	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT void close(){...}. Hence whenever you make any changes here, also make changes in 
-    	 * void close(){...} 
-    	 */
-        //******************************************START**********************************************************//
-    	if(AppletParams.isEitherTPorTDForAll() ){
-    		if(appletTerminate.check_terminate(this)){
-        
-	        removeTextFrame();
-	        if ( _mainpanel != null ) {
-	            _mainpanel.terminate();
-	        }
-	        if ( _contentpane != null ) {
-	            _contentpane.removeAll();
-	        }
-	        setVisible( false );
-	        dispose();
-	     
-	        NewWindowSubtree.handleBackToSubTreeButton();
-	        NewWindowSubtree.handleCloseXButton();
-	        AppletTerminate.extraTerminationActions(this);
-	        }
-	        else{
-	        	appletTerminate.closeAdditionalTasks();
-	        }
-    	}
-    	else{
-      //********************************************END**********************************************************//
-    		removeTextFrame();
-	        if ( _mainpanel != null ) {
-	            _mainpanel.terminate();
-	        }
-	        if ( _contentpane != null ) {
-	            _contentpane.removeAll();
-	        }
-	        setVisible( false );
-	        dispose();
-     //******************************************START**********************************************************//     
-    	} //end of else
-  	//********************************************END**********************************************************//
-      
-    }
-    public Options get_options() {
-    	return _options;
-    }
-    
-    public Container get_content_pane(){
-    	return _contentpane;
-   }
-    //********************************************END**********************************************************//
 }

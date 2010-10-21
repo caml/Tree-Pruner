@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phyloxml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.00/phyloxml.xsd"
+    xsi:schemaLocation="http://www.phyloxml.org http://www.phyloxml.org/1.10/phyloxml.xsd"
     xmlns="http://www.phyloxml.org">
     <phylogeny branch_length_unit="c" rooted="true">
         <name>t3</name>
-        <id type="treebank">1-1</id>
+        <id provider="treebank">1-1</id>
         <description>test phylogeny</description>
         <confidence type="ml">0.1</confidence>
         <clade branch_length="0.1">
@@ -19,30 +19,26 @@
                 <blue>33</blue>
             </color>
             <node_id>root id</node_id>
-            <taxonomy type="host">
-                <id type="ncbi">1</id>
+            <taxonomy>
+                <id provider="ncbi">1</id>
                 <code>ECDYS</code>
                 <scientific_name>ecdysozoa</scientific_name>
                 <common_name>molting animals</common_name>
                 <rank>phylum</rank>
                 <uri>http://www.ecdysozoa.org/</uri>
             </taxonomy>
-            <sequence type="aa">
+            <sequence type="protein">
                 <symbol>BCL2L14</symbol>
                 <accession source="UniProtKB">Q9BZR8</accession>
                 <name>Apoptosis facilitator Bcl-2-like 14 protein</name>
                 <location>12p13-p12</location>
                 <mol_seq>MCSTSGCDLEEIPLDDDDLNTIEFKILAYY</mol_seq>
-                <uri type="source" desc="UniProt link"
-                    >http://www.pir.uniprot.org/cgi-bin/upEntry?id=B2L14_HUMAN</uri>
-                <annotation ref="GO:0006915" source="UniProtKB" evidence="experimental"
-                    type="function">
+                <uri type="source" desc="UniProt link">http://www.pir.uniprot.org/cgi-bin/upEntry?id=B2L14_HUMAN</uri>
+                <annotation ref="GO:0006915" source="UniProtKB" evidence="experimental" type="function">
                     <desc>apoptosis</desc>
                     <confidence type="ml">1</confidence>
-                    <property datatype="xsd:double" applies_to="annotation" ref="AFFY:expression"
-                        unit="AFFY:x">0.2</property>
-                    <property datatype="xsd:string" applies_to="annotation" ref="MED:disease"
-                        >lymphoma</property>
+                    <property datatype="xsd:double" applies_to="annotation" ref="AFFY:expression" unit="AFFY:x">0.2</property>
+                    <property datatype="xsd:string" applies_to="annotation" ref="MED:disease">lymphoma</property>
                 </annotation>
                 <annotation ref="GO:0005829"/>
                 <annotation>
@@ -72,9 +68,9 @@
                     <green>14</green>
                     <blue>16</blue>
                 </color>
-                <node_id type="nodeid">a id</node_id>
+                <node_id provider="nodeid">a id</node_id>
                 <taxonomy>
-                    <id type="ncbi">123</id>
+                    <id provider="ncbi">123</id>
                     <code>CAEEL</code>
                     <scientific_name>C elegans</scientific_name>
                     <common_name>elegant nematode worm</common_name>
@@ -91,8 +87,7 @@
                     <duplications>1</duplications>
                     <confidence type="">80</confidence>
                 </events>
-                <binary_characters type="characters" present_count="2" lost_count="3"
-                    gained_count="1">
+                <binary_characters type="characters" present_count="2" lost_count="3" gained_count="1">
                     <gained>
                         <bc>c</bc>
                     </gained>
