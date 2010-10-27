@@ -50,11 +50,25 @@ import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletFileMenu;
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.NewWindowSubtree;
+//********************************************END**********************************************************//
+
 public final class MainFrameApplet extends MainFrame {
 
     private static final long    serialVersionUID = 1941019292746717053L;
-    private final static int     FRAME_X_SIZE     = 640, FRAME_Y_SIZE = 580;
+  //******************************************START Changed**********************************************************//
+    //Change the size of the applet window. Default is much small!
+    private final static int     FRAME_X_SIZE     = 800, FRAME_Y_SIZE = 800;
+//    private final static int     FRAME_X_SIZE     = 640, FRAME_Y_SIZE = 580;
+  //********************************************END**********************************************************//
     private final ArchaeopteryxA _applet;
+    
+  //******************************************START**********************************************************//
+    AppletFileMenu appletFileMenu = new AppletFileMenu(this);
+    //********************************************END**********************************************************//
     private ButtonGroup          _radio_group_1;
 
     MainFrameApplet( final ArchaeopteryxA parent_applet, final Configuration configuration ) {
@@ -72,6 +86,12 @@ public final class MainFrameApplet extends MainFrame {
             }
             catch ( final Exception e ) {
                 ForesterUtil.printErrorMessage( ArchaeopteryxA.NAME, e.toString() );
+                
+              //******************************************START**********************************************************//
+                if(AppletParams.isTreePrunerForAll() ){
+                	NewWindowSubtree.destroyWarningWindow();
+                }
+               //********************************************END**********************************************************//
                 e.printStackTrace();
                 JOptionPane
                         .showMessageDialog( this,
@@ -109,6 +129,12 @@ public final class MainFrameApplet extends MainFrame {
         if ( !_configuration.isUseNativeUI() ) {
             _jmenubar.setBackground( _configuration.getGuiMenuBackgroundColor() );
         }
+        
+      //******************************************START**********************************************************//
+        if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
+        	appletFileMenu.buildFileMenu(_jmenubar, _configuration);
+        }
+      //********************************************END**********************************************************//
         buildToolsMenu();
         buildViewMenu();
         buildFontSizeMenu();
@@ -120,13 +146,17 @@ public final class MainFrameApplet extends MainFrame {
         _contentpane.setLayout( new BorderLayout() );
         _contentpane.add( _mainpanel, BorderLayout.CENTER );
         setSize( FRAME_X_SIZE, FRAME_Y_SIZE );
-        addWindowListener( new WindowAdapter() {
+      //******************************************START CHANGED**********************************************************//
+        addWindowListener(closeWindowAdapter);
+        /**addWindowListener( new WindowAdapter() {  //Using predefined variable closeWindowAdapter - changed
 
             @Override
             public void windowClosing( final WindowEvent e ) {
                 close();
             }
-        } );
+        } );*/
+
+        //********************************************END**********************************************************//
         addComponentListener( new ComponentAdapter() {
 
             @Override
@@ -155,9 +185,16 @@ public final class MainFrameApplet extends MainFrame {
             @Override
             public void stateChanged( final ChangeEvent e ) {
                 MainFrame.setOvPlacementColorChooseMenuItem( _overview_placment_mi, getCurrentTreePanel() );
-                MainFrame.setTextColorChooseMenuItem( _switch_colors_mi, getCurrentTreePanel() );
-                MainFrame
-                        .setTextMinSupportMenuItem( _choose_minimal_confidence_mi, getOptions(), getCurrentTreePanel() );
+                //******************************************START Changed**********************************************************//
+//                MainFrame.setTextColorChooseMenuItem( _switch_colors_mi, getCurrentTreePanel() );
+//              MainFrame
+//              .setTextMinSupportMenuItem( _choose_minimal_confidence_mi, getOptions(), getCurrentTreePanel() );
+                //********************************************END**********************************************************//
+                
+              //******************************************START**********************************************************//
+                setTextForGraphicsSizeChooserMenuItem( _print_size_mi, getOptions() );
+                setTextForPdfLineWidthChooserMenuItem( _choose_pdf_width_mi, getOptions() );
+              //********************************************END**********************************************************//
                 MainFrame.setTextForFontChooserMenuItem( _choose_font_mi, createCurrentFontDesc( getMainPanel()
                         .getTreeFontSet() ) );
                 MainFrame.updateOptionsMenuDependingOnPhylogenyType( getMainPanel(),
@@ -186,16 +223,24 @@ public final class MainFrameApplet extends MainFrame {
         _options_jmenu.add( _show_overview_cbmi = new JCheckBoxMenuItem( MainFrame.SHOW_OVERVIEW_LABEL ) );
         _options_jmenu.add( _label_direction_cbmi = new JCheckBoxMenuItem( LABEL_DIRECTION_LABEL ) );
         _label_direction_cbmi.setToolTipText( LABEL_DIRECTION_TIP );
-        _options_jmenu.add( _color_labels_same_as_parent_branch = new JCheckBoxMenuItem( COLOR_LABELS_LABEL ) );
-        _color_labels_same_as_parent_branch.setToolTipText( MainFrame.COLOR_LABELS_TIP );
+        //******************************************START Changed**********************************************************//
+
+//        _options_jmenu.add( _color_labels_same_as_parent_branch = new JCheckBoxMenuItem( COLOR_LABELS_LABEL ) );
+//        _color_labels_same_as_parent_branch.setToolTipText( MainFrame.COLOR_LABELS_TIP );
+        //********************************************END**********************************************************//
+
         _options_jmenu.add( _screen_antialias_cbmi = new JCheckBoxMenuItem( MainFrame.SCREEN_ANTIALIAS_LABEL ) );
-        _options_jmenu.add( _background_gradient_cbmi = new JCheckBoxMenuItem( MainFrame.BG_GRAD_LABEL ) );
+      //******************************************START Changed**********************************************************//
+//        _options_jmenu.add( _background_gradient_cbmi = new JCheckBoxMenuItem( MainFrame.BG_GRAD_LABEL ) );
+//      _options_jmenu.add( _choose_minimal_confidence_mi = new JMenuItem( "" ) );
+//        _options_jmenu.add( _switch_colors_mi = new JMenuItem( "" ) );
+
+      //********************************************END**********************************************************//
         if ( getConfiguration().doDisplayOption( Configuration.show_domain_architectures ) ) {
             _options_jmenu.add( _show_domain_labels = new JCheckBoxMenuItem( SHOW_DOMAIN_LABELS_LABEL ) );
         }
-        _options_jmenu.add( _choose_minimal_confidence_mi = new JMenuItem( "" ) );
+
         _options_jmenu.add( _overview_placment_mi = new JMenuItem( "" ) );
-        _options_jmenu.add( _switch_colors_mi = new JMenuItem( "" ) );
         _options_jmenu.add( _choose_font_mi = new JMenuItem( "" ) );
         _options_jmenu.addSeparator();
         _options_jmenu.add( MainFrame.customizeMenuItemAsLabel( new JMenuItem( MainFrame.SEARCH_SUBHEADER ),
@@ -204,14 +249,54 @@ public final class MainFrameApplet extends MainFrame {
                 .add( _search_case_senstive_cbmi = new JCheckBoxMenuItem( MainFrame.SEARCH_CASE_SENSITIVE_LABEL ) );
         _options_jmenu.add( _search_whole_words_only_cbmi = new JCheckBoxMenuItem( MainFrame.SEARCH_TERMS_ONLY_LABEL ) );
         _options_jmenu.add( _inverse_search_result_cbmi = new JCheckBoxMenuItem( INVERSE_SEARCH_RESULT_LABEL ) );
+        
+      //******************************************START**********************************************************//
+        //New Stuff from MainFrameApplication
+        
+        _options_jmenu.addSeparator();
+        _options_jmenu.add( MainFrame.customizeMenuItemAsLabel( new JMenuItem( "Graphics Export & Printing:" ),
+        		getConfiguration() ) );
+        _options_jmenu.add( _antialias_print_cbmi = new JCheckBoxMenuItem( "Antialias" ) );
+        _options_jmenu.add( _print_black_and_white_cbmi = new JCheckBoxMenuItem( "Export in Black and White" ) );
+        _options_jmenu
+        .add( _print_using_actual_size_cbmi = new JCheckBoxMenuItem( "Use Current Image Size for PDF export and Printing" ) );
+        _options_jmenu
+        .add( _graphics_export_using_actual_size_cbmi = new JCheckBoxMenuItem( "Use Current Image Size for PNG, JPG, and GIF export" ) );
+        _options_jmenu
+        .add( _graphics_export_visible_only_cbmi = new JCheckBoxMenuItem( "Limit to Visible ('Screenshot') for PNG, JPG, and GIF export" ) );
+        _options_jmenu.add( _print_size_mi = new JMenuItem( "" ) );
+        _options_jmenu.add( _choose_pdf_width_mi = new JMenuItem( "" ) );
+        _options_jmenu.addSeparator();
+        _options_jmenu
+        .add( MainFrame.customizeMenuItemAsLabel( new JMenuItem( "Newick/NHX/Nexus Parsing:" ), getConfiguration() ) );
+
+        _options_jmenu.add( _replace_underscores_cbmi = new JCheckBoxMenuItem( "Replace Underscores with Spaces" ) );
+
+      //********************************************END**********************************************************//
         customizeJMenuItem( _choose_font_mi );
-        customizeJMenuItem( _switch_colors_mi );
-        customizeJMenuItem( _choose_minimal_confidence_mi );
+        //******************************************START Changed**********************************************************//
+        
+//        customizeJMenuItem( _switch_colors_mi );
+//        customizeJMenuItem( _choose_minimal_confidence_mi );
+        //********************************************END**********************************************************//
+        
         customizeJMenuItem( _overview_placment_mi );
+      //******************************************START**********************************************************//
+        customizeJMenuItem( _choose_pdf_width_mi );
+        customizeJMenuItem( _print_size_mi );
+      //********************************************END**********************************************************//
+        
         customizeCheckBoxMenuItem( _show_node_boxes_cbmi, getOptions().isShowNodeBoxes() );
-        customizeCheckBoxMenuItem( _color_labels_same_as_parent_branch, getOptions().isColorLabelsSameAsParentBranch() );
+        
+      //******************************************START Changed**********************************************************//
+//        customizeCheckBoxMenuItem( _color_labels_same_as_parent_branch, getOptions().isColorLabelsSameAsParentBranch() );
+        //********************************************END**********************************************************//
+
         customizeCheckBoxMenuItem( _screen_antialias_cbmi, getOptions().isAntialiasScreen() );
-        customizeCheckBoxMenuItem( _background_gradient_cbmi, getOptions().isBackgroundColorGradient() );
+        
+      //******************************************START Changed**********************************************************//
+//        customizeCheckBoxMenuItem( _background_gradient_cbmi, getOptions().isBackgroundColorGradient() );
+      //********************************************END**********************************************************//
         customizeCheckBoxMenuItem( _show_domain_labels, getOptions().isShowDomainLabels() );
         customizeCheckBoxMenuItem( _search_case_senstive_cbmi, getOptions().isSearchCaseSensitive() );
         customizeCheckBoxMenuItem( _show_scale_cbmi, getOptions().isShowScale() );
@@ -227,34 +312,60 @@ public final class MainFrameApplet extends MainFrame {
                                    getOptions().getNodeLabelDirection() == NODE_LABEL_DIRECTION.RADIAL );
         customizeCheckBoxMenuItem( _search_whole_words_only_cbmi, getOptions().isMatchWholeTermsOnly() );
         customizeCheckBoxMenuItem( _inverse_search_result_cbmi, getOptions().isInverseSearchResult() );
+      //******************************************START**********************************************************//
+        //Customization of the above added Options from MainFrameApplication
+        customizeCheckBoxMenuItem( _antialias_print_cbmi, getOptions().isAntialiasPrint() );
+        customizeCheckBoxMenuItem( _print_black_and_white_cbmi, getOptions().isPrintBlackAndWhite() );
+        customizeCheckBoxMenuItem( _replace_underscores_cbmi, getOptions().isReplaceUnderscoresInNhParsing() );
+        customizeCheckBoxMenuItem( _graphics_export_visible_only_cbmi, getOptions().isGraphicsExportVisibleOnly() );
+        customizeCheckBoxMenuItem( _print_using_actual_size_cbmi, getOptions().isPrintUsingActualSize() );
+        customizeCheckBoxMenuItem( _graphics_export_using_actual_size_cbmi, getOptions()
+                .isGraphicsExportUsingActualSize() );
+      //********************************************END**********************************************************//
         _jmenubar.add( _options_jmenu );
     }
 
     void buildToolsMenu() {
         _tools_menu = MainFrame.createMenu( "Tools", getConfiguration() );
-        _tools_menu.add( _confcolor_item = new JMenuItem( "Colorize Branches Depending on Confidence" ) );
-        customizeJMenuItem( _confcolor_item );
-        _tools_menu.add( _taxcolor_item = new JMenuItem( "Taxonomy Colorize Branches" ) );
-        customizeJMenuItem( _taxcolor_item );
-        _tools_menu.add( _remove_branch_color_item = new JMenuItem( "Delete Branch Colors" ) );
-        _remove_branch_color_item.setToolTipText( "To delete branch color values from the current phylogeny." );
-        customizeJMenuItem( _remove_branch_color_item );
-        _tools_menu.addSeparator();
         _tools_menu.add( _midpoint_root_item = new JMenuItem( "Midpoint-Root" ) );
         customizeJMenuItem( _midpoint_root_item );
-        _tools_menu.addSeparator();
-        _tools_menu
-                .add( _infer_common_sn_names_item = new JMenuItem( "Infer Common Parts of Internal Scientific Names" ) );
-        customizeJMenuItem( _infer_common_sn_names_item );
-        _tools_menu.add( _collapse_species_specific_subtrees = new JMenuItem( "Collapse Species-Specific Subtrees" ) );
-        customizeJMenuItem( _collapse_species_specific_subtrees );
+      //******************************************START Changed**********************************************************//
+        //Commented because only MID-POINT ROOT Item is needed
+//        _tools_menu.add( _confcolor_item = new JMenuItem( "Colorize Branches Depending on Confidence" ) );
+//        customizeJMenuItem( _confcolor_item );
+//        _tools_menu.add( _taxcolor_item = new JMenuItem( "Taxonomy Colorize Branches" ) );
+//        customizeJMenuItem( _taxcolor_item );
+//        _tools_menu.add( _remove_branch_color_item = new JMenuItem( "Delete Branch Colors" ) );
+//        _remove_branch_color_item.setToolTipText( "To delete branch color values from the current phylogeny." );
+//        customizeJMenuItem( _remove_branch_color_item );
+//        _tools_menu.addSeparator();
+           
+//        _tools_menu.addSeparator();
+//        _tools_menu
+//                .add( _infer_common_sn_names_item = new JMenuItem( "Infer Common Parts of Internal Scientific Names" ) );
+//        customizeJMenuItem( _infer_common_sn_names_item );
+//        _tools_menu.add( _collapse_species_specific_subtrees = new JMenuItem( "Collapse Species-Specific Subtrees" ) );
+//        customizeJMenuItem( _collapse_species_specific_subtrees );
+      //********************************************END**********************************************************//
         _jmenubar.add( _tools_menu );
     }
 
+  //******************************************START**********************************************************//
+    static void setTextForGraphicsSizeChooserMenuItem( final JMenuItem mi, final Options o ) {
+        mi.setText( "Enter Default Size for Graphics Export... (current: " + o.getPrintSizeX() + ", "
+                + o.getPrintSizeY() + ")" );
+    }
+    
+    static void setTextForPdfLineWidthChooserMenuItem( final JMenuItem mi, final Options o ) {
+        mi.setText( "Enter Default Line Width for PDF Export... (current: " + o.getPrintLineWidth() + ")" );
+    }
+  //********************************************END**********************************************************//
+    
     JApplet getApplet() {
         return _applet;
     }
-
+  
+    
     @Override
     MainPanel getMainPanel() {
         return _mainpanel;

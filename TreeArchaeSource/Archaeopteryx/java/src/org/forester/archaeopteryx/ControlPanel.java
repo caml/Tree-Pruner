@@ -67,8 +67,17 @@ import org.forester.phylogeny.data.Sequence;
 import org.forester.phylogeny.data.SequenceRelation;
 import org.forester.util.ForesterUtil;
 
-final class ControlPanel extends JPanel implements ActionListener {
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.ControlPanelAdditions;
+import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
+//********************************************END**********************************************************//
 
+
+//******************************************START CHANGED**********************************************************//
+public class ControlPanel extends JPanel implements ActionListener {
+//final class ControlPanel extends JPanel implements ActionListener {  //final->public - changed
+//********************************************END**********************************************************//
     private static final String  RETURN_TO_SUPER_TREE_TEXT = "Back to Super Tree";
     final static Font            jcb_font                  = new Font( Configuration.getDefaultFontFamilyName(),
                                                                        Font.PLAIN,
@@ -79,6 +88,7 @@ final class ControlPanel extends JPanel implements ActionListener {
     final static Font            jcb_bold_font             = new Font( Configuration.getDefaultFontFamilyName(),
                                                                        Font.BOLD,
                                                                        9 );
+
     private static final long    serialVersionUID          = -8463483932821545633L;
     private final MainPanel      _mainpanel;
     // The settings from the conf file
@@ -154,6 +164,12 @@ final class ControlPanel extends JPanel implements ActionListener {
     private JButton              _search_reset_button;
     private JLabel               _search_found_label;
     private Sequence             _selected_query_seq;
+    
+  //******************************************START**********************************************************//
+    private static String UpOneLevelTEXT ="Up one level";
+    public ControlPanelAdditions controlPanelAdditions;
+    private KeepRemoveConfiguration keepRemoveConfiguration;
+    //********************************************END**********************************************************//
 
     ControlPanel( final MainPanel ap, final Configuration configuration ) {
         init();
@@ -264,6 +280,14 @@ final class ControlPanel extends JPanel implements ActionListener {
                     displayedPhylogenyMightHaveChanged( true );
                 }
                 else {
+                	//******************************************START**********************************************************//
+                	if(AppletParams.isTreePrunerForAll() ){
+                		controlPanelAdditions.addTreePrunerButtonFunctions(e);
+                	}
+                	else if (AppletParams.isTreeDecoratorForAll()){
+                		controlPanelAdditions.addTreeDecoratorButtonFunctions(e);
+                	}
+                	 //********************************************END**********************************************************//
                     displayedPhylogenyMightHaveChanged( true );
                 }
             }
@@ -282,12 +306,29 @@ final class ControlPanel extends JPanel implements ActionListener {
     void activateButtonToReturnToSuperTree( int index ) {
         --index;
         if ( index > 0 ) {
-            _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT + " " + index );
+        	//******************************************START CHANGED**********************************************************//
+               //return to super tree -> up one level - changed
+        	if(AppletParams.isEitherTPorTDForLANLorBHB()){
+                  _return_to_super_tree.setText( UpOneLevelTEXT + " " + index );
+        	}
+        	else{
+        		_return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT + " " + index );
+        	}
+            //********************************************END**********************************************************//
         }
         else {
-            _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT );
+        	//******************************************START CHANGED**********************************************************//
+            //  //return to super tree -> up one level - changed
+        	if(AppletParams.isEitherTPorTDForLANLorBHB()){
+                _return_to_super_tree.setText( UpOneLevelTEXT);
+        	}
+        	else{
+        		_return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT); 
+        	}
+            
         }
-        _return_to_super_tree.setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor() );
+        _return_to_super_tree.setForeground( Color.RED);
+      //********************************************END**********************************************************//
         _return_to_super_tree.setEnabled( true );
     }
 
@@ -338,7 +379,18 @@ final class ControlPanel extends JPanel implements ActionListener {
         _zoom_out_y.setPreferredSize( new Dimension( 10, 10 ) );
         _zoom_in_y.setPreferredSize( new Dimension( 10, 10 ) );
         _show_whole.setPreferredSize( new Dimension( 10, 10 ) );
-        _return_to_super_tree = new JButton( RETURN_TO_SUPER_TREE_TEXT );
+        
+      //******************************************START CHANGED**********************************************************//
+        //  //return to super tree -> up one level - changed
+        if(AppletParams.isEitherTPorTDForLANLorBHB()){
+        	_return_to_super_tree = new JButton( UpOneLevelTEXT );
+        }
+        else{
+        	_return_to_super_tree = new JButton( RETURN_TO_SUPER_TREE_TEXT );
+        }
+       //********************************************END**********************************************************//
+        
+        //_return_to_super_tree = new JButton( RETURN_TO_SUPER_TREE_TEXT );
         _return_to_super_tree.setEnabled( false );
         _order = new JButton( "Order Subtrees" );
         _uncollapse_all = new JButton( "Uncollapse All" );
@@ -355,6 +407,16 @@ final class ControlPanel extends JPanel implements ActionListener {
         addJButton( _return_to_super_tree, this );
         addJButton( _order, this );
         addJButton( _uncollapse_all, this );
+        
+      //******************************************START**********************************************************//
+        if(AppletParams.isTreePrunerForAll() ){
+        	controlPanelAdditions.addTreePrunerButtons();
+        }
+        else if (AppletParams.isTreeDecoratorForAll()){
+        	controlPanelAdditions.addTreeDecoratorButtons();
+        }
+      //********************************************END**********************************************************//
+        
         final JLabel spacer3 = new JLabel( "" );
         add( spacer3 );
         setVisibilityOfDomainStrucureControls();
@@ -523,7 +585,9 @@ final class ControlPanel extends JPanel implements ActionListener {
 
     void addJTextField( final JTextField tf, final JPanel p ) {
         if ( !_configuration.isUseNativeUI() ) {
-            tf.setForeground( getConfiguration().getGuiBackgroundColor() );
+        	//******************************************START Changed**********************************************************//
+            tf.setForeground( getConfiguration().getGuiCheckboxTextColor() );
+          //********************************************END**********************************************************//
             tf.setFont( ControlPanel.jcb_font );
         }
         p.add( tf );
@@ -583,7 +647,15 @@ final class ControlPanel extends JPanel implements ActionListener {
     }// addSequenceRelationBlock
 
     void deactivateButtonToReturnToSuperTree() {
-        _return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT );
+    	//******************************************START CHANGED**********************************************************//
+        // //return to super tree -> up one level - changed
+    	if(AppletParams.isEitherTPorTDForLANLorBHB()){
+    		_return_to_super_tree.setText( UpOneLevelTEXT );
+    	}
+    	else{
+    		_return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT );
+    	}
+        //********************************************END**********************************************************//
         _return_to_super_tree.setForeground( getConfiguration().getGuiButtonTextColor() );
         _return_to_super_tree.setEnabled( false );
     }
@@ -1105,6 +1177,14 @@ final class ControlPanel extends JPanel implements ActionListener {
         else if ( action == _color_subtree_cb_item ) {
             setActionWhenNodeClicked( NodeClickAction.COLOR_SUBTREE );
         }
+      //******************************************START**********************************************************//
+    	else if(AppletParams.isTreePrunerForAll() && (action == keepRemoveConfiguration._keepSequences || 
+    											action == keepRemoveConfiguration._removeSequences)){
+            int x = keepRemoveConfiguration.setClickToAction(action,this);
+            _click_to_combobox.setSelectedIndex( x );
+            return;
+        }
+        //********************************************END**********************************************************//
         else if ( action == _open_seq_web_item ) {
             setActionWhenNodeClicked( NodeClickAction.OPEN_SEQ_WEB );
         }
@@ -1161,9 +1241,12 @@ final class ControlPanel extends JPanel implements ActionListener {
 
     void setDynamicHidingIsOn( final boolean is_on ) {
         //  if ( !_configuration.isUseNativeUI() ) {
+    	//******************************************START Changed**********************************************************//
+    	//Changed the color from getConfiguration().getGuiCheckboxAndButtonActiveColor()()
         if ( is_on ) {
-            getDynamicallyHideData().setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor() );
+            getDynamicallyHideData().setForeground( Color.RED );
         }
+      //********************************************END**********************************************************//
         else {
             if ( !_configuration.isUseNativeUI() ) {
                 getDynamicallyHideData().setForeground( getConfiguration().getGuiButtonTextColor() );
@@ -1371,6 +1454,21 @@ final class ControlPanel extends JPanel implements ActionListener {
                 }
             }
         }
+      //******************************************START**********************************************************//
+        if(AppletParams.isTreePrunerForAll() ){
+	        if ( _configuration.doDisplayClickToOption( KeepRemoveConfiguration._KEEP_SEQUENCES)||
+	        		( _configuration.doDisplayClickToOption( KeepRemoveConfiguration._REMOVE_SEQUENCES ) )) {
+	        	
+		        int[] s = new int[2];
+		        int[] r = new int[2];
+		        s[0]= cb_index;s[1]=selected_index;
+		        r = keepRemoveConfiguration.setupClickToOptions(s,default_option,this);
+		        cb_index = r[0];
+		        selected_index = r[1];
+		    }
+        }
+        
+      //********************************************END**********************************************************//
         // Set default selection and its action
         _click_to_combobox.setSelectedIndex( selected_index );
         setClickToAction( selected_index );
@@ -1381,6 +1479,12 @@ final class ControlPanel extends JPanel implements ActionListener {
      * Set up the controls from the config settings. 11/26/05
      */
     void setupControls() {
+    	//******************************************START**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll()){
+    		controlPanelAdditions = new ControlPanelAdditions(this);
+    		keepRemoveConfiguration = new KeepRemoveConfiguration(_configuration);
+    	}
+      //********************************************END**********************************************************//
         // The tree display options:
         setupDisplayCheckboxes();
         /* GUILHEM_BEG */
@@ -1395,6 +1499,16 @@ final class ControlPanel extends JPanel implements ActionListener {
         endClickToOptions();
         // Zoom and quick edit buttons
         addButtons();
+      //******************************************START**********************************************************//
+        if(AppletParams.isTreePrunerForAll()){
+		     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
+		     controlPanelAdditions.callTreePrunerAutosaveToAdd();
+        }
+        else if(AppletParams.isTreeDecoratorForAll()){
+		     controlPanelAdditions.addSubTreeWindowHierarchyLabel();
+		     controlPanelAdditions.callTreeDecoratorAutosaveToAdd();
+        }
+      //********************************************END**********************************************************//
         setupSearchTools();
     }
 
@@ -1572,9 +1686,12 @@ final class ControlPanel extends JPanel implements ActionListener {
         _search_tf.setToolTipText( tip );
         _search_tf.setEditable( true );
         if ( !getConfiguration().isUseNativeUI() ) {
-            _search_tf.setForeground( getConfiguration().getGuiMenuBackgroundColor() );
-            _search_tf.setBackground( getConfiguration().getGuiCheckboxTextColor() );
-            _search_tf.setBorder( null );
+        	//******************************************START Changed**********************************************************//
+        	_search_tf.setBackground( getConfiguration().getGuiMenuBackgroundColor() );
+        	_search_tf.setForeground( getConfiguration().getGuiCheckboxTextColor() );
+        	_search_tf.setBorder(BorderFactory.createLineBorder( getConfiguration().getGuiButtonBorderColor() ) );
+            //_search_tf.setBorder( null );
+          //********************************************END**********************************************************//
         }
         _search_reset_button = new JButton();
         getSearchResetButton().setText( "Reset" );
@@ -1860,13 +1977,20 @@ final class ControlPanel extends JPanel implements ActionListener {
         return label;
     }
 
-    enum NodeClickAction {
+  //******************************************START CHANGED**********************************************************//
+    public enum NodeClickAction {
+    //enum NodeClickAction {   none -> public - changed 	
+  //********************************************END**********************************************************//
         SHOW_DATA,
         COLLAPSE,
         REROOT,
         SUBTREE,
         SWAP,
         COLOR_SUBTREE,
+      //******************************************START**********************************************************//
+        KEEP_SEQUENCES,
+        REMOVE_SEQUENCES,
+      //********************************************END**********************************************************//
         OPEN_TAX_WEB,
         OPEN_SEQ_WEB,
         CUT_SUBTREE,
@@ -1877,4 +2001,109 @@ final class ControlPanel extends JPanel implements ActionListener {
         EDIT_NODE_DATA,
         BLAST;
     }
+//******************************************START**********************************************************//
+    
+    public void addClickToOptionKeepRemove( final int which, final String title ) {
+        _click_to_combobox.addItem( title );
+        _click_to_names.add( title );
+        _all_click_to_names.put( new Integer( which ), title );
+        if ( !_configuration.isUseNativeUI() ) {
+//            _click_to_combobox.setBackground( Constants.BUTTON_BACKGROUND_COLOR_DEFAULT );
+//            _click_to_combobox.setForeground( Constants.BUTTON_TEXT_COLOR_DEFAULT );
+        	_click_to_combobox.setBackground( getConfiguration().getGuiButtonBackgroundColor() );
+            _click_to_combobox.setForeground( getConfiguration().getGuiButtonTextColor() );
+        	
+        }
+    }
+    
+    public void show_whole_all() {
+        for( final TreePanel tree_panel : _mainpanel.getTreePanels() ) {
+            if ( tree_panel != null ) {
+                tree_panel.validate();
+                tree_panel.setParametersForPainting( _mainpanel.getSizeOfViewport().width, _mainpanel
+                        .getSizeOfViewport().height, true );
+                tree_panel.resetPreferredSize();
+                tree_panel.repaint();
+            }
+        }
+    }
+    
+    public void show_whole() {
+        if ( _mainpanel.getCurrentScrollPane() == null ) {
+            return;
+        }
+        _mainpanel.getCurrentTreePanel().updateOvSettings();
+        _mainpanel.getCurrentTreePanel().validate();
+        _mainpanel.validate();
+        _mainpanel.getCurrentTreePanel().setParametersForPainting( _mainpanel.getSizeOfViewport().width,
+                                                                   _mainpanel.getSizeOfViewport().height,
+                                                                   true );
+        _mainpanel.getCurrentTreePanel().resetPreferredSize();
+        _mainpanel.adjustJScrollPane();
+        _mainpanel.getCurrentTreePanel().repaint();
+        _mainpanel.getCurrentTreePanel().validate();
+        _mainpanel.validate();
+        _mainpanel.getCurrentTreePanel().setParametersForPainting( _mainpanel.getSizeOfViewport().width,
+                                                                   _mainpanel.getSizeOfViewport().height,
+                                                                   true );
+        _mainpanel.getCurrentTreePanel().resetPreferredSize();
+        _mainpanel.adjustJScrollPane();
+        _mainpanel.getCurrentTreePanel().repaint();
+        _mainpanel.getCurrentTreePanel().updateOvSizes();
+    }
+    
+    public void add_additional_JButton( final JButton jb, final JPanel p ) {
+    	//****AC****
+//        jb.setFocusPainted( false );
+//        jb.setFont( ControlPanel.jcb_font );
+//        if ( !_configuration.isUseNativeUI() ) {
+//            jb.setBorder( BorderFactory.createLineBorder( ControlPanel.button_border_color ) );
+//            jb.setBackground( ControlPanel.button_background_color );
+//            jb.setForeground( ControlPanel.button_text_color );
+//        }
+//        p.add( jb );
+//        jb.addActionListener( this );
+        
+    	
+    	//****AC****
+        jb.setFocusPainted( false );
+        jb.setFont( ControlPanel.jcb_font );
+        if ( !_configuration.isUseNativeUI() ) {
+            jb.setBorder( BorderFactory.createLineBorder( getConfiguration().getGuiButtonBorderColor() ) );
+            jb.setBackground( getConfiguration().getGuiButtonBackgroundColor() );
+            jb.setForeground( getConfiguration().getGuiButtonTextColor() );
+        }
+        p.add( jb );
+        jb.addActionListener( this );
+    }
+    
+    public void displayed_phylogeny_mightHaveChanged( final boolean recalc_longest_ext_node_info ) {
+        if ( ( _mainpanel != null ) && ( _mainpanel.getCurrentPhylogeny() != null ) ) {
+            if ( getOptions().isShowOverview() ) {
+                _mainpanel.getCurrentTreePanel().updateOvSizes();
+            }
+            setVisibilityOfDomainStrucureControls();
+            updateDomainStructureEvaluethresholdDisplay();
+            _mainpanel.getCurrentTreePanel().calculateScaleDistance();
+            _mainpanel.getCurrentTreePanel().calcMaxDepth();
+            _mainpanel.adjustJScrollPane();
+            if ( recalc_longest_ext_node_info ) {
+                _mainpanel.getCurrentTreePanel().initNodeData();
+                _mainpanel.getCurrentTreePanel().calculateLongestExtNodeInfo();
+            }
+            _mainpanel.getCurrentTreePanel().repaint();
+        }
+    }
+    
+    public void addLabel(JLabel j_label){
+    	add (j_label);
+    }
+    public void addPanel(JPanel j_panel){
+    	add (j_panel);
+    }
+    
+    public void set_action_whenNodeClicked( final NodeClickAction action ) {
+        _action_when_node_clicked = action;
+    }
+  //********************************************END**********************************************************//
 }

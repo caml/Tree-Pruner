@@ -50,6 +50,11 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.PhylogenyNode;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AppletTerminate;
+//********************************************END**********************************************************//
+
 public class MainPanel extends JPanel implements ComponentListener {
 
     private static final long  serialVersionUID = -2682765312661416435L;
@@ -65,6 +70,9 @@ public class MainPanel extends JPanel implements ComponentListener {
     private Phylogeny          _cut_or_copied_tree;
     private Set<PhylogenyNode> _copied_and_pasted_nodes;
 
+  //******************************************START**********************************************************//
+    AppletTerminate appletTerminate = new AppletTerminate(_mainframe);
+  //********************************************END**********************************************************//
     MainPanel() {
     }
 
@@ -390,8 +398,59 @@ public class MainPanel extends JPanel implements ComponentListener {
     }
 
     void terminate() {
+    	
+    	//******************************************START**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll()){
+    		appletTerminate.terminateAdditionalTasks(this);
+    	}
+        //********************************************END**********************************************************//
         for( final TreePanel atvtreepanel : _treepanels ) {
             atvtreepanel.removeAllEditNodeJFrames();
         }
     }
+  //******************************************START**********************************************************//
+    void terminateOnDelete() {
+    	appletTerminate.terminateOnDeleteAdditionalTasks();
+        for( final TreePanel atvtreepanel : _treepanels ) {
+            atvtreepanel.removeAllEditNodeJFrames();
+        }
+    }
+    
+    public MainFrame returnMainFrame(){
+    	return _mainframe;
+    }
+    public ControlPanel get_control_panel() {
+        return _control_panel;
+    }
+    
+    public void adjust_JScroll_pane() {
+        if ( getTabbedPane() != null ) {
+            getCurrentScrollPanePanel().remove( getCurrentScrollPane() );
+            getCurrentScrollPanePanel().add( getCurrentScrollPane(), BorderLayout.CENTER );
+        }
+        getCurrentScrollPane().revalidate();
+    }
+    
+    public  TreePanel get_current_treePanel() {
+        final int selected = getTabbedPane().getSelectedIndex();
+        if ( selected >= 0 ) {
+            return _treepanels.get( selected );
+        }
+        else {
+            if ( _treepanels.size() == 1 ) {
+                return _treepanels.get( 0 );
+            }
+            else {
+                return null;
+            }
+        }
+    }
+    
+    public Phylogeny get_current_phylogeny() {
+    	if ( getCurrentTreePanel() == null ) {
+    		return null;
+    	}
+    	return getCurrentTreePanel().getPhylogeny();
+    }
+   //********************************************END**********************************************************//
 }

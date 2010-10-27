@@ -40,6 +40,13 @@ import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
 import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.custom.data.Accession;
+import com.lanl.application.TPTD.tree.node.ExtraNodeInfo;
+import com.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
+//********************************************END**********************************************************//
+
 public class PhylogenyNode implements PhylogenyNodeI, Comparable<PhylogenyNode> {
 
     /** Value of -99.0 is used as default value. */
@@ -60,6 +67,10 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable<PhylogenyNode> 
     private BranchData               _branch_data;
     private float                    _x_secondary;
     private float                    _y_secondary;
+    
+  //******************************************START**********************************************************//
+    public ExtraNodeInfo extraNodeInfo;
+//********************************************END**********************************************************//
 
     /**
      * Default constructor for PhylogenyNode.
@@ -128,6 +139,14 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable<PhylogenyNode> 
      *            the PhylogenyNode to add
      */
     final private void addChildNode( final PhylogenyNode child ) {
+    	//******************************************START**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll()){
+    		Accession.extractAccessionFromStrain(child);
+    	}
+    	if(AppletParams.isTreeDecoratorForAll()){
+    		DecoratorJSONHandler.setExtraNodeInfoForTD(child);
+    	}
+        //********************************************END**********************************************************//
         getDescendants().add( child );
     }
 
@@ -549,6 +568,11 @@ public class PhylogenyNode implements PhylogenyNodeI, Comparable<PhylogenyNode> 
         _parent = null;
         _id = 0;
         initializeData();
+      //******************************************START**********************************************************//
+        if(AppletParams.isEitherTPorTDForAll()){
+        	extraNodeInfo = new ExtraNodeInfo();
+        }
+      //********************************************END**********************************************************//
     }
 
     /**

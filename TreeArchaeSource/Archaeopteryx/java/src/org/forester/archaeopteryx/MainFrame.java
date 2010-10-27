@@ -28,6 +28,8 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -49,15 +51,21 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.AppletTerminate;
+import com.lanl.application.TPTD.applet.NewWindowSubtree;
+
 public abstract class MainFrame extends JFrame implements ActionListener {
 
     static final String       USE_MOUSEWHEEL_SHIFT_TO_ROTATE     = "In this display type, use mousewheel + Shift to rotate [or A and S]";
     static final String       PHYLOXML_REF_TOOL_TIP              = Constants.PHYLOXML_REFERENCE;                                                                                                                                       //TODO //FIXME
     static final String       APTX_REF_TOOL_TIP                  = Constants.APTX_REFERENCE;
     private static final long serialVersionUID                   = 3655000897845508358L;
-    final static Font         menu_font                          = new Font( Configuration.getDefaultFontFamilyName(),
+  //******************************************START Chnaged**********************************************************//
+    public final static Font         menu_font                          = new Font( Configuration.getDefaultFontFamilyName(),
                                                                              Font.PLAIN,
-                                                                             10 );
+                                                                             10 ); //added public
+  //******************************************END**********************************************************//
     static final String       TYPE_MENU_HEADER                   = "Type";
     static final String       RECTANGULAR_TYPE_CBMI_LABEL        = "Rectangular";
     static final String       EURO_TYPE_CBMI_LABEL               = "Euro Type";
@@ -185,7 +193,16 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     Configuration             _configuration;
     JMenuItem                 _remove_branch_color_item;
     Options                   _options;
+  //******************************************START**********************************************************//
+    AppletTerminate appletTerminate = new AppletTerminate(this);
+    public WindowAdapter closeWindowAdapter = new WindowAdapter(){
 
+        @Override
+        public void windowClosing( final WindowEvent e ) {
+            close();
+        }
+    };
+   //********************************************END**********************************************************//
     MainFrame() {
         // Empty constructor.
     }
@@ -340,6 +357,36 @@ public abstract class MainFrame extends JFrame implements ActionListener {
                 getCurrentTreePanel().updateOvSizes();
             }
         }
+      //******************************************START**********************************************************//
+        //TODO AAC Code Duplication from Main Frame Application
+        else if ( o == _graphics_export_visible_only_cbmi ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _antialias_print_cbmi ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _print_black_and_white_cbmi ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _print_using_actual_size_cbmi ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _graphics_export_using_actual_size_cbmi ) {
+            updateOptions( getOptions() );
+        }
+        else if ( o == _print_size_mi ) {
+            choosePrintSize();
+        }
+        else if ( o == _choose_pdf_width_mi ) {
+            choosePdfWidth();
+        }
+        else if ( o == _replace_underscores_cbmi ) {
+            if ( ( _extract_pfam_style_tax_codes_cbmi != null ) && _replace_underscores_cbmi.isSelected() ) {
+                _extract_pfam_style_tax_codes_cbmi.setSelected( false );
+            }
+            updateOptions( getOptions() );
+        }
+      //********************************************END**********************************************************//
         else if ( ( o == _rectangular_type_cbmi ) || ( o == _triangular_type_cbmi ) || ( o == _curved_type_cbmi )
                 || ( o == _convex_type_cbmi ) || ( o == _euro_type_cbmi ) || ( o == _rounded_type_cbmi )
                 || ( o == _unrooted_type_cbmi ) || ( o == _circular_type_cbmi ) ) {
@@ -525,15 +572,42 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     }
 
     void close() {
-        removeTextFrame();
-        if ( _mainpanel != null ) {
-            _mainpanel.terminate();
-        }
-        if ( _contentpane != null ) {
-            _contentpane.removeAll();
-        }
-        setVisible( false );
-        dispose();
+    	//******************************************START**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll() ){
+    		if(appletTerminate.check_terminate(this)){
+        
+	        removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+	     
+	        NewWindowSubtree.handleBackToSubTreeButton();
+	        NewWindowSubtree.handleCloseXButton();
+	        AppletTerminate.extraTerminationActions(this);
+	        }
+	        else{
+	        	appletTerminate.closeAdditionalTasks();
+	        }
+    	}
+    	else{
+      //********************************************END**********************************************************//
+    		removeTextFrame();
+    		if ( _mainpanel != null ) {
+    			_mainpanel.terminate();
+    		}
+    		if ( _contentpane != null ) {
+    			_contentpane.removeAll();
+    		}
+    		setVisible( false );
+    		dispose();
+      //******************************************START**********************************************************//     
+    	} //end of else
+  	//********************************************END**********************************************************//
     }
 
     void confColor() {
@@ -1131,7 +1205,7 @@ public abstract class MainFrame extends JFrame implements ActionListener {
     static void setTextForFontChooserMenuItem( final JMenuItem mi, final String font_desc ) {
         mi.setText( "Select Font... (current: " + font_desc + ")" );
     }
-
+    
     static void setTextMinSupportMenuItem( final JMenuItem mi, final Options options, final TreePanel current_tree_panel ) {
         if ( ( current_tree_panel == null ) || ( current_tree_panel.getPhylogeny() == null ) ) {
             mi.setEnabled( true );
@@ -1228,4 +1302,159 @@ public abstract class MainFrame extends JFrame implements ActionListener {
             tree_panel.setTextAntialias();
         }
     }
+  //******************************************START**********************************************************//
+  //TODO AAC  Code Duplication from Main Frame Application
+    private void choosePrintSize() {
+        final String s = ( String ) JOptionPane.showInputDialog( this,
+                                                                 "Please enter values for width and height,\nseparated by a comma.\n"
+                                                                         + "[current values: "
+                                                                         + getOptions().getPrintSizeX() + ", "
+                                                                         + getOptions().getPrintSizeY() + "]\n"
+                                                                         + "[A4: " + Constants.A4_SIZE_X + ", "
+                                                                         + Constants.A4_SIZE_Y + "]\n" + "[US Letter: "
+                                                                         + Constants.US_LETTER_SIZE_X + ", "
+                                                                         + Constants.US_LETTER_SIZE_Y + "]",
+                                                                 "Default Size for Graphics Export",
+                                                                 JOptionPane.QUESTION_MESSAGE,
+                                                                 null,
+                                                                 null,
+                                                                 getOptions().getPrintSizeX() + ", "
+                                                                         + getOptions().getPrintSizeY() );
+        if ( !ForesterUtil.isEmpty( s ) && ( s.indexOf( ',' ) > 0 ) ) {
+            boolean success = true;
+            int x = 0;
+            int y = 0;
+            final String[] str_ary = s.split( "," );
+            if ( str_ary.length == 2 ) {
+                final String x_str = str_ary[ 0 ].trim();
+                final String y_str = str_ary[ 1 ].trim();
+                if ( !ForesterUtil.isEmpty( x_str ) && !ForesterUtil.isEmpty( y_str ) ) {
+                    try {
+                        x = Integer.parseInt( x_str );
+                        y = Integer.parseInt( y_str );
+                    }
+                    catch ( final Exception ex ) {
+                        success = false;
+                    }
+                }
+                else {
+                    success = false;
+                }
+            }
+            else {
+                success = false;
+            }
+            if ( success && ( x > 1 ) && ( y > 1 ) ) {
+                getOptions().setPrintSizeX( x );
+                getOptions().setPrintSizeY( y );
+            }
+        }
+    }
+  //TODO AAC Code Duplication from Main Frame Application
+    private void choosePdfWidth() {
+        final String s = ( String ) JOptionPane.showInputDialog( this,
+                                                                 "Please enter the default line width for PDF export.\n"
+                                                                         + "[current value: "
+                                                                         + getOptions().getPrintLineWidth() + "]\n",
+                                                                 "Line Width for PDF Export",
+                                                                 JOptionPane.QUESTION_MESSAGE,
+                                                                 null,
+                                                                 null,
+                                                                 getOptions().getPrintLineWidth() );
+        if ( !ForesterUtil.isEmpty( s ) ) {
+            boolean success = true;
+            float f = 0.0f;
+            final String m_str = s.trim();
+            if ( !ForesterUtil.isEmpty( m_str ) ) {
+                try {
+                    f = Float.parseFloat( m_str );
+                }
+                catch ( final Exception ex ) {
+                    success = false;
+                }
+            }
+            else {
+                success = false;
+            }
+            if ( success && ( f > 0.0 ) ) {
+                getOptions().setPrintLineWidth( f );
+            }
+        }
+    }
+    
+    public void closeOnDelete() {
+        removeTextFrame();
+        if ( _mainpanel != null ) {
+            _mainpanel.terminateOnDelete();
+        }
+        if ( _contentpane != null ) {
+            _contentpane.removeAll();
+        }
+        setVisible( false );
+        dispose();
+        AppletTerminate.extraTerminationActions(this);
+    }
+    public MainPanel get_main_panel() {
+        return _mainpanel;
+    }
+    public void repaintPanel(){
+    	this.getMainPanel().repaint();
+    }
+    
+    public Configuration get_configuration() {
+        return _configuration;
+    }
+    
+    public void close_() {
+    	/**
+    	 * NOTE TO PROGRAMMER
+    	 * CHANGES MADE IN THIS METHOD WILL ALSO AFFECT void close(){...}. Hence whenever you make any changes here, also make changes in 
+    	 * void close(){...} 
+    	 */
+        //******************************************START**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll() ){
+    		if(appletTerminate.check_terminate(this)){
+        
+	        removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+	     
+	        NewWindowSubtree.handleBackToSubTreeButton();
+	        NewWindowSubtree.handleCloseXButton();
+	        AppletTerminate.extraTerminationActions(this);
+	        }
+	        else{
+	        	appletTerminate.closeAdditionalTasks();
+	        }
+    	}
+    	else{
+      //********************************************END**********************************************************//
+    		removeTextFrame();
+	        if ( _mainpanel != null ) {
+	            _mainpanel.terminate();
+	        }
+	        if ( _contentpane != null ) {
+	            _contentpane.removeAll();
+	        }
+	        setVisible( false );
+	        dispose();
+     //******************************************START**********************************************************//     
+    	} //end of else
+  	//********************************************END**********************************************************//
+      
+    }
+    public Options get_options() {
+    	return _options;
+    }
+    
+    public Container get_content_pane(){
+    	return _contentpane;
+   }
+    //********************************************END**********************************************************//
 }

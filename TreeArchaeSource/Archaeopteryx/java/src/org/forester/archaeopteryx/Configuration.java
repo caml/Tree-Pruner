@@ -48,8 +48,15 @@ import org.forester.archaeopteryx.Options.NODE_LABEL_DIRECTION;
 import org.forester.archaeopteryx.Options.OVERVIEW_PLACEMENT_TYPE;
 import org.forester.archaeopteryx.Options.PHYLOGENY_GRAPHICS_TYPE;
 import org.forester.util.ForesterUtil;
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
+//********************************************END**********************************************************//
 
-public final class Configuration {
+//******************************************START CHANGED**********************************************************//
+public class Configuration {
+//final class Configuration {   // final->public - changed
+//********************************************END**********************************************************//
 
     static final String                     VALIDATE_AGAINST_PHYLOXML_XSD_SCHEMA                   = "validate_against_phyloxml_xsd_schema";
     private static final String             WEB_LINK_KEY                                           = "web_link";
@@ -75,6 +82,9 @@ public final class Configuration {
     private boolean                         _show_scale                                            = false;
     private boolean                         _show_branch_length_values                             = false;
     private boolean                         _show_overview                                         = true;
+  //******************************************START**********************************************************//
+    public KeepRemoveConfiguration              keepRemoveConfiguration   = new KeepRemoveConfiguration(this);
+  //********************************************END**********************************************************//
     private short                           _number_of_digits_after_comma_for_confidence_values    = Constants.NUMBER_OF_DIGITS_AFTER_COMMA_FOR_CONFIDENCE_VALUES_DEFAULT;
     private short                           _number_of_digits_after_comma_for_branch_length_values = Constants.NUMBER_OF_DIGITS_AFTER_COMMA_FOR_BRANCH_LENGTH_VALUES_DEFAULT;
     private boolean                         _editable                                              = true;
@@ -119,15 +129,19 @@ public final class Configuration {
     final static int                        subtree                                                = 3;
     final static int                        swap                                                   = 4;
     final static int                        color_subtree                                          = 5;
-    final static int                        open_seq_web                                           = 6;
-    final static int                        open_tax_web                                           = 7;
-    final static int                        cut_subtree                                            = 8;
-    final static int                        copy_subtree                                           = 9;
-    final static int                        paste_subtree                                          = 10;
-    final static int                        delete_subtree_or_node                                 = 11;
-    final static int                        add_new_node                                           = 12;
-    final static int                        edit_node_data                                         = 13;
-    final static int                        blast                                                  = 14;
+  //******************************************START CHANGED**********************************************************//
+    //****AC**** The numbers have been changed to make room for 6 and 7
+    final static int                        open_seq_web                                           = 8;
+    final static int                        open_tax_web                                           = 9;
+    final static int                        cut_subtree                                            = 10;
+    final static int                        copy_subtree                                           = 11;
+    final static int                        paste_subtree                                          = 12;
+    final static int                        delete_subtree_or_node                                 = 13;
+    final static int                        add_new_node                                           = 14;
+    final static int                        edit_node_data                                         = 15;
+    final static int                        blast                                                  = 16;
+  //********************************************END**********************************************************//
+ 
     // ---------------------------
     // Display options for trees
     // ---------------------------
@@ -152,6 +166,13 @@ public final class Configuration {
     final static String                     clickto_options[][]                                    = {
             { "Display Node Data", "display" }, { "Collapse/Uncollapse", "display" }, { "Root/Reroot", "display" },
             { "Sub/Super Tree", "display" }, { "Swap Descendants", "display" }, { "Colorize Subtree", "display" },
+          //******************************************START**********************************************************//
+            {"<html><b>Keep Sequences</b></html>", "display"},            //Display or no display depends upon the 
+            {"<html><b>Remove/Restore Sequences</b></html>", "display"},  //TreePruner or TreeDecorator AppType. 
+            /**Later on change this to nodisplay if apptype is TreeDecorator from ArchaeA.java
+            Change Number in KeepRemoveConfiguration.java from 6 n 7 for keep and remove to higher number 
+            if TreeDecorator demands it*/
+         //********************************************END**********************************************************//
             { "Open Sequence Web", "nodisplay" }, { "Open Taxonomy Web", "nodisplay" }, { "Cut Subtree", "display" },
             { "Copy Subtree", "display" }, { "Paste Subtree", "display" }, { "Delete Subtree/Node", "display" },
             { "Add New Node", "display" }, { "Edit Node Data", "display" }, { "Blast", "display" } };
@@ -295,14 +316,18 @@ public final class Configuration {
         return _gui_button_background_color;
     }
 
-    Color getGuiMenuBackgroundColor() {
+  //******************************************START Changed**********************************************************//
+    public Color getGuiMenuBackgroundColor() {
         return _gui_menu_background_color;
     }
-
-    Color getGuiMenuTextColor() {
+  //added public
+  //********************************************END**********************************************************//
+  //******************************************START Changed**********************************************************//
+    public Color getGuiMenuTextColor() {
         return _gui_menu_text_color;
     }
-
+  //added public
+  //********************************************END**********************************************************//
     Color getGuiButtonBorderColor() {
         return _gui_button_border_color;
     }
@@ -317,6 +342,19 @@ public final class Configuration {
     }
 
     boolean doDisplayClickToOption( final int which ) {
+    	//******************************************START**********************************************************//
+    	/**
+    	 * Note to programmer: Whatever happens in this method will also affect do_display_clickToOption(final int which){}
+    	 */
+    	if(which == 6 || which == 7){
+    		if(AppletParams.isTreePrunerForAll() ){
+    			clickto_options[which][1] = "display";
+    		}
+    		else{
+    			clickto_options[which][1] = "nodisplay";
+    		}
+    	}
+    //********************************************END**********************************************************//
         return clickto_options[ which ][ 1 ].equalsIgnoreCase( "display" );
     }
 
@@ -404,6 +442,11 @@ public final class Configuration {
         else if ( name.equals( "edit_node_data" ) ) {
             index = Configuration.edit_node_data;
         }
+      //******************************************START**********************************************************//
+        else if ( name.equals( "blast" )) {
+        	index = Configuration.blast;
+        }
+        //********************************************END**********************************************************//
         else if ( name.equals( "display_node_popup" ) ) {
             ForesterUtil.printWarningMessage( Constants.PRG_NAME,
                                               "configuration key [display_node_popup] is deprecated" );
@@ -420,6 +463,13 @@ public final class Configuration {
             ForesterUtil.printWarningMessage( Constants.PRG_NAME, "configuration key [go_to_swiss_prot] is deprecated" );
             return DEPRECATED;
         }
+      //******************************************START**********************************************************//
+        else{
+        	if(AppletParams.isTreePrunerForAll() ){
+        		index = keepRemoveConfiguration.getClickToIndex(name,index);
+        	}
+        }
+      //********************************************END**********************************************************//
         return index;
     }
 
@@ -577,8 +627,9 @@ public final class Configuration {
     boolean isShowScale() {
         return _show_scale;
     }
-
-    final boolean isUseNativeUI() {
+  //******************************************START Changed**********************************************************//
+    public final boolean isUseNativeUI() {   //added public
+  //********************************************END**********************************************************//    	
         if ( ( _use_native_ui == null ) || ( _use_native_ui == TRIPLET.UNKNOWN ) ) {
             if ( ( _native_ui == TRIPLET.UNKNOWN ) && Util.isMac() && Util.isJava15() ) {
                 _use_native_ui = TRIPLET.TRUE;
@@ -1304,6 +1355,27 @@ public final class Configuration {
     static String getDefaultFontFamilyName() {
         return DEFAULT_FONT_FAMILY;
     }
+    
+  //******************************************START**********************************************************//
+    public boolean do_display_clickToOption( final int which ) {
+    	/**
+    	 * Note to programmer: Whatever happens in this method will also affect doDisplayClickToOption(final int which){}
+    	 */
+    	if(which == 6 || which == 7){
+    		if(AppletParams.isTreePrunerForAll() ){
+    			clickto_options[which][1] = "display";
+    		}
+    		else{
+    			clickto_options[which][1] = "nodisplay";
+    		}
+    	}
+        return clickto_options[ which ][ 1 ].equals( "display" );
+    }
+    
+    public String get_click_toTitle( final int which ) {
+        return clickto_options[ which ][ 0 ];
+    }
+  //********************************************END**********************************************************//
 
     static enum TRIPLET {
         TRUE, FALSE, UNKNOWN

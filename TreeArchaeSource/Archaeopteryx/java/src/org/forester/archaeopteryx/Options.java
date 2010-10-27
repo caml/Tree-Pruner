@@ -29,11 +29,17 @@ import java.awt.Font;
 
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+import com.lanl.application.TPTD.applet.AppletParams;
+//********************************************END**********************************************************//
+
 /*
  * This is to hold changeable options.
  */
-final public class Options {
-
+//******************************************START CHANGED**********************************************************//
+public class Options {
+//final class Options { // final->public - changed
+//********************************************END**********************************************************//
     static final double             MIN_CONFIDENCE_DEFAULT = 0.0;
     private boolean                 _show_node_boxes;
     private boolean                 _show_branch_length_values;
@@ -121,7 +127,13 @@ final public class Options {
     }
 
     final private void init() {
-        _show_node_boxes = false;
+    	//******************************************START **********************************************************//
+    	if(AppletParams.isTreeDecoratorForAll()){
+    		_show_node_boxes = true;
+    	}
+    	else
+    	//********************************************END**********************************************************//
+    		_show_node_boxes = false;
         _show_branch_length_values = false;
         _internal_number_are_confidence_for_nh_parsing = false;
         _show_scale = false;
@@ -459,7 +471,40 @@ final public class Options {
         }
     }
 
-    static enum PHYLOGENY_GRAPHICS_TYPE {
+  //******************************************START CHANGED**********************************************************//
+    public enum PHYLOGENY_GRAPHICS_TYPE {
+    //enum PHYLOGENY_GRAPHICS_TYPE {  // default->public - changed
+//********************************************END**********************************************************//
         RECTANGULAR, TRIANGULAR, EURO_STYLE, ROUNDED, CONVEX, CURVED, UNROOTED, CIRCULAR;
     }
+    
+  //******************************************START**********************************************************//
+	public boolean is_print_usingActualSize() {
+		return _print_using_actual_size;
+	}
+
+	public int get_print_sizeX() {
+		return _print_size_x;
+	}
+
+	public int get_print_sizeY() {
+		return _print_size_y;
+	}
+
+	public double get_print_lineWidth() {
+		return _print_line_width;
+	}
+
+	public boolean is_graphics_exportUsingActualSize() {
+		return _graphics_export_using_actual_size;
+	}
+
+	public boolean is_graphics_exportVisibleOnly() {
+		return _graphics_export_visible_only;
+	}
+
+	public boolean is_antialias_print() {
+		return _antialias_print;
+	}
+      //********************************************END**********************************************************//
 }

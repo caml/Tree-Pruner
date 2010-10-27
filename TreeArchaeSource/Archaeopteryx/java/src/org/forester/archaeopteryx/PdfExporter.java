@@ -51,7 +51,11 @@ import com.lowagie.text.pdf.PdfWriter;
  * 
  * Current version: iText-2.1.7
  */
-final class PdfExporter {
+//******************************************START CHANGED**********************************************************//
+public final class PdfExporter {
+//final class PdfExporter { //changed
+//********************************************END**********************************************************//
+
 
     private static final int HEIGHT_LIMIT = 100;
     private static final int WIDTH_LIMIT  = 60;
@@ -60,8 +64,11 @@ final class PdfExporter {
         // Empty constructor.
     }
 
-    static String writePhylogenyToPdf( final String file_name, final TreePanel tree_panel, int width, int height )
-            throws IOException {
+  //******************************************START CHANGED**********************************************************//
+    public static String writePhylogenyToPdf( final String file_name, final TreePanel tree_panel, int width, int height )
+    //static String writePhylogenyToPdf( final String file_name, final TreePanel tree_panel, int width, int height ) //changed
+  //********************************************END**********************************************************//
+    throws IOException {
         if ( height < HEIGHT_LIMIT ) {
             height = HEIGHT_LIMIT;
         }

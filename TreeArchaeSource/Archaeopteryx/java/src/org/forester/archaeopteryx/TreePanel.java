@@ -107,6 +107,19 @@ import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
+//******************************************START**********************************************************//
+
+import com.lanl.application.TPTD.applet.AppletParams;
+import com.lanl.application.TPTD.applet.NewWindowSubtree;
+import com.lanl.application.TPTD.applet.SubTreePanel;
+import com.lanl.application.TPTD.custom.data.Accession;
+import com.lanl.application.treeDecorator.applet.TreeDecoratorPaint;
+import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
+import com.lanl.application.treePruner.custom.data.WorkingSet;
+import com.lanl.application.treePruner.applet.TreePrunerColorSet;
+import com.lanl.application.treePruner.applet.TreePrunerPaint;
+//********************************************END**********************************************************//
+
 public final class TreePanel extends JPanel implements ActionListener, MouseWheelListener, Printable {
 
     private static final float              PI                                = ( float ) ( Math.PI );
@@ -149,7 +162,13 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
     private int                             _node_frame_index                 = 0;
     private Phylogeny                       _phylogeny                        = null;
     private final Phylogeny[]               _phylogenies                      = new Phylogeny[ TreePanel.MAX_SUBTREES ];
-    private int                             _subtree_index                    = 0;
+    // private int                             _subtree_index                    = 0;
+    
+  //******************************************START CHANGED**********************************************************//
+    private static int                            _subtree_index                    = 0;
+    //changed from instance variable to static variable
+  //********************************************END**********************************************************//
+    
     private MainPanel                       _main_panel                       = null;
     private Set<PhylogenyNode>              _found_nodes                      = null;
     private PhylogenyNode                   _highlight_node                   = null;
@@ -204,6 +223,15 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
     final private HashMap<Integer, Integer> _urt_nodeid_index_map             = new HashMap<Integer, Integer>();
     HashMap<Integer, Short>                 _nodeid_dist_to_leaf              = new HashMap<Integer, Short>();
     private AffineTransform                 _at;
+    
+  //******************************************START**********************************************************//
+    public SubTreePanel subTreePanel;
+    public TreePrunerPaint treePrunerPaint;
+    public TreeDecoratorPaint treeDecoratorPaint;
+    public WorkingSet workingSet;
+    public NewWindowSubtree newWindowSubtree = new NewWindowSubtree(this);
+    //********************************************END**********************************************************//
+    
     private double                          _max_distance_to_root             = -1;
     private int                             _dynamic_hiding_factor            = 0;
     private boolean                         _edited                           = false;
@@ -211,10 +239,13 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
     private JTextArea                       _rollover_popup;
     //private final short                     _skip_counter                     = 0;
     private final StringBuffer              _popup_buffer                     = new StringBuffer();
+  //******************************************START Changed**********************************************************//
+    //Reduced the size of the font to 9 (originally 12)
     final private static Font               POPUP_FONT                        = new Font( Configuration
                                                                                                   .getDefaultFontFamilyName(),
                                                                                           Font.PLAIN,
-                                                                                          12 );
+                                                                                          9 );
+  //********************************************END**********************************************************//
     private static final boolean            DRAW_MEAN_COUNTS                  = true;                                                     //TODO remove me later
     private Sequence                        _query_sequence                   = null;
     private final FontRenderContext         _frc                              = new FontRenderContext( null,
@@ -259,6 +290,19 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
         if ( !_phylogeny.isEmpty() ) {
             _phylogeny.recalculateNumberOfExternalDescendants( true );
         }
+        
+        //******************************************START**********************************************************//
+        if(AppletParams.isEitherTPorTDForAll()){
+        	subTreePanel = new SubTreePanel(this);
+            subTreePanel.setPhylogeny(t);
+            subTreePanel.setSubTreeNodeInfo();
+            subTreePanel.setFullTreeNodeInfo();
+            workingSet = new WorkingSet();
+            treePrunerPaint = new TreePrunerPaint(this,workingSet);
+            treeDecoratorPaint = new TreeDecoratorPaint(this);
+        }
+        //********************************************END**********************************************************//
+        
         setBackground( getTreeColorSet().getBackgroundColor() );
         final MouseListener mouse_listener = new MouseListener( this );
         addMouseListener( mouse_listener );
@@ -364,10 +408,36 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             g.setColor( PhylogenyMethods.getBranchColorValue( node ) );
         }
         else if ( to_pdf ) {
-            g.setColor( getTreeColorSet().getBranchColorForPdf() );
+            //g.setColor( getTreeColorSet().getBranchColorForPdf() );
+        	//******************************************START CHANGED**********************************************************//
+        	if(AppletParams.isTreePrunerForAll() ){
+        		treePrunerPaint.initArrayLists();
+                treePrunerPaint.paintKeepRemove(g,node);
+            }
+        	else if(AppletParams.isTreeDecoratorForAll() ){
+        		treeDecoratorPaint.decorateBranch(g, node);      
+        	}
+        	else{
+        		g.setColor( getTreeColorSet().getBranchColorForPdf() ); 
+        	}
+            //commented -  changed
+           //********************************************END**********************************************************//
         }
         else {
-            g.setColor( getTreeColorSet().getBranchColor() );
+            //g.setColor( getTreeColorSet().getBranchColor() );
+        	//******************************************START CHANGED**********************************************************//
+        	if(AppletParams.isTreePrunerForAll() ){
+        		treePrunerPaint.initArrayLists();
+                treePrunerPaint.paintKeepRemove(g,node);
+            }
+        	else if(AppletParams.isTreeDecoratorForAll() ){
+        		treeDecoratorPaint.decorateBranch(g, node);      
+        	}
+        	else{
+        		g.setColor( getTreeColorSet().getBranchColor() ); 
+        	}
+            //commented -  changed
+           //********************************************END**********************************************************//
         }
     }
 
@@ -376,7 +446,18 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             g.setColor( PhylogenyMethods.getBranchColorValue( node ) );
         }
         else {
-            g.setColor( getTreeColorSet().getBranchColor() );
+        	//******************************************START CHANGED**********************************************************//
+        	if(AppletParams.isTreePrunerForAll() ){
+        		treePrunerPaint.initArrayLists();
+                treePrunerPaint.paintKeepRemove(g,node);
+                _control_panel.controlPanelAdditions.callTreePrunerAutoSaveToRefresh();
+            }
+        	else{
+        		g.setColor( getTreeColorSet().getBranchColor() );
+        	}
+        	//changed
+            //********************************************END**********************************************************//
+            //g.setColor( getTreeColorSet().getBranchColor() );
         }
     }
 
@@ -1116,6 +1197,14 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             case OPEN_TAX_WEB:
                 openTaxWeb( node );
                 break;
+              //******************************************START**********************************************************//
+            case KEEP_SEQUENCES:
+            	workingSet.memorizeKeepNodes(node, this);
+            	break;
+            case REMOVE_SEQUENCES:	
+            	workingSet.memorizeRemoveNodes(node);
+            	break;
+           //********************************************END**********************************************************//
             case CUT_SUBTREE:
                 cutSubtree( node );
                 break;
@@ -2288,7 +2377,16 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
                         }
                     }
                     else {
-                        drawLine( x1a, y2, x2a, y2, g );
+                        //drawLine( x1a, y2, x2a, y2, g );
+                    	//******************************************START CHANGED**********************************************************//
+                    	if(AppletParams.isTreePrunerForAll() ){
+                    		treePrunerPaint.drawThickLine(g,node, x1a, y2, x2a, y2);
+                    	}
+                    	else{
+                    		drawLine( x1a, y2, x2a, y2, g );
+                    	}
+                         //Commented changed
+                        //********************************************END**********************************************************//
                     }
                 }
                 else {
@@ -2623,6 +2721,22 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             drawOval( x - 9, y - 8, 17, 17, g );
             drawOval( x - 9, y - 9, 18, 18, g );
         }
+      //******************************************START**********************************************************//
+        if(AppletParams.isEitherTPorTDForAll()){
+        	newWindowSubtree.paintNodeTracker(g, x, y, node, to_pdf, to_graphics_file);
+        }
+        
+        if(AppletParams.isTreeDecoratorForAll()){
+        	_control_panel.controlPanelAdditions.callTreeDecoratorAutoSaveToRefresh();
+        	if ( is_in_found_nodes ) {
+	            paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
+	        }
+        	else if  ( getOptions().isShowNodeBoxes()){
+        		treeDecoratorPaint.decorateNodeBox(g, ForesterUtil.roundToInt(x), ForesterUtil.roundToInt(y), node);
+        	}
+        }
+        else{
+      //********************************************END**********************************************************//
         if ( is_in_found_nodes ) {
             paintFoundNode( ForesterUtil.roundToInt( x ), ForesterUtil.roundToInt( y ), g );
         }
@@ -2656,6 +2770,9 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
                     drawRectFilled( x - HALF_BOX_SIZE, y - HALF_BOX_SIZE, BOX_SIZE, BOX_SIZE, g );
                 }
             }
+          //******************************************START**********************************************************//
+        }
+      //********************************************END**********************************************************//
         }
     }
 
@@ -2711,7 +2828,16 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             if ( _sb.length() > 0 ) {
                 _sb.append( " " );
             }
-            _sb.append( node.getNodeName() );
+            //_sb.append( node.getNodeName() );
+          //******************************************START CHANGED**********************************************************//
+            if(AppletParams.isEitherTPorTDForAll()){
+            	_sb.append(Accession.removeAccessionFromStrain(node));
+            }
+            else{
+            	_sb.append( node.getNodeName() );
+            }
+                //commented changed
+            //********************************************END**********************************************************//
         }
         if ( node.getNodeData().isHasSequence() ) {
             if ( getControlPanel().isShowGeneSymbols() && ( node.getNodeData().getSequence().getSymbol().length() > 0 ) ) {
@@ -2737,6 +2863,14 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
                 _sb.append( node.getNodeData().getSequence().getAccession().getValue() );
             }
         }
+        
+      //******************************************START**********************************************************//
+        if(AppletParams.isTreePrunerForAll() ){
+        	treePrunerPaint.initArrayLists();
+            treePrunerPaint.paintKeepRemove(g,node);
+        }
+       //********************************************END**********************************************************//
+        	
         g.setFont( getTreeFontSet().getLargeFont() );
         if ( is_in_found_nodes ) {
             g.setFont( getTreeFontSet().getLargeFont().deriveFont( Font.BOLD ) );
@@ -2805,6 +2939,25 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             }
         }
         if ( sNodeText.length() > 0 ) {
+        	
+        	//******************************************START**********************************************************//
+        	// TODO Check for consistency
+        	if(AppletParams.isTreeDecoratorForAll()){
+        		if ( is_in_found_nodes ) {
+                    g.setColor( getTreeColorSet().getFoundColor() );
+                    g.setFont( getTreeFontSet().getLargeFont().deriveFont( Font.BOLD ) );
+                    TreePanel.drawString( _sb.toString(), node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE, node.getYcoord()
+                            + ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor ), g );
+        		}
+        		else{
+        		treeDecoratorPaint.decorateStrain(g, ForesterUtil.roundToInt
+        				(node.getXcoord() + x + 2 + TreePanel.HALF_BOX_SIZE),
+        				ForesterUtil.roundToInt(node.getYcoord()+ ( getTreeFontSet()._fm_large.getAscent() / down_shift_factor))
+        						, _sb.toString(), node,to_pdf);
+        		}
+        	}
+        	else
+        	//********************************************END**********************************************************//
             TreePanel.drawString( sNodeText, posX, posY, g );
         }
         // GUILHEM_END _____________
@@ -3229,8 +3382,10 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             getOvVirtualRectangle().setRect( x, y, width, height );
         }
     }
-
-    final void paintPhylogeny( final Graphics2D g,
+  //******************************************START CHANGED**********************************************************//
+    public void paintPhylogeny( final Graphics2D g,
+    		// void paintPhylogeny( finalvoid  Graphics2D g, // default->public - changed
+    	    //********************************************END**********************************************************//    		
                                final boolean to_pdf,
                                final boolean to_graphics_file,
                                final int graphics_file_width,
@@ -3243,6 +3398,20 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
         /* GUILHEM_END */
         // Color the background
         if ( !to_pdf ) {
+        	//******************************************START CHANGED**********************************************************//
+       /* 	if(AppletParams.isTreePrunerForAll() ){
+        		g.setColor(TreePrunerColorSet.getBackgroundColor());
+            }
+        	else if(AppletParams.isTreeDecoratorForAll() ){
+        		g.setColor(DecoratorColorSet.getBackgroundColor());
+            }
+        	else{*/
+        		g.setColor( getTreeColorSet().getBackgroundColor() );
+        	/*}*/
+        	
+        	//	  //Changed the background color from Back to white - changed
+        															 
+            //********************************************END**********************************************************//
             final Rectangle r = getVisibleRect();
             if ( !getOptions().isBackgroundColorGradient() || getOptions().isPrintBlackAndWhite() ) {
                 g.setColor( getTreeColorSet().getBackgroundColor() );
@@ -3826,7 +3995,10 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
         _nodeid_dist_to_leaf = new HashMap<Integer, Short>();
     }
 
-    final void resetPreferredSize() {
+  //******************************************START CHANGED**********************************************************//
+    public void resetPreferredSize() {
+    //void resetPreferredSize() { //changed default -> public	
+    //********************************************END**********************************************************//
         if ( ( getPhylogeny() == null ) || getPhylogeny().isEmpty() ) {
             return;
         }
@@ -3952,7 +4124,10 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
      * @param x
      * @param y
      */
-    final void setParametersForPainting( final int x, final int y, final boolean recalc_longest_ext_node_info ) {
+  //******************************************START CHANGED**********************************************************//
+    public void setParametersForPainting( final int x, final int y, final boolean recalc_longest_ext_node_info ) {
+  // void setParametersForPainting( final int x, final int y, final boolean recalc_longest_ext_node_info ) { default -> public - changed
+  //********************************************END**********************************************************//
         // updateStyle(); not needed?
         if ( ( _phylogeny != null ) && !_phylogeny.isEmpty() ) {
             initNodeData();
@@ -4343,7 +4518,7 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
     }
 
     final void subTree( final PhylogenyNode node ) {
-        if ( getPhylogenyGraphicsType() == PHYLOGENY_GRAPHICS_TYPE.UNROOTED ) {
+        /*if ( getPhylogenyGraphicsType() == PHYLOGENY_GRAPHICS_TYPE.UNROOTED ) {
             JOptionPane.showMessageDialog( this,
                                            "Cannot get a sub/super tree in unrooted display",
                                            "Attempt to get sub/super tree in unrooted display",
@@ -4373,13 +4548,45 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             superTree();
         }
         _main_panel.getControlPanel().showWhole();
-        repaint();
+        repaint();*/
+    	
+    	//******************************************START CHANGED**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll()){
+    		newWindowSubtree.subTree(node, _phylogeny, subTreePanel);
+        }
+    	else{
+    		if ( !node.isExternal() && !node.isRoot() && ( _subtree_index <= ( TreePanel.MAX_SUBTREES - 1 ) ) ) {
+                _phylogenies[ _subtree_index++ ] = _phylogeny;
+                _phylogeny = _phylogeny.subTree( node );
+                updateSubSuperTreeButton();
+            }
+            else if ( node.isRoot() && ( _subtree_index >= 1 ) ) {
+                superTree();
+            }
+            _main_panel.getControlPanel().showWhole();
+            repaint();
+    	}
+   // 	 ENTIRE METHOD of subTree(node) has been overwritten - changed
+    	//********************************************END**********************************************************//
     }
 
     final void superTree() {
-        _phylogenies[ _subtree_index ] = null;
-        _phylogeny = _phylogenies[ --_subtree_index ];
-        updateSubSuperTreeButton();
+//        _phylogenies[ _subtree_index ] = null;
+//        _phylogeny = _phylogenies[ --_subtree_index ];
+//        updateSubSuperTreeButton();
+    	
+    	//******************************************START CHANGED**********************************************************//
+    	if(AppletParams.isEitherTPorTDForAll()){
+    		newWindowSubtree.superTree();
+    	}
+    	//  ENTIRE METHOD of superTree() has been overwritten - changed
+    	else{
+	    	_phylogenies[ _subtree_index ] = null;
+	        _phylogeny = _phylogenies[ --_subtree_index ];
+	        updateSubSuperTreeButton();
+    	}
+    
+    	//********************************************END**********************************************************//
     }
 
     final void swap( final PhylogenyNode node ) {
@@ -4589,4 +4796,51 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
             }
         }
     }
+//******************************************START**********************************************************//
+    
+    public void setPhylogeny(Phylogeny phylogeny){
+    	_phylogeny = phylogeny;
+    }
+    
+    public Phylogeny getCurrentPhylogeny(){
+    	return _phylogeny;
+    }
+    
+    public static void reset_subtree_index(){
+    	_subtree_index = 0; 
+    }
+    
+    public static void set_subtree_index(int n){
+    	_subtree_index = n; 
+    }
+    public static int get_subtree_index(){
+    	return _subtree_index; 
+    }
+    
+    public void updateSubSuperTreeButton(boolean deactivate) {
+        if ( deactivate ) {
+            getControlPanel().deactivateButtonToReturnToSuperTree();
+        }
+        else {
+            getControlPanel().activateButtonToReturnToSuperTree( 0 );
+        }
+    }
+    
+	public File get_tree_file() {
+		return _treefile;
+	}
+
+	public void set_tree_file(final File treefile) {
+		_treefile = treefile;
+	}
+
+	public void set_arrow_cursor() {
+		setCursor(ARROW_CURSOR);
+		repaint();
+	}
+
+	public PHYLOGENY_GRAPHICS_TYPE get_phylogeny_graphicsType() {
+		return _graphics_type;
+	}
+    //********************************************END**********************************************************//
 }
