@@ -11,7 +11,7 @@ native_ui: no
 #  --------------------------------------------
 #  Minimal confidence value to be displayed ('min_confidence_value'):
 #    Example: 'min_confidence_value: 50.0' (a commonly used 
-#    value for bootstrap support)
+#    values for bootstrap support)
 #  Font family name ('font_family'):
 #    Example: 'font_family: Arial,Calibri,Helvetica'
 #    It is advisable to use more than one value for font_family (in
@@ -29,30 +29,21 @@ native_ui: no
 #  Do/do not line up cladogram display ('non_lined_up_cladogram')
 #    Example: 'non_lined_up_cladogram: yes'   
 #  Default size for graphics export and printing ('graphics_export_x' and 'graphics_export_y')
-#    (Archaeopteryx tries to guess the locale, so setting these is not always necessary)  
+#    (ATV tries to guess the locale, so setting these is not always necessary)  
 #    Example: For A4 (portrait):
 #               'graphics_export_x: 595'
 #               'graphics_export_y: 845'
 #             For US Letter (portrait):
 #               'graphics_export_x: 612'
 #               'graphics_export_y: 792'
-#  Default line width for PDF export ('pdf_export_line_wdith')
-#    Example: 'pdf_export_line_width: 0.5'
 #  Show overview ('show_overview'): not implemented yet
 #  Phylogeny graphics type ('phylogeny_graphics_type'):
 #    Example: 'phylogeny_graphics_type: euro_style' 
-#    The seven possible values are: rectangular                    
-#                                   euro_style
-#                                   curved
-#                                   triangular
-#                                   convex
-#                                   unrooted
-#                                   circular
-#  Nodel label direction for circular
-#    and unrooted type ('node_label_direction'):
-#    Example: 'node_label_direction: horizontal' 
-#    The two possible values are: horizontal                    
-#                                 radial
+#    The five possible values are: rectangular                    
+#                                  euro_style
+#                                  curved
+#                                  triangular
+#                                  convex
 
 min_confidence_value:      0.0
 font_family:               Verdana,Tahoma,Arial,Helvetica,Dialog,Lucida-Sans,SansSerif,Sans-serif,Sans
@@ -64,12 +55,10 @@ non_lined_up_cladogram:    no
 phylogeny_graphics_type:   rectangular 
 #graphics_export_x:        595
 #graphics_export_y:        792
-pdf_export_line_width:     0.5
 show_overview:             yes
-overview_width:            160
-overview_height:           200
+overview_width:            60
+overview_height:           80
 overview_placement_type:   upper_left
-node_label_direction:      radial
 
 
 
@@ -80,10 +69,10 @@ node_label_direction:      radial
 #  Format: 'name: display|nodisplay yes|no'
 #  Note: if an option is not displayed, it will not be enabled
 #
-#  For the following use '?' to let Archaeopteryx decide (depending on tree):
-#  - 'phylogram'
-#  - 'write_confidence_values'
-#  - 'write_events'
+#  For the following use "?" to let ATV decide (depending on tree):
+#  -"phylogram"
+#  -"write_confidence_values"
+#  -"write_events" 
 
 phylogram:                     display   ?
 color_according_to_species:    display   yes
@@ -171,8 +160,8 @@ web_link: http://www.ensembl.org/Homo_sapiens/Search/Summary?species=all;idx=;q=
 
 
 
-#  Settings Specific for ArchaeopteryxE
-#  ------------------------------------
+#  Settings Specific for ATVe
+#  --------------------------
 #  To hide controls and menus: 'hide_controls_and_menus: yes'
 #  To use tabbed display     : 'use_tabbed_display: yes'
 
