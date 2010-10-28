@@ -310,24 +310,35 @@ public class ControlPanel extends JPanel implements ActionListener {
                //return to super tree -> up one level - changed
         	if(AppletParams.isEitherTPorTDForLANLorBHB()){
                   _return_to_super_tree.setText( UpOneLevelTEXT + " " + index );
+                  _return_to_super_tree.setForeground( Color.RED);
         	}
         	else{
         		_return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT + " " + index );
+        		if(AppletParams.isArchaeopteryxForBHBorLANL())
+        			_return_to_super_tree.setForeground( Color.RED);
+        		else
+        			_return_to_super_tree.setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor());
         	}
             //********************************************END**********************************************************//
         }
         else {
         	//******************************************START CHANGED**********************************************************//
             //  //return to super tree -> up one level - changed
+        	// Changed text color from getConfiguration().getGuiCheckboxAndButtonActiveColor()
         	if(AppletParams.isEitherTPorTDForLANLorBHB()){
                 _return_to_super_tree.setText( UpOneLevelTEXT);
+                _return_to_super_tree.setForeground( Color.RED);
         	}
         	else{
         		_return_to_super_tree.setText( RETURN_TO_SUPER_TREE_TEXT); 
+        		if(AppletParams.isArchaeopteryxForBHBorLANL())
+        			_return_to_super_tree.setForeground( Color.RED);
+        		else
+        			_return_to_super_tree.setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor());
         	}
             
         }
-        _return_to_super_tree.setForeground( Color.RED);
+//        _return_to_super_tree.setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor());
       //********************************************END**********************************************************//
         _return_to_super_tree.setEnabled( true );
     }
@@ -586,7 +597,14 @@ public class ControlPanel extends JPanel implements ActionListener {
     void addJTextField( final JTextField tf, final JPanel p ) {
         if ( !_configuration.isUseNativeUI() ) {
         	//******************************************START Changed**********************************************************//
-            tf.setForeground( getConfiguration().getGuiCheckboxTextColor() );
+        	// Changed the text color
+        	if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
+        		tf.setForeground( getConfiguration().getGuiCheckboxTextColor() );
+        	}
+        	else {
+        		tf.setForeground( getConfiguration().getGuiBackgroundColor() );
+        	}
+        	// tf.setForeground( getConfiguration().getGuiBackgroundColor() );
           //********************************************END**********************************************************//
             tf.setFont( ControlPanel.jcb_font );
         }
@@ -1244,7 +1262,13 @@ public class ControlPanel extends JPanel implements ActionListener {
     	//******************************************START Changed**********************************************************//
     	//Changed the color from getConfiguration().getGuiCheckboxAndButtonActiveColor()()
         if ( is_on ) {
-            getDynamicallyHideData().setForeground( Color.RED );
+        	if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
+        		getDynamicallyHideData().setForeground( Color.RED );
+        	}
+        	else {
+        		getDynamicallyHideData().setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor() );
+        	}
+//        	getDynamicallyHideData().setForeground( getConfiguration().getGuiCheckboxAndButtonActiveColor() );
         }
       //********************************************END**********************************************************//
         else {
@@ -1687,9 +1711,18 @@ public class ControlPanel extends JPanel implements ActionListener {
         _search_tf.setEditable( true );
         if ( !getConfiguration().isUseNativeUI() ) {
         	//******************************************START Changed**********************************************************//
-        	_search_tf.setBackground( getConfiguration().getGuiMenuBackgroundColor() );
-        	_search_tf.setForeground( getConfiguration().getGuiCheckboxTextColor() );
-        	_search_tf.setBorder(BorderFactory.createLineBorder( getConfiguration().getGuiButtonBorderColor() ) );
+        	if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
+        		_search_tf.setBackground( getConfiguration().getGuiMenuBackgroundColor() );
+        		_search_tf.setForeground( getConfiguration().getGuiCheckboxTextColor() );
+        		_search_tf.setBorder(BorderFactory.createLineBorder( getConfiguration().getGuiButtonBorderColor() ) );
+        	}
+        	else {
+        		_search_tf.setForeground( getConfiguration().getGuiMenuBackgroundColor() );
+                _search_tf.setBackground( getConfiguration().getGuiCheckboxTextColor() );
+                _search_tf.setBorder( null );
+        	}
+        	//_search_tf.setForeground( getConfiguration().getGuiMenuBackgroundColor() );
+            //_search_tf.setBackground( getConfiguration().getGuiCheckboxTextColor() );
             //_search_tf.setBorder( null );
           //********************************************END**********************************************************//
         }

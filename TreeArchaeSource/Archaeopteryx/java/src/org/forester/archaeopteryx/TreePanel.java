@@ -239,13 +239,16 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
     private JTextArea                       _rollover_popup;
     //private final short                     _skip_counter                     = 0;
     private final StringBuffer              _popup_buffer                     = new StringBuffer();
-  //******************************************START Changed**********************************************************//
-    //Reduced the size of the font to 9 (originally 12)
-    final private static Font               POPUP_FONT                        = new Font( Configuration
+  //******************************************START**********************************************************//
+    final private static Font               POPUP_FONT_NEW                        = new Font( Configuration
                                                                                                   .getDefaultFontFamilyName(),
                                                                                           Font.PLAIN,
                                                                                           9 );
   //********************************************END**********************************************************//
+    final private static Font               POPUP_FONT                        = new Font( Configuration
+																						    		.getDefaultFontFamilyName(),
+																			    		Font.PLAIN,
+																			    		12 );
     private static final boolean            DRAW_MEAN_COUNTS                  = true;                                                     //TODO remove me later
     private Sequence                        _query_sequence                   = null;
     private final FontRenderContext         _frc                              = new FontRenderContext( null,
@@ -1258,7 +1261,15 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
     final private void init() {
         _color_chooser = new JColorChooser();
         _rollover_popup = new JTextArea();
-        _rollover_popup.setFont( POPUP_FONT );
+      //******************************************START Changed**********************************************************//
+        // POPUP_FONT changed
+        if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
+        	_rollover_popup.setFont( POPUP_FONT_NEW );
+        }
+        else {
+        	_rollover_popup.setFont( POPUP_FONT );
+        }
+        //********************************************END**********************************************************//
         resetNodeIdToDistToLeafMap();
         setTextAntialias();
         setTreeFile( null );
@@ -4463,6 +4474,7 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
                     }
                 }
                 if ( _popup_buffer.length() > 0 ) {
+                	
                     if ( !getConfiguration().isUseNativeUI() ) {
                         _rollover_popup
                                 .setBorder( BorderFactory.createLineBorder( getTreeColorSet().getBranchColor() ) );
@@ -4474,7 +4486,15 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
                             _rollover_popup.setForeground( getTaxonomyBasedColor( node ) );
                         }
                         else {
-                            _rollover_popup.setForeground( getTreeColorSet().getSequenceColor() );
+                        	//******************************************START Changed**********************************************************//
+                        	// Changed _rollover_popup foreground to red (getDupBoxCol() is red in config
+                        	if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()) {
+                        		_rollover_popup.setForeground( getTreeColorSet().getDuplicationBoxColor() );
+                        	}
+                        	else {
+                        		_rollover_popup.setForeground( getTreeColorSet().getSequenceColor() );
+                        	}
+                        	//********************************************END**********************************************************//
                         }
                     }
                     else {
@@ -4487,6 +4507,8 @@ public final class TreePanel extends JPanel implements ActionListener, MouseWhee
                                                                                   e.getLocationOnScreen().y
                                                                                           - ( lines * 20 ) );
                     _node_desc_popup.show();
+                    
+
                 }
             }
         }

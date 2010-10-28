@@ -6,7 +6,7 @@
 #    '?'   to use native (system) "look and feel" if Mac OS X with Java 1.5 is detected,
 #          Archaeopteryx-style "look and feel" otherwise
 
-native_ui: ?
+native_ui: no
 
 
 
@@ -185,7 +185,7 @@ default_click_to: reroot
 
 display_color: background                 0xFFFFFF
 display_color: background_gradient_bottom 0x0000FF
-display_color: sequence                   0xFF0000
+display_color: sequence                   0x000000
 display_color: taxonomy                   0xB4B4B4
 display_color: confidence                 0x38B0DE
 display_color: branch_length              0x8C8C8C

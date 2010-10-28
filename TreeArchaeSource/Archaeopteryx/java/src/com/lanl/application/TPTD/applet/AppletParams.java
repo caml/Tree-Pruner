@@ -175,7 +175,7 @@ public class AppletParams {
 		}
 		return false;
 	}
-	
+	// Unused: Kept If Requirements arise
 	public static boolean isArchaeopteryxForBHBorLANL(){
 		if(applicationType == 0 ){
 			return true;
