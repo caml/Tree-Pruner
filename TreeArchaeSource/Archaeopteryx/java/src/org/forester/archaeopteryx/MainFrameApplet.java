@@ -136,7 +136,10 @@ public final class MainFrameApplet extends MainFrame {
       //********************************************END**********************************************************//
         buildToolsMenu();
         buildViewMenu();
-        buildFontSizeMenu();
+      //******************************************START CHANGED**********************************************************//
+        if(!AppletParams.isTreeDecoratorForAll()) 
+        	buildFontSizeMenu();
+      //********************************************END**********************************************************//
         buildOptionsMenu();
         buildTypeMenu();
         buildHelpMenu();
