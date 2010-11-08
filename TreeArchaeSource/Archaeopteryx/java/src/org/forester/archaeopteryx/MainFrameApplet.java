@@ -27,7 +27,10 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-
+/**
+ * NOTE - The original file was obtained from SourceForge.net (Archaeopteryx Version 0.957 beta) on 2010.10.13
+ *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
+ */
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -65,8 +68,6 @@ public final class MainFrameApplet extends MainFrame {
     
   //******************************************START**********************************************************//
     AppletFileMenu appletFileMenu = new AppletFileMenu(this);
-    //Default Applet Window size is much small
-    private final static int     FRAME_X_SIZE_NEW     = 800, FRAME_Y_SIZE_NEW = 800;
     //********************************************END**********************************************************//
     private ButtonGroup          _radio_group_1;
 
@@ -147,14 +148,8 @@ public final class MainFrameApplet extends MainFrame {
         _contentpane = getContentPane();
         _contentpane.setLayout( new BorderLayout() );
         _contentpane.add( _mainpanel, BorderLayout.CENTER );
-        
-      //******************************************START CHANGED**********************************************************//
-        if(AppletParams.isEitherTPorTDForLANLorBHB() || AppletParams.isArchaeopteryxForBHBorLANL()){
-        	setSize( FRAME_X_SIZE_NEW, FRAME_Y_SIZE_NEW );
-        }
-        else {
-        	setSize( FRAME_X_SIZE, FRAME_Y_SIZE );
-        }
+        setSize( FRAME_X_SIZE, FRAME_Y_SIZE );
+        //******************************************START CHANGED**********************************************************// 
         addWindowListener(closeWindowAdapter);
         /**addWindowListener( new WindowAdapter() {  //Using predefined variable closeWindowAdapter - changed
 

@@ -23,7 +23,10 @@
 // WWW: www.phylosoft.org/forester
 
 package org.forester.archaeopteryx;
-
+/**
+ * NOTE - The original file was obtained from SourceForge.net (Archaeopteryx Version 0.957 beta) on 2010.10.13
+ *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
+ */
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
