@@ -30,6 +30,11 @@ package org.forester.phylogeny;
  * NOTE - The original file was obtained from SourceForge.net (Archaeopteryx Version 0.957 beta) on 2010.10.13
  *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
  */
+import gov.lanl.application.TPTD.applet.AppletParams;
+import gov.lanl.application.TPTD.custom.data.Accession;
+import gov.lanl.application.TPTD.tree.node.ExtraNodeInfo;
+import gov.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,11 +49,6 @@ import org.forester.phylogeny.iterators.PreorderTreeIterator;
 import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.custom.data.Accession;
-import com.lanl.application.TPTD.tree.node.ExtraNodeInfo;
-import com.lanl.application.treeDecorator.applet.communication.DecoratorJSONHandler;
-//********************************************END**********************************************************//
 
 public class PhylogenyNode implements PhylogenyNodeI, Comparable<PhylogenyNode> {
 

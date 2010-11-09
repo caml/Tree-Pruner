@@ -27,6 +27,10 @@ package org.forester.archaeopteryx;
  * NOTE - The original file was obtained from SourceForge.net (Archaeopteryx Version 0.957 beta) on 2010.10.13
  *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
  */
+import gov.lanl.application.TPTD.applet.AppletParams;
+import gov.lanl.application.TPTD.applet.AppletTerminate;
+import gov.lanl.application.TPTD.applet.NewWindowSubtree;
+
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -54,9 +58,6 @@ import org.forester.phylogeny.Phylogeny;
 import org.forester.util.ForesterConstants;
 import org.forester.util.ForesterUtil;
 
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.AppletTerminate;
-import com.lanl.application.TPTD.applet.NewWindowSubtree;
 
 public abstract class MainFrame extends JFrame implements ActionListener {
 

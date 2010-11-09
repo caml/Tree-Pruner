@@ -31,6 +31,9 @@ package org.forester.archaeopteryx;
  * NOTE - The original file was obtained from SourceForge.net (Archaeopteryx Version 0.957 beta) on 2010.10.13
  *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
  */
+import gov.lanl.application.TPTD.applet.AppletParams;
+import gov.lanl.application.treePruner.applet.KeepRemoveConfiguration;
+
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -52,9 +55,6 @@ import org.forester.archaeopteryx.Options.OVERVIEW_PLACEMENT_TYPE;
 import org.forester.archaeopteryx.Options.PHYLOGENY_GRAPHICS_TYPE;
 import org.forester.util.ForesterUtil;
 //******************************************START**********************************************************//
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.treePruner.applet.KeepRemoveConfiguration;
-//********************************************END**********************************************************//
 
 //******************************************START CHANGED**********************************************************//
 public class Configuration {

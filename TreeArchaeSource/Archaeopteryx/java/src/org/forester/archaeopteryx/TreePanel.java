@@ -28,6 +28,16 @@ package org.forester.archaeopteryx;
  * NOTE - The original file was obtained from SourceForge.net (Archaeopteryx Version 0.957 beta) on 2010.10.13
  *  and was modified by the LANL Influenza Sequence Database IT team (flu@lanl.gov)
  */
+import gov.lanl.application.TPTD.applet.AppletParams;
+import gov.lanl.application.TPTD.applet.NewWindowSubtree;
+import gov.lanl.application.TPTD.applet.SubTreePanel;
+import gov.lanl.application.TPTD.custom.data.Accession;
+import gov.lanl.application.treeDecorator.applet.TreeDecoratorPaint;
+import gov.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
+import gov.lanl.application.treePruner.applet.TreePrunerColorSet;
+import gov.lanl.application.treePruner.applet.TreePrunerPaint;
+import gov.lanl.application.treePruner.custom.data.WorkingSet;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -112,16 +122,6 @@ import org.forester.util.ForesterUtil;
 
 //******************************************START**********************************************************//
 
-import com.lanl.application.TPTD.applet.AppletParams;
-import com.lanl.application.TPTD.applet.NewWindowSubtree;
-import com.lanl.application.TPTD.applet.SubTreePanel;
-import com.lanl.application.TPTD.custom.data.Accession;
-import com.lanl.application.treeDecorator.applet.TreeDecoratorPaint;
-import com.lanl.application.treeDecorator.applet.ui.drawDecoration.DecoratorColorSet;
-import com.lanl.application.treePruner.custom.data.WorkingSet;
-import com.lanl.application.treePruner.applet.TreePrunerColorSet;
-import com.lanl.application.treePruner.applet.TreePrunerPaint;
-//********************************************END**********************************************************//
 
 public final class TreePanel extends JPanel implements ActionListener, MouseWheelListener, Printable {
 
